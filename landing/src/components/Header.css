@@ -1,0 +1,206 @@
+/* ============================================
+   HEADER - ACTUALIZADO CON COLORES AZUL/TEAL
+   ============================================ */
+
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.98);
+    border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(8px);
+}
+
+.header--scrolled {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.08);
+}
+
+.header__container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0.75rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* === BRAND === */
+.header__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: transform 0.2s;
+}
+
+.header__brand:hover {
+    transform: scale(1.02);
+}
+
+.header__logo {
+    width: 40px;
+    height: 40px;
+    background: #1d4ed8;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+.header__logo-svg {
+    width: 24px;
+    height: 24px;
+    color: white;
+}
+
+.header__name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    background: #1d4ed8;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* === NAVIGATION === */
+.header__nav {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* === BUTTONS === */
+.header-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.25rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.header-btn__icon-svg {
+    width: 18px;
+    height: 18px;
+}
+
+.header-btn__text {
+    font-weight: 600;
+}
+
+/* Ghost Button */
+.header-btn--ghost {
+    background: transparent;
+    color: #64748b;
+}
+
+.header-btn--ghost:hover {
+    background: rgba(59, 130, 246, 0.05);
+    color: #1d4ed8;
+}
+
+/* Outline Button */
+.header-btn--outline {
+    background: transparent;
+    color: #3b82f6;
+    border: 2px solid #3b82f6;
+}
+
+.header-btn--outline:hover {
+    background: #1d4ed8;
+    color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+/* Primary Button */
+.header-btn--primary {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+.header-btn--primary:hover {
+    background: #1d4ed8;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
+}
+
+/* Logout Button */
+.header-btn--logout {
+    background: transparent;
+    color: #ef4444;
+    border: 2px solid #ef4444;
+}
+
+.header-btn--logout:hover {
+    background: #ef4444;
+    color: white;
+}
+
+/* Warning Button */
+.header-btn--warning {
+    background: transparent;
+    color: #f59e0b;
+    border: 2px solid #f59e0b;
+}
+
+.header-btn--warning:hover {
+    background: #f59e0b;
+    color: white;
+}
+
+/* Menu Hamburger Button */
+.menu-hamburger-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+.menu-hamburger-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
+}
+
+.menu-hamburger-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+    .header__container {
+        padding: 0.75rem 1rem;
+    }
+
+    .header-btn__text {
+        display: none;
+    }
+
+    .header-btn {
+        padding: 0.65rem;
+        min-width: 44px;
+        justify-content: center;
+    }
+
+    .header__name {
+        font-size: 1.1rem;
+    }
+}
