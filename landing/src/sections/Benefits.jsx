@@ -122,14 +122,12 @@ export default function Benefits() {
                       {/* Visual Side */}
                       <div className="flex-1">
                         <div className="relative">
-                          {/* Large Icon Container */}
+                          {/* Large Icon Container - SIN PATTERN */}
                           <div className={`
                             relative w-full aspect-square max-w-xs md:max-w-sm mx-auto rounded-3xl overflow-hidden
                             bg-gradient-to-br ${colors.gradient}
                             group-hover:scale-105 transition-transform duration-500
                           `}>
-                            {/* Pattern Overlay */}
-                            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle,white_2px,transparent_2px)] bg-[size:24px_24px]" />
 
                             {/* Animated Rings */}
                             <div className="absolute inset-0 flex items-center justify-center">
@@ -143,7 +141,7 @@ export default function Benefits() {
                               <Icon className="w-24 h-24 md:w-40 md:h-40 text-white drop-shadow-2xl" strokeWidth={1.5} />
                             </div>
 
-                            {/* Stat Badge - OPCIÓN A: REDUCCIÓN MODERADA */}
+                            {/* Stat Badge */}
                             <div className="hidden md:block absolute bottom-6 left-1/2 -translate-x-1/2">
                               <div className="bg-white/95 backdrop-blur-sm rounded-lg md:rounded-xl px-3 py-1.5 md:px-5 md:py-3 shadow-2xl border border-white/50">
                                 <div className="text-center">
