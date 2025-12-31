@@ -36,29 +36,28 @@ const isProduction = process.env.NODE_ENV === 'production' || isRender;
 const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
-    'http://192.168.1.11:5173',
+    'http://192.168.1.9:5173',
     'https://nutri-app-frontend.onrender.com',
     process.env.FRONTEND_URL
-];
+].filter(Boolean); // Eliminar valores undefined
 
-const corsOptions = {
-    origin(origin, callback) {
-        // Permitir requests sin origin (ej: Postman, curl)
+app.use(cors({
+    origin: function (origin, callback) {
+        // Permitir requests sin origin (Postman, curl, etc.)
         if (!origin) return callback(null, true);
 
         if (allowedOrigins.includes(origin)) {
-            return callback(null, true);
+            callback(null, true);
+        } else {
+            console.warn('⚠️ Origen bloqueado por CORS:', origin);
+            callback(new Error('Not allowed by CORS'));
         }
-
-        console.warn('⚠️ Origen no permitido por CORS:', origin);
-        return callback(new Error('Not allowed by CORS'));
     },
-    credentials: true, // Permitir cookies/headers de autorización
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-};
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
-app.use(cors(corsOptions));
 app.use(express.json());
 
 // ===== TRUST PROXY (para Render) ===========================================

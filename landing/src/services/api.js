@@ -1,4 +1,4 @@
-// frontend/src/api.js
+// frontend/src/services/api.js
 // ============================================
 // Cliente Axios configurado para JWT
 // Maneja automáticamente el token en cada petición
@@ -14,6 +14,7 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    timeout: 30000, // 30 segundos timeout
 });
 
 // ============================================
@@ -45,6 +46,15 @@ api.interceptors.response.use(
         return response;
     },
     (error) => {
+        // Manejar errores de red
+        if (!error.response) {
+            console.error('❌ Error de red - No se pudo conectar al servidor');
+            return Promise.reject({
+                message: 'No se pudo conectar al servidor. Verifica tu conexión.',
+                type: 'network_error'
+            });
+        }
+
         // Manejar errores de autenticación
         if (error.response) {
             const { status, data } = error.response;
@@ -61,8 +71,18 @@ api.interceptors.response.use(
                 // (Solo si NO estamos ya en la página de login)
                 if (data?.expired && !window.location.pathname.includes('/login')) {
                     console.log('🔄 Redirigiendo al login por token expirado...');
-                    window.location.href = '/login';
+                    window.location.href = '/doctora/login'; // ✅ Ruta corregida
                 }
+            }
+
+            // Manejar error 403 (CORS o permisos)
+            if (status === 403) {
+                console.error('❌ Acceso denegado (403)');
+            }
+
+            // Manejar error 500
+            if (status === 500) {
+                console.error('❌ Error interno del servidor');
             }
         }
 
