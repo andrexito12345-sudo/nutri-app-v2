@@ -1,5 +1,38 @@
-import { motion } from 'framer-motion';
+import { useEffect, useRef } from 'react';
+import { motion, useInView, useMotionValue, useSpring } from 'framer-motion';
 import { ArrowRight, Sparkles, Shield } from 'lucide-react';
+
+// Componente pequeño para animar los números sin afectar el diseño
+const AnimatedCounter = ({ value, suffix = "", decimals = 0, delay = 0 }) => {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  const motionValue = useMotionValue(0);
+  const springValue = useSpring(motionValue, {
+    damping: 30,
+    stiffness: 100,
+    duration: 2
+  });
+
+  useEffect(() => {
+    if (inView) {
+      // Pequeño retraso opcional para que empiece justo cuando el texto aparece
+      const timeout = setTimeout(() => {
+        motionValue.set(value);
+      }, delay * 1000);
+      return () => clearTimeout(timeout);
+    }
+  }, [motionValue, inView, value, delay]);
+
+  useEffect(() => {
+    return springValue.on("change", (latest) => {
+      if (ref.current) {
+        ref.current.textContent = Number(latest).toFixed(decimals) + suffix;
+      }
+    });
+  }, [springValue, decimals, suffix]);
+
+  return <span ref={ref} />;
+};
 
 export default function Hero() {
   const scrollToBooking = () => {
@@ -78,11 +111,32 @@ export default function Hero() {
                 </div>
               </motion.div>
 
+              {/* Urgency Element - REPOSICIONADO (ENCIMA DE BOTONES) & REDISEÑADO (PREMIUM) */}
+              <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="flex items-center gap-3 py-1"
+              >
+                {/* Badge de 'Alta Demanda' con efecto pulsante */}
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-50 text-red-600 rounded-full text-xs font-bold uppercase tracking-wide border border-red-100 shadow-sm">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                  </span>
+                  Alta Demanda
+                </div>
+                {/* Mensaje de escasez claro y directo */}
+                <p className="text-sm font-medium text-neutral-600">
+                  Solo quedan <span className="text-neutral-900 font-bold border-b-2 border-accent-200">3 cupos</span> esta semana
+                </p>
+              </motion.div>
+
               {/* CTA Buttons */}
               <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
+                  transition={{ delay: 0.7 }}
                   className="flex flex-col sm:flex-row gap-4"
               >
                 <button
@@ -101,38 +155,29 @@ export default function Hero() {
                 </button>
               </motion.div>
 
-              {/* Urgency Element */}
-              <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.7 }}
-                  className="inline-flex items-center gap-2 px-4 py-3 bg-accent-100 border border-accent-300 rounded-lg"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-accent-600 rounded-full animate-pulse" />
-                  <span className="text-sm font-semibold text-accent-900">
-                  Solo 3 cupos disponibles esta semana
-                </span>
-                </div>
-              </motion.div>
-
-              {/* Social Proof Numbers */}
+              {/* Social Proof Numbers - (hidden en mobile) */}
               <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.8 }}
-                  className="grid grid-cols-3 gap-6 pt-8 border-t border-neutral-200"
+                  className="hidden md:grid grid-cols-3 gap-6 pt-8 border-t border-neutral-200"
               >
                 <div>
-                  <div className="text-3xl font-bold text-primary-700">95%</div>
+                  <div className="text-3xl font-bold text-primary-700">
+                    <AnimatedCounter value={95} suffix="%" delay={0.9} />
+                  </div>
                   <div className="text-sm text-neutral-600 mt-1">Tasa de Éxito</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-primary-700">4.9★</div>
+                  <div className="text-3xl font-bold text-primary-700">
+                    <AnimatedCounter value={4.9} suffix="★" decimals={1} delay={0.9} />
+                  </div>
                   <div className="text-sm text-neutral-600 mt-1">Valoración</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-primary-700">8+</div>
+                  <div className="text-3xl font-bold text-primary-700">
+                    <AnimatedCounter value={8} suffix="+" delay={0.9} />
+                  </div>
                   <div className="text-sm text-neutral-600 mt-1">Años Exp.</div>
                 </div>
               </motion.div>
@@ -157,9 +202,7 @@ export default function Hero() {
                 {/* Overlay Sutil */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary-600/5 to-primary-800/10" />
 
-                {/* Floating Stats Cards - MÁS PEQUEÑAS Y REPOSICIONADAS */}
-
-                {/* Card Promedio - Arriba Izquierda */}
+                {/* Floating Stats Cards */}
                 <div className="absolute top-6 left-6 bg-white/95 backdrop-blur-sm px-3 py-2.5 rounded-xl shadow-lg animate-float">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -174,7 +217,6 @@ export default function Hero() {
                   </div>
                 </div>
 
-                {/* Card Satisfacción - Abajo Derecha */}
                 <div className="absolute bottom-6 right-6 bg-white/95 backdrop-blur-sm px-3 py-2.5 rounded-xl shadow-lg animate-float" style={{ animationDelay: '1s' }}>
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-accent-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -189,7 +231,6 @@ export default function Hero() {
                   </div>
                 </div>
 
-                {/* Badge Daniela Vaca - Abajo Izquierda */}
                 <div className="absolute bottom-6 left-6 bg-white/95 backdrop-blur-sm px-4 py-3 rounded-xl shadow-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center flex-shrink-0">
