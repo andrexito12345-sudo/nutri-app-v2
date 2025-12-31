@@ -1,10 +1,19 @@
 import React, { useState } from "react";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Menu } from 'lucide-react';
 
-// Componentes y Hook refactorizados
+// Componentes refactorizados
 import { useDashboardLogic } from '../hooks/useDashboardLogic';
-import DashboardKPIs from '../components/dashboard/DashboardKPIs';
+
+// NUEVOS COMPONENTES MODERNOS
+import DashboardKPIsModern from '../components/dashboard/DashboardKPIsModern';
+import TodaySummary from '../components/dashboard/TodaySummary';
+import TrendChart from '../components/dashboard/TrendChart';
+import UpcomingTimeline from '../components/dashboard/UpcomingTimeline';
+import QuickActions from '../components/dashboard/QuickActions';
+
+// Componentes existentes
 import AppointmentsSection from '../components/dashboard/AppointmentsSection';
 import PatientsSection from '../components/dashboard/PatientsSection';
 import DashboardModals from '../components/dashboard/DashboardModals';
@@ -13,10 +22,7 @@ import ToolsSidebar from '../components/ToolsSidebar';
 import "./DashboardPage.css";
 
 function DashboardPage() {
-    // ✅ ESTADO DEL MENÚ LATERAL - INTERNO
     const [isToolsOpen, setIsToolsOpen] = useState(false);
-
-    // Extraemos TODA la lógica del Hook
     const logic = useDashboardLogic();
 
     if (logic.loading) {
@@ -41,7 +47,7 @@ function DashboardPage() {
 
     return (
         <div className="dash">
-            {/* Header con botón de menú integrado */}
+            {/* Header Mejorado */}
             <div className="dash-header">
                 <div>
                     <h1 className="dash-title">Panel de Control</h1>
@@ -53,30 +59,57 @@ function DashboardPage() {
                             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
                         })}
                     </div>
-                    {/* BOTÓN DEL MENÚ INTEGRADO */}
                     <button
                         type="button"
                         className="dash-menu-btn"
-                        onClick={() => {
-                            console.log('🔵 Abriendo menú desde DashboardPage');
-                            setIsToolsOpen(true);
-                        }}
+                        onClick={() => setIsToolsOpen(true)}
                         title="Menú de Herramientas"
                     >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                        </svg>
+                        <Menu className="w-6 h-6" strokeWidth={2.5} />
                     </button>
                 </div>
             </div>
 
-            {/* Métricas y KPIs */}
-            <DashboardKPIs
+            {/* Quick Actions - SOLO DESKTOP (oculto en móvil) */}
+            <div className="hidden lg:block">
+                <QuickActions
+                    onOpenPatientForm={logic.openPatientForm}
+                    onOpenIMC={() => logic.setShowBMIModal(true)}
+                    onOpenStats={() => logic.setShowStatsModal(true)}
+                    onOpenDiet={() => logic.setShowDietModal(true)}
+                    onOpenHerramientasAvanzadas={() => logic.setShowHerramientasAvanzadas(true)}
+                />
+            </div>
+
+            {/* Resumen de Hoy - NUEVO */}
+            <TodaySummary
+                appointments={logic.filteredAppointments}
+                visitStats={logic.visitStats}
+            />
+
+            {/* KPIs Modernos - REEMPLAZADO */}
+            <DashboardKPIsModern
                 metrics={logic.metrics}
                 visitStats={logic.visitStats}
             />
 
-            {/* Sección de Citas */}
+            {/* Gráficas y Timeline - NUEVO */}
+            <div className="hidden md:grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                {/* Gráfica de Tendencias (2 columnas) */}
+                <div className="lg:col-span-2">
+                    <TrendChart appointments={logic.filteredAppointments} />
+                </div>
+
+                {/* Timeline de Próximas Citas (1 columna) */}
+                <div className="lg:col-span-1">
+                    <UpcomingTimeline
+                        appointments={logic.filteredAppointments}
+                        formatDate={logic.formatDate}
+                    />
+                </div>
+            </div>
+
+            {/* Sección de Citas - EXISTENTE */}
             <AppointmentsSection
                 appointments={logic.filteredAppointments}
                 metrics={logic.metrics}
@@ -94,7 +127,7 @@ function DashboardPage() {
                 handleCreatePatientFromAppointment={logic.handleCreatePatientFromAppointment}
             />
 
-            {/* Sección de Pacientes */}
+            {/* Sección de Pacientes - EXISTENTE */}
             <PatientsSection
                 patients={logic.patients}
                 loading={logic.patientsLoading}
@@ -111,38 +144,30 @@ function DashboardPage() {
             {/* Menú Lateral de Herramientas */}
             <ToolsSidebar
                 isOpen={isToolsOpen}
-                onClose={() => {
-                    console.log('✅ Cerrando menú lateral');
-                    setIsToolsOpen(false);
-                }}
+                onClose={() => setIsToolsOpen(false)}
                 onOpenStats={() => {
-                    console.log('📊 Abriendo Panel de Estadísticas');
                     logic.setShowStatsModal(true);
                     setIsToolsOpen(false);
                 }}
                 onOpenIMC={() => {
-                    console.log('📏 Abriendo Calculadora IMC');
                     logic.setShowBMIModal(true);
                     setIsToolsOpen(false);
                 }}
                 onOpenFoods={() => {
-                    console.log('🍎 Tabla Nutricional');
                     alert("Tabla de Alimentos: En construcción");
                     setIsToolsOpen(false);
                 }}
                 onOpenDiet={() => {
-                    console.log('📋 Abriendo Generador de Dietas');
                     logic.setShowDietModal(true);
                     setIsToolsOpen(false);
                 }}
                 onOpenHerramientasAvanzadas={() => {
-                    console.log('⚡ Abriendo Herramientas Avanzadas');
                     logic.setShowHerramientasAvanzadas(true);
                     setIsToolsOpen(false);
                 }}
             />
 
-            {/* Gestión de Todos los Modales */}
+            {/* Modales */}
             <DashboardModals
                 modals={logic.modals}
                 modalData={logic.modalData}
@@ -159,7 +184,7 @@ function DashboardPage() {
                 }}
             />
 
-            {/* Contenedor invisible para impresión */}
+            {/* Contenedor de impresión */}
             <div style={{ display: 'none' }}>
                 <div ref={logic.printRef}></div>
             </div>
