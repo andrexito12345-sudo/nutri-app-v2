@@ -110,7 +110,7 @@ function LoginPage() {
 
                     {/* Logo solo móvil */}
                     <div className="lg:hidden flex justify-center mb-4">
-                        <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                        <div className="w-12 h-12 rounded-xl bg-primary-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
                             <Activity className="text-white w-6 h-6" />
                         </div>
                     </div>
@@ -165,7 +165,7 @@ function LoginPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-3.5 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/30 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+                            className="w-full py-3.5 px-6 bg-primary-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/30 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-70"
                         >
                             {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><span>Ingresar</span> <ArrowRight className="w-4 h-4" /></>}
                         </button>
