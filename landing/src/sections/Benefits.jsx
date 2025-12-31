@@ -76,28 +76,28 @@ export default function Benefits() {
   });
 
   return (
-      <section className="py-32 bg-white relative overflow-hidden">
+      <section className="py-24 bg-white relative overflow-hidden">
 
         {/* Background */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(59,130,246,0.04),transparent_50%)]" />
 
         <div className="max-w-7xl mx-auto px-4 relative z-10">
 
-          {/* Header */}
+          {/* Header - MISMO TAMAÑO QUE TESTIMONIALS */}
           <motion.div
               ref={ref}
               initial={{ opacity: 0, y: 30 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6 }}
-              className="text-center max-w-3xl mx-auto mb-24"
+              className="text-center max-w-3xl mx-auto mb-16"
           >
-            <h2 className="text-5xl md:text-6xl font-bold mb-6 text-neutral-900 leading-tight">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-neutral-900 tracking-tight leading-tight">
               Transforma Tu Vida
-              <span className="block mt-2 bg-gradient-to-r from-primary-700 to-primary-500 bg-clip-text text-transparent">
+              <span className="block mt-1 text-primary-600">
                 En Todos los Niveles
               </span>
             </h2>
-            <p className="text-xl text-neutral-600">
+            <p className="text-xl text-neutral-500 max-w-2xl mx-auto leading-relaxed">
               Beneficios integrales respaldados por ciencia y cientos de casos de éxito
             </p>
           </motion.div>
@@ -201,7 +201,7 @@ export default function Benefits() {
             })}
           </div>
 
-          {/* Final CTA - MÁS COMPACTO Y NEGRO CON BOTONES AZULES */}
+          {/* Final CTA */}
           <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -210,7 +210,7 @@ export default function Benefits() {
           >
             <div className="relative overflow-hidden rounded-2xl bg-black">
 
-              {/* Content - MÁS COMPACTO */}
+              {/* Content */}
               <div className="relative px-6 py-10 md:px-12 md:py-12 text-center">
                 <div className="max-w-4xl mx-auto">
 
@@ -239,7 +239,7 @@ export default function Benefits() {
                     Únete a más de 500 mujeres que ya lograron sus objetivos
                   </p>
 
-                  {/* Botones - AZUL PRIMARY */}
+                  {/* Botones */}
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                     <button
                         onClick={() => document.getElementById('booking-form')?.scrollIntoView({ behavior: 'smooth' })}
