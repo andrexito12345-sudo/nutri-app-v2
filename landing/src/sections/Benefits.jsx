@@ -83,7 +83,7 @@ export default function Benefits() {
 
         <div className="max-w-7xl mx-auto px-4 relative z-10">
 
-          {/* Header - MISMO TAMAÑO QUE TESTIMONIALS */}
+          {/* Header */}
           <motion.div
               ref={ref}
               initial={{ opacity: 0, y: 30 }}
@@ -122,9 +122,9 @@ export default function Benefits() {
                       {/* Visual Side */}
                       <div className="flex-1">
                         <div className="relative">
-                          {/* Large Icon Container */}
+                          {/* Large Icon Container - CUADRADO PERO MÁS PEQUEÑO */}
                           <div className={`
-                            relative w-full aspect-square max-w-md mx-auto rounded-3xl overflow-hidden
+                            relative w-full aspect-square max-w-xs md:max-w-sm mx-auto rounded-3xl overflow-hidden
                             bg-gradient-to-br ${colors.gradient}
                             group-hover:scale-105 transition-transform duration-500
                           `}>
@@ -133,14 +133,14 @@ export default function Benefits() {
 
                             {/* Animated Rings */}
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="absolute w-32 h-32 rounded-full border-4 border-white/30 animate-ping" />
-                              <div className="absolute w-48 h-48 rounded-full border-2 border-white/20" />
-                              <div className="absolute w-64 h-64 rounded-full border border-white/10" />
+                              <div className="absolute w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white/30 animate-ping" />
+                              <div className="absolute w-36 h-36 md:w-48 md:h-48 rounded-full border-2 border-white/20" />
+                              <div className="absolute w-48 h-48 md:w-64 md:h-64 rounded-full border border-white/10" />
                             </div>
 
                             {/* Icon */}
                             <div className="relative h-full flex items-center justify-center">
-                              <Icon className="w-32 h-32 md:w-40 md:h-40 text-white drop-shadow-2xl" strokeWidth={1.5} />
+                              <Icon className="w-24 h-24 md:w-40 md:h-40 text-white drop-shadow-2xl" strokeWidth={1.5} />
                             </div>
 
                             {/* Stat Badge - SOLO DESKTOP */}
