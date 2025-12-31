@@ -199,64 +199,7 @@ export default function Benefits() {
             })}
           </div>
 
-          {/* Final CTA */}
-          <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 1 }}
-              className="mt-24"
-          >
-            <div className="relative overflow-hidden rounded-2xl bg-black">
 
-              {/* Content */}
-              <div className="relative px-6 py-10 md:px-12 md:py-12 text-center">
-                <div className="max-w-4xl mx-auto">
-
-                  {/* Avatares y Rating */}
-                  <div className="flex items-center justify-center gap-3 mb-5">
-                    <div className="flex -space-x-2">
-                      {[1,2,3,4,5].map(i => (
-                          <div key={i} className="w-10 h-10 rounded-full bg-neutral-700 border-2 border-black" />
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      {[1,2,3,4,5].map(i => (
-                          <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                      ))}
-                      <span className="ml-1 font-semibold text-white text-sm">4.9/5</span>
-                    </div>
-                  </div>
-
-                  {/* Título */}
-                  <h3 className="text-3xl md:text-4xl font-bold mb-4 text-white">
-                    ¿Lista para Cambiar Tu Vida?
-                  </h3>
-
-                  {/* Descripción */}
-                  <p className="text-lg text-neutral-300 mb-8">
-                    Únete a más de 500 mujeres que ya lograron sus objetivos
-                  </p>
-
-                  {/* Botones */}
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                    <button
-                        onClick={() => document.getElementById('booking-form')?.scrollIntoView({ behavior: 'smooth' })}
-                        className="group inline-flex items-center gap-2 px-7 py-3.5 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
-                    >
-                      Agendar Consulta Gratis
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </button>
-                    <button
-                        onClick={() => document.getElementById('testimonios')?.scrollIntoView({ behavior: 'smooth' })}
-                        className="inline-flex items-center gap-2 px-7 py-3.5 bg-neutral-800 text-white rounded-xl font-semibold hover:bg-neutral-700 transition-all duration-200"
-                    >
-                      Ver Testimonios
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
 
         </div>
       </section>

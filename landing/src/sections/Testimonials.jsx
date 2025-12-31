@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { Star, Quote, Users, TrendingUp, Award, CalendarCheck, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Star, Quote, Users, TrendingUp, Award, CalendarCheck, ChevronLeft, ChevronRight, CheckCircle2, Sparkles, ArrowRight } from 'lucide-react';
 
 const testimonials = [
   {
@@ -279,46 +279,48 @@ export default function Testimonials() {
 
           </div>
 
-          {/* NEW COMPACT DARK CONTAINER: Stats (Left) + CTA (Right) */}
+          {/* REFINED COMPACT CTA CONTAINER - DARK MODE (NEGRO ABSOLUTO) */}
           <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.6 }}
-              className="relative max-w-5xl mx-auto mt-12 px-4 md:px-0"
+              // CAMBIO: max-w-6xl (Antes max-w-5xl) para hacerlo más panorámico y delgado
+              className="relative max-w-6xl mx-auto mt-12 px-4 md:px-0"
           >
-            {/* CAMBIO DE FONDO: bg-neutral-900 (Negro/Gris Oscuro) */}
-            {/* Ajuste Móvil: rounded-2xl | Desktop: rounded-[2rem] */}
-            <div className="bg-neutral-900 rounded-2xl md:rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-neutral-800 overflow-hidden">
-              <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-neutral-800">
+            <div className="relative rounded-2xl md:rounded-3xl overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] bg-black border border-neutral-800">
 
-                {/* LEFT SIDE: STATS GRID (HIDDEN ON MOBILE, VISIBLE DESKTOP) */}
-                <div className="hidden md:grid grid-cols-2 bg-neutral-800/30">
+              <div className="absolute inset-0 bg-black" />
+
+              {/* CAMBIO: Layout asimétrico 2:1 para Stats:CTA */}
+              <div className="grid lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-neutral-800 relative z-10">
+
+                {/* LEFT SIDE: STATS IN ONE SINGLE ROW (col-span-2) */}
+                <div className="hidden md:grid lg:col-span-2 grid-cols-4 bg-transparent">
                   {stats.map((stat, index) => {
                     const Icon = stat.icon;
                     const suffix = stat.value.includes('%') ? '%' :
                         stat.value.includes('+') ? '+' :
                             stat.value.includes('/') ? '/5' : '';
 
-                    const isLastRow = index >= 2;
-                    const isLastCol = index % 2 !== 0;
+                    // Solo borde derecho para los primeros 3 (ahora que están en fila de 4)
+                    const showBorderRight = index < 3;
 
                     return (
                         <div
                             key={index}
+                            // Padding ajustado para reducir altura
                             className={`
-                          p-6 flex flex-col items-center justify-center text-center hover:bg-neutral-800 transition-colors duration-300
-                          ${!isLastRow ? 'border-b border-neutral-800' : ''}
-                          ${!isLastCol ? 'border-r border-neutral-800' : ''}
+                          p-6 flex flex-col items-center justify-center text-center hover:bg-neutral-900 transition-all duration-300 group/stat
+                          ${showBorderRight ? 'lg:border-r border-neutral-800' : ''}
                         `}
                         >
-                          <div className="w-10 h-10 rounded-xl bg-neutral-800 border border-neutral-700 shadow-inner flex items-center justify-center mb-3 text-primary-400">
-                            <Icon className="w-5 h-5" strokeWidth={2} />
+                          <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center mb-2 text-white group-hover/stat:scale-110 transition-transform duration-300">
+                            <Icon className="w-5 h-5" strokeWidth={2.5} />
                           </div>
-                          {/* Textos cambiados a blanco y gris claro */}
-                          <div className="text-2xl lg:text-3xl font-bold text-white mb-1 tracking-tight">
+                          <div className="text-2xl font-black text-white mb-0.5 tracking-tight">
                             {hasAnimated && <AnimatedNumber value={stat.numericValue} suffix={suffix} delay={0.8 + (index * 0.1)} />}
                           </div>
-                          <div className="text-[10px] lg:text-xs font-bold text-neutral-400 uppercase tracking-wider">
+                          <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider leading-tight">
                             {stat.label}
                           </div>
                         </div>
@@ -326,42 +328,57 @@ export default function Testimonials() {
                   })}
                 </div>
 
-                {/* RIGHT SIDE: CTA (VISIBLE ALWAYS) - Ahora con fondo oscuro */}
-                {/* Ajuste Móvil: p-8 | Desktop: p-12 */}
-                <div className="p-8 md:p-10 lg:p-12 flex flex-col justify-center items-center text-center bg-neutral-900 relative">
-                  {/* Subtle Background Glow - Dark Theme */}
-                  <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-transparent via-transparent to-primary-900/20 opacity-40" />
+                {/* RIGHT SIDE: CTA (col-span-1) */}
+                <div className="lg:col-span-1 px-6 py-8 flex flex-col justify-center items-center text-center relative bg-transparent">
 
-                  <div className="relative z-10">
-                    <h3 className="text-2xl md:text-3xl font-bold text-white mb-6 leading-tight">
-                      ¿Lista para ser la próxima <span className="text-primary-400">historia de éxito?</span>
+                  <div className="hidden md:block absolute top-4 right-4">
+                    <Sparkles className="w-4 h-4 text-neutral-700 animate-pulse" />
+                  </div>
+
+                  <div className="relative z-10 w-full max-w-sm mx-auto space-y-5">
+
+                    {/* Heading simplificado para ahorrar espacio vertical */}
+                    <h3 className="text-xl md:text-2xl font-black text-white leading-tight">
+                      ¿Lista para tu
+                      <span className="inline-block ml-1.5 text-white border-b-2 border-primary-600">
+                        Transformación?
+                      </span>
                     </h3>
 
+                    {/* COMPACT CTA BUTTON - AZUL */}
                     <button
                         onClick={() => document.getElementById('booking-form')?.scrollIntoView({ behavior: 'smooth' })}
-                        // Botón Blanco para máximo contraste sobre fondo negro
-                        // Ajuste Móvil: padding px-6 py-3.5
-                        className="group relative inline-flex items-center justify-center gap-2 md:gap-3 px-6 py-3.5 md:px-8 md:py-4 bg-white text-neutral-900 rounded-xl font-bold text-sm md:text-base shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:bg-neutral-100 hover:scale-[1.02] transition-all duration-300 w-full sm:w-auto"
+                        className="group relative w-full overflow-hidden rounded-xl bg-primary-600 hover:bg-primary-700 shadow-[0_8px_30px_rgba(37,99,235,0.4)] hover:shadow-[0_10px_35px_rgba(37,99,235,0.5)] hover:scale-[1.02] transition-all duration-300"
                     >
-                      <CalendarCheck className="w-4 h-4 md:w-5 md:h-5 text-primary-600" />
-                      <span>Agendar Primera Consulta</span>
+                      <div className="relative px-5 py-3.5 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 w-full">
+                          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-white text-primary-600 flex-shrink-0 group-hover:scale-110 transition-transform duration-300 shadow-sm">
+                            <CalendarCheck className="w-4 h-4" strokeWidth={2.5} />
+                          </div>
 
-                      {/* GRATIS REINTEGRADO Y RESALTADO */}
-                      <span className="relative flex items-center justify-center ml-1">
-                        <span className="absolute inset-0 bg-emerald-400 rounded-full blur opacity-40 animate-pulse"></span>
-                        <span className="relative px-1.5 py-0.5 md:px-2 md:py-0.5 bg-neutral-900 text-emerald-400 rounded-md text-[10px] md:text-xs font-black uppercase tracking-wider border border-emerald-500/30">
-                          Gratis
-                        </span>
-                      </span>
+                          <div className="flex flex-row items-center gap-2 text-left flex-grow">
+                            <span className="text-sm md:text-base font-black text-white leading-none">
+                              Agendar Consulta
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded bg-white text-primary-700 text-[10px] font-bold uppercase tracking-wide leading-none shadow-sm">
+                              Gratis
+                            </span>
+                          </div>
+                        </div>
+
+                        <ArrowRight className="w-4 h-4 text-white flex-shrink-0 group-hover:translate-x-1 transition-transform duration-300" />
+                      </div>
                     </button>
 
-                    <p className="mt-5 text-xs text-neutral-400 font-medium flex items-center justify-center gap-2">
-                      <span className="relative flex h-2 w-2">
+                    {/* Compact Urgency */}
+                    <p className="text-[10px] text-neutral-500 font-medium flex items-center justify-center gap-2">
+                       <span className="relative flex h-2 w-2 flex-shrink-0">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                       </span>
                       Cupos limitados esta semana
                     </p>
+
                   </div>
                 </div>
 
