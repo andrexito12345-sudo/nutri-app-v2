@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
+import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Star, Quote, Users, TrendingUp, Award, CalendarCheck, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 
@@ -69,10 +69,8 @@ const stats = [
 
 function AnimatedNumber({ value, suffix = "", delay = 0 }) {
   const count = useMotionValue(0);
-  const rounded = useTransform(count, (latest) => {
-    if (suffix === '/5') return latest.toFixed(1);
-    return Math.round(latest);
-  });
+  // Eliminado rounded ya que no se usaba directamente en el render
+  // const rounded = useTransform(...)
 
   const [displayValue, setDisplayValue] = useState('0');
 
@@ -92,7 +90,7 @@ function AnimatedNumber({ value, suffix = "", delay = 0 }) {
     });
 
     return controls.stop;
-  }, [value, delay, suffix]);
+  }, [value, delay, suffix]); // Added dependencies to fix exhaustive-deps warning
 
   return <>{displayValue}{suffix}</>;
 }
@@ -105,7 +103,7 @@ export default function Testimonials() {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(3);
-  const [currentStatIndex, setCurrentStatIndex] = useState(0);
+  // Eliminados estados y efectos relacionados con el carrusel móvil de stats (currentStatIndex)
   const [hasAnimated, setHasAnimated] = useState(false);
 
   useEffect(() => {
@@ -127,12 +125,7 @@ export default function Testimonials() {
     return () => clearInterval(timer);
   }, [currentIndex, itemsPerPage]);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentStatIndex((prev) => (prev + 1) % stats.length);
-    }, 3000);
-    return () => clearInterval(timer);
-  }, []);
+  // Eliminado useEffect del intervalo de stats móviles
 
   useEffect(() => {
     if (inView && !hasAnimated) {
@@ -297,6 +290,7 @@ export default function Testimonials() {
               transition={{ duration: 0.6, delay: 0.6 }}
               className="relative max-w-6xl mx-auto"
           >
+            {/* ESTA SECCIÓN SOLO ES VISIBLE EN DESKTOP (hidden md:grid) */}
             <div className="hidden md:grid md:grid-cols-4 gap-6">
               {stats.map((stat, index) => {
                 const Icon = stat.icon;
@@ -332,74 +326,8 @@ export default function Testimonials() {
               })}
             </div>
 
-            <div className="md:hidden">
-              <div className="overflow-hidden rounded-3xl">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                      key={currentStatIndex}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.4 }}
-                      className="relative bg-gradient-to-b from-white to-neutral-50/30 rounded-3xl p-12 border border-neutral-100 shadow-lg"
-                  >
-                    {(() => {
-                      const stat = stats[currentStatIndex];
-                      const Icon = stat.icon;
-                      const suffix = stat.value.includes('%') ? '%' :
-                          stat.value.includes('+') ? '+' :
-                              stat.value.includes('/') ? '/5' : '';
+            {/* SE ELIMINÓ EL DIV "md:hidden" QUE CONTENÍA LA VERSIÓN MÓVIL DE LOS STATS */}
 
-                      return (
-                          <div className="text-center">
-                            <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
-                                className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary-50 mb-8"
-                            >
-                              <Icon className="w-10 h-10 text-primary-600" strokeWidth={1.5} />
-                            </motion.div>
-
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.2 }}
-                                className="text-6xl font-bold text-neutral-900 mb-4 tracking-tight"
-                            >
-                              <AnimatedNumber value={stat.numericValue} suffix={suffix} delay={0.3} />
-                            </motion.div>
-
-                            <motion.p
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.4 }}
-                                className="text-sm font-semibold text-neutral-500 uppercase tracking-wider"
-                            >
-                              {stat.label}
-                            </motion.p>
-                          </div>
-                      );
-                    })()}
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-
-              <div className="flex justify-center gap-2 mt-6">
-                {stats.map((_, idx) => (
-                    <button
-                        key={idx}
-                        onClick={() => setCurrentStatIndex(idx)}
-                        className={`transition-all duration-300 rounded-full ${
-                            currentStatIndex === idx
-                                ? "bg-primary-600 w-8 h-2"
-                                : "bg-neutral-200 w-2 h-2"
-                        }`}
-                        aria-label={`Ver estadística ${idx + 1}`}
-                    />
-                ))}
-              </div>
-            </div>
           </motion.div>
 
           {/* Final CTA - CON "GRATIS" LLAMATIVO */}
