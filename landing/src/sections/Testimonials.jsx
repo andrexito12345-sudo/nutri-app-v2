@@ -69,8 +69,6 @@ const stats = [
 
 function AnimatedNumber({ value, suffix = "", delay = 0 }) {
   const count = useMotionValue(0);
-  // Eliminado rounded ya que no se usaba directamente en el render
-  // const rounded = useTransform(...)
 
   const [displayValue, setDisplayValue] = useState('0');
 
@@ -90,7 +88,7 @@ function AnimatedNumber({ value, suffix = "", delay = 0 }) {
     });
 
     return controls.stop;
-  }, [value, delay, suffix]); // Added dependencies to fix exhaustive-deps warning
+  }, [value, delay, suffix]);
 
   return <>{displayValue}{suffix}</>;
 }
@@ -103,7 +101,6 @@ export default function Testimonials() {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(3);
-  // Eliminados estados y efectos relacionados con el carrusel móvil de stats (currentStatIndex)
   const [hasAnimated, setHasAnimated] = useState(false);
 
   useEffect(() => {
@@ -124,8 +121,6 @@ export default function Testimonials() {
     }, 6000);
     return () => clearInterval(timer);
   }, [currentIndex, itemsPerPage]);
-
-  // Eliminado useEffect del intervalo de stats móviles
 
   useEffect(() => {
     if (inView && !hasAnimated) {
@@ -284,75 +279,94 @@ export default function Testimonials() {
 
           </div>
 
+          {/* NEW COMPACT DARK CONTAINER: Stats (Left) + CTA (Right) */}
           <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.6 }}
-              className="relative max-w-6xl mx-auto"
+              className="relative max-w-5xl mx-auto mt-12 px-4 md:px-0"
           >
-            {/* ESTA SECCIÓN SOLO ES VISIBLE EN DESKTOP (hidden md:grid) */}
-            <div className="hidden md:grid md:grid-cols-4 gap-6">
-              {stats.map((stat, index) => {
-                const Icon = stat.icon;
-                const suffix = stat.value.includes('%') ? '%' :
-                    stat.value.includes('+') ? '+' :
-                        stat.value.includes('/') ? '/5' : '';
+            {/* CAMBIO DE FONDO: bg-neutral-900 (Negro/Gris Oscuro) */}
+            {/* Ajuste Móvil: rounded-2xl | Desktop: rounded-[2rem] */}
+            <div className="bg-neutral-900 rounded-2xl md:rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-neutral-800 overflow-hidden">
+              <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-neutral-800">
 
-                return (
-                    <motion.div
-                        key={index}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={inView ? { opacity: 1, y: 0 } : {}}
-                        transition={{ duration: 0.5, delay: 0.7 + (index * 0.1) }}
-                        className="relative bg-gradient-to-b from-white to-neutral-50/50 rounded-3xl p-8 border border-neutral-100/50 shadow-sm hover:shadow-lg transition-all duration-300 group"
+                {/* LEFT SIDE: STATS GRID (HIDDEN ON MOBILE, VISIBLE DESKTOP) */}
+                <div className="hidden md:grid grid-cols-2 bg-neutral-800/30">
+                  {stats.map((stat, index) => {
+                    const Icon = stat.icon;
+                    const suffix = stat.value.includes('%') ? '%' :
+                        stat.value.includes('+') ? '+' :
+                            stat.value.includes('/') ? '/5' : '';
+
+                    const isLastRow = index >= 2;
+                    const isLastCol = index % 2 !== 0;
+
+                    return (
+                        <div
+                            key={index}
+                            className={`
+                          p-6 flex flex-col items-center justify-center text-center hover:bg-neutral-800 transition-colors duration-300
+                          ${!isLastRow ? 'border-b border-neutral-800' : ''}
+                          ${!isLastCol ? 'border-r border-neutral-800' : ''}
+                        `}
+                        >
+                          <div className="w-10 h-10 rounded-xl bg-neutral-800 border border-neutral-700 shadow-inner flex items-center justify-center mb-3 text-primary-400">
+                            <Icon className="w-5 h-5" strokeWidth={2} />
+                          </div>
+                          {/* Textos cambiados a blanco y gris claro */}
+                          <div className="text-2xl lg:text-3xl font-bold text-white mb-1 tracking-tight">
+                            {hasAnimated && <AnimatedNumber value={stat.numericValue} suffix={suffix} delay={0.8 + (index * 0.1)} />}
+                          </div>
+                          <div className="text-[10px] lg:text-xs font-bold text-neutral-400 uppercase tracking-wider">
+                            {stat.label}
+                          </div>
+                        </div>
+                    );
+                  })}
+                </div>
+
+                {/* RIGHT SIDE: CTA (VISIBLE ALWAYS) - Ahora con fondo oscuro */}
+                {/* Ajuste Móvil: p-8 | Desktop: p-12 */}
+                <div className="p-8 md:p-10 lg:p-12 flex flex-col justify-center items-center text-center bg-neutral-900 relative">
+                  {/* Subtle Background Glow - Dark Theme */}
+                  <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-transparent via-transparent to-primary-900/20 opacity-40" />
+
+                  <div className="relative z-10">
+                    <h3 className="text-2xl md:text-3xl font-bold text-white mb-6 leading-tight">
+                      ¿Lista para ser la próxima <span className="text-primary-400">historia de éxito?</span>
+                    </h3>
+
+                    <button
+                        onClick={() => document.getElementById('booking-form')?.scrollIntoView({ behavior: 'smooth' })}
+                        // Botón Blanco para máximo contraste sobre fondo negro
+                        // Ajuste Móvil: padding px-6 py-3.5
+                        className="group relative inline-flex items-center justify-center gap-2 md:gap-3 px-6 py-3.5 md:px-8 md:py-4 bg-white text-neutral-900 rounded-xl font-bold text-sm md:text-base shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:bg-neutral-100 hover:scale-[1.02] transition-all duration-300 w-full sm:w-auto"
                     >
-                      <div className="flex justify-center mb-6">
-                        <div className="w-16 h-16 rounded-2xl bg-primary-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                          <Icon className="w-8 h-8 text-primary-600" strokeWidth={1.5} />
-                        </div>
-                      </div>
+                      <CalendarCheck className="w-4 h-4 md:w-5 md:h-5 text-primary-600" />
+                      <span>Agendar Primera Consulta</span>
 
-                      <div className="text-center mb-3">
-                        <div className="text-5xl font-bold text-neutral-900 tracking-tight">
-                          {hasAnimated && <AnimatedNumber value={stat.numericValue} suffix={suffix} delay={0.8 + (index * 0.15)} />}
-                        </div>
-                      </div>
+                      {/* GRATIS REINTEGRADO Y RESALTADO */}
+                      <span className="relative flex items-center justify-center ml-1">
+                        <span className="absolute inset-0 bg-emerald-400 rounded-full blur opacity-40 animate-pulse"></span>
+                        <span className="relative px-1.5 py-0.5 md:px-2 md:py-0.5 bg-neutral-900 text-emerald-400 rounded-md text-[10px] md:text-xs font-black uppercase tracking-wider border border-emerald-500/30">
+                          Gratis
+                        </span>
+                      </span>
+                    </button>
 
-                      <p className="text-center text-sm font-semibold text-neutral-500 uppercase tracking-wider">
-                        {stat.label}
-                      </p>
-                    </motion.div>
-                );
-              })}
+                    <p className="mt-5 text-xs text-neutral-400 font-medium flex items-center justify-center gap-2">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      </span>
+                      Cupos limitados esta semana
+                    </p>
+                  </div>
+                </div>
+
+              </div>
             </div>
-
-            {/* SE ELIMINÓ EL DIV "md:hidden" QUE CONTENÍA LA VERSIÓN MÓVIL DE LOS STATS */}
-
-          </motion.div>
-
-          {/* Final CTA - CON "GRATIS" LLAMATIVO */}
-          <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.8 }}
-              className="text-center mt-20"
-          >
-            <p className="text-2xl font-semibold text-neutral-900 mb-8">
-              ¿Lista para ser la próxima historia de éxito?
-            </p>
-            <button
-                onClick={() => document.getElementById('booking-form')?.scrollIntoView({ behavior: 'smooth' })}
-                className="group relative inline-flex items-center gap-3 px-10 py-5 bg-neutral-900 text-white rounded-xl font-bold text-lg shadow-xl shadow-neutral-900/20 hover:bg-neutral-800 hover:scale-105 transition-all duration-300"
-            >
-              <CalendarCheck className="w-5 h-5 text-primary-400" />
-              Agendar Mi Primera Consulta{' '}
-              <span className="relative inline-block ml-1">
-                <span className="relative z-10 px-3 py-1 bg-gradient-to-r from-emerald-400 to-teal-400 text-neutral-900 rounded-full text-base font-black uppercase tracking-wide animate-pulse">
-                  Gratis
-                </span>
-                <span className="absolute inset-0 bg-emerald-400 rounded-full blur-md animate-pulse opacity-50"></span>
-              </span>
-            </button>
           </motion.div>
 
         </div>
