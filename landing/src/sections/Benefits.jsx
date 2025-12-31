@@ -7,73 +7,66 @@ const benefits = [
   {
     icon: Heart,
     title: "Relación Saludable con la Comida",
-    description: "Sin prohibiciones ni culpa. Aprende a disfrutar comiendo mientras alcanzas tus objetivos.",
-    color: "text-rose-600",
-    bg: "bg-primary-100",
-    border: "group-hover:border-rose-200"
+    description: "Sin prohibiciones ni culpa. Aprende a disfrutar comiendo mientras alcanzas tus objetivos. Desarrolla una relación positiva con la comida que durará toda la vida.",
+    stat: "98%",
+    statLabel: "Sin culpa al comer",
+    color: "rose",
+    position: "left"
   },
   {
     icon: Zap,
     title: "Más Energía y Vitalidad",
-    description: "Despierta con ganas. Nutrición real que te impulsa durante todo el día sin bajones.",
-    color: "text-amber-600",
-    bg: "bg-primary-100",
-    border: "group-hover:border-amber-200"
+    description: "Despierta con ganas cada mañana. Nutrición real que te impulsa durante todo el día sin bajones de energía. Optimiza tu metabolismo y recupera tu vitalidad natural.",
+    stat: "3x",
+    statLabel: "Más energía",
+    color: "amber",
+    position: "right"
   },
   {
     icon: TrendingUp,
     title: "Resultados Sostenibles",
-    description: "Pierde peso de forma saludable y mantén los resultados a largo plazo. Adiós al efecto rebote.",
-    // Restaurado al color Primary de tu marca
-    color: "text-primary-600",
-    bg: "bg-primary-100",
-    border: "group-hover:border-primary-200"
+    description: "Pierde peso de forma saludable y mantén los resultados a largo plazo. Adiós al efecto rebote para siempre. Promedio de -8kg en 3 meses con cambios permanentes.",
+    stat: "-8kg",
+    statLabel: "Promedio en 3 meses",
+    color: "blue",
+    position: "left"
   },
   {
     icon: Smile,
     title: "Mejora Tu Autoestima",
-    description: "Siéntete segura y confiada. El cambio físico es solo el comienzo de tu nueva versión.",
-    color: "text-violet-600",
-    bg: "bg-primary-100",
-    border: "group-hover:border-violet-200"
+    description: "Siéntete segura y confiada cada día. El cambio físico es solo el comienzo de tu nueva versión. Desarrolla seguridad y confianza que transformarán todas las áreas de tu vida.",
+    stat: "95%",
+    statLabel: "Mayor confianza",
+    color: "violet",
+    position: "right"
   },
   {
     icon: Shield,
     title: "Prevención de Enfermedades",
-    description: "Reduce riesgos de diabetes, hipertensión y problemas cardiovasculares con ciencia.",
-    color: "text-blue-600",
-    bg: "bg-blue-100",
-    border: "group-hover:border-blue-200"
+    description: "Reduce riesgos de diabetes, hipertensión y problemas cardiovasculares con ciencia respaldada. Prevención activa basada en protocolos médicos validados internacionalmente.",
+    stat: "-40%",
+    statLabel: "Reducción de riesgo",
+    color: "indigo",
+    position: "left"
   },
   {
     icon: Check,
     title: "Plan 100% Personalizado",
-    description: "Adaptado a tu estilo de vida, gustos, presupuesto y objetivos únicos. Hecho para ti.",
-    // Usamos el color Accent (Teal) o Green para variedad, aquí mantengo índigo/verde según preferencia,
-    // pero usaré Accent si quieres que coincida con tu paleta secundaria. Lo dejaré en Emerald/Green por semántica de "Check".
-    color: "text-emerald-600",
-    bg: "bg-primary-100",
-    border: "group-hover:border-emerald-200"
+    description: "Adaptado exclusivamente a tu estilo de vida, gustos, presupuesto y objetivos únicos. No hay dos planes iguales. El tuyo está diseñado específicamente para ti y se ajusta semana a semana.",
+    stat: "100%",
+    statLabel: "Personalizado para ti",
+    color: "emerald",
+    position: "right"
   }
 ];
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: "easeOut" }
-  }
+const colorMap = {
+  rose: { gradient: "from-rose-500 via-pink-500 to-rose-600", bg: "bg-rose-500", light: "bg-rose-50", text: "text-rose-600", ring: "ring-rose-500/20" },
+  amber: { gradient: "from-amber-500 via-orange-500 to-amber-600", bg: "bg-amber-500", light: "bg-amber-50", text: "text-amber-600", ring: "ring-amber-500/20" },
+  blue: { gradient: "from-blue-500 via-primary-500 to-blue-600", bg: "bg-blue-500", light: "bg-blue-50", text: "text-blue-600", ring: "ring-blue-500/20" },
+  violet: { gradient: "from-violet-500 via-purple-500 to-violet-600", bg: "bg-violet-500", light: "bg-violet-50", text: "text-violet-600", ring: "ring-violet-500/20" },
+  indigo: { gradient: "from-indigo-500 via-blue-500 to-indigo-600", bg: "bg-indigo-500", light: "bg-indigo-50", text: "text-indigo-600", ring: "ring-indigo-500/20" },
+  emerald: { gradient: "from-emerald-500 via-teal-500 to-emerald-600", bg: "bg-emerald-500", light: "bg-emerald-50", text: "text-emerald-600", ring: "ring-emerald-500/20" }
 };
 
 export default function Benefits() {
@@ -83,30 +76,12 @@ export default function Benefits() {
   });
 
   return (
-      <section className="py-24 bg-white relative overflow-hidden">
+      <section className="py-32 bg-white relative overflow-hidden">
 
-        {/* --- SVG Background Pattern (Subtle Grid) --- */}
-        <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.4]">
-          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="small-grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e5e7eb" strokeWidth="0.5" />
-              </pattern>
-              <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
-                <rect width="100" height="100" fill="url(#small-grid)" />
-                <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#d1d5db" strokeWidth="1" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-          </svg>
-        </div>
+        {/* Background */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(59,130,246,0.04),transparent_50%)]" />
 
-        {/* Decorative Blob - Usando Primary */}
-        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary-200 to-transparent" />
-        <div className="absolute right-0 top-1/4 w-[500px] h-[500px] bg-primary-50/50 rounded-full blur-3xl pointer-events-none" />
-
-        {/* Contenedor ajustado a max-w-6xl para equilibrio perfecto */}
-        <div className="max-w-6xl mx-auto px-4 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 relative z-10">
 
           {/* Header */}
           <motion.div
@@ -114,99 +89,173 @@ export default function Benefits() {
               initial={{ opacity: 0, y: 30 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6 }}
-              className="text-center max-w-3xl mx-auto mb-20"
+              className="text-center max-w-3xl mx-auto mb-24"
           >
-          <span className="inline-block px-4 py-1.5 bg-primary-50 text-primary-700 rounded-full font-bold text-xs tracking-wider mb-6 border border-primary-100 shadow-sm">
-            RESULTADOS REALES
-          </span>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-neutral-900 tracking-tight leading-tight">
-              Lo Que Lograrás con
-              {/* CORREGIDO: Usando text-primary-600 estricto */}
-              <span className="block mt-1 text-primary-600">
-              Nuestro Acompañamiento
-            </span>
+            <h2 className="text-5xl md:text-6xl font-bold mb-6 text-neutral-900 leading-tight">
+              Transforma Tu Vida
+              <span className="block mt-2 bg-gradient-to-r from-primary-600 to-violet-600 bg-clip-text text-transparent">
+                En Todos los Niveles
+              </span>
             </h2>
-            <p className="text-xl text-neutral-500 max-w-2xl mx-auto leading-relaxed">
-              Un enfoque integral que transforma no solo tu cuerpo, sino tu mente y tu bienestar general para siempre.
+            <p className="text-xl text-neutral-600">
+              Beneficios integrales respaldados por ciencia y cientos de casos de éxito
             </p>
           </motion.div>
 
-          {/* Grid de Beneficios */}
-          <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate={inView ? "visible" : "hidden"}
-              className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
-          >
+          {/* SPLIT SCREEN BENEFITS */}
+          <div className="space-y-24">
             {benefits.map((benefit, index) => {
               const Icon = benefit.icon;
+              const colors = colorMap[benefit.color];
+              const isLeft = benefit.position === "left";
+
               return (
                   <motion.div
                       key={index}
-                      variants={itemVariants}
-                      className={`
-                  group bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 
-                  border border-neutral-100 hover:-translate-y-1 ${benefit.border}
-                `}
+                      initial={{ opacity: 0, y: 60 }}
+                      animate={inView ? { opacity: 1, y: 0 } : {}}
+                      transition={{ duration: 0.7, delay: index * 0.15 }}
+                      className="group"
                   >
-                    <div className={`w-14 h-14 rounded-2xl ${benefit.bg} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                      <Icon className={`w-7 h-7 ${benefit.color}`} strokeWidth={2} />
-                    </div>
+                    <div className={`flex flex-col ${isLeft ? 'lg:flex-row' : 'lg:flex-row-reverse'} gap-12 items-center`}>
 
-                    {/* Título hover cambia a primary-700 */}
-                    <h3 className="text-xl font-bold mb-3 text-neutral-900 group-hover:text-primary-700 transition-colors">
-                      {benefit.title}
-                    </h3>
-                    <p className="text-neutral-500 leading-relaxed text-base">
-                      {benefit.description}
-                    </p>
+                      {/* Visual Side */}
+                      <div className="flex-1">
+                        <div className="relative">
+                          {/* Large Icon Container */}
+                          <div className={`
+                            relative w-full aspect-square max-w-md mx-auto rounded-3xl overflow-hidden
+                            bg-gradient-to-br ${colors.gradient}
+                            group-hover:scale-105 transition-transform duration-500
+                          `}>
+                            {/* Pattern Overlay */}
+                            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle,white_2px,transparent_2px)] bg-[size:24px_24px]" />
+
+                            {/* Animated Rings */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="absolute w-32 h-32 rounded-full border-4 border-white/30 animate-ping" />
+                              <div className="absolute w-48 h-48 rounded-full border-2 border-white/20" />
+                              <div className="absolute w-64 h-64 rounded-full border border-white/10" />
+                            </div>
+
+                            {/* Icon */}
+                            <div className="relative h-full flex items-center justify-center">
+                              <Icon className="w-32 h-32 md:w-40 md:h-40 text-white drop-shadow-2xl" strokeWidth={1.5} />
+                            </div>
+
+                            {/* Stat Badge - SOLO DESKTOP */}
+                            <div className="hidden md:block absolute bottom-8 left-1/2 -translate-x-1/2">
+                              <div className="bg-white/95 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-2xl border border-white/50">
+                                <div className="text-center">
+                                  <div className={`text-4xl font-bold bg-gradient-to-r ${colors.gradient} bg-clip-text text-transparent mb-1`}>
+                                    {benefit.stat}
+                                  </div>
+                                  <div className="text-xs text-neutral-600 font-semibold uppercase tracking-wide">
+                                    {benefit.statLabel}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Content Side */}
+                      <div className="flex-1">
+                        <div className={`max-w-xl ${isLeft ? 'lg:pl-8' : 'lg:pr-8'}`}>
+                          {/* Step Number */}
+                          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${colors.light} mb-6`}>
+                            <span className={`text-sm font-bold ${colors.text}`}>
+                              Beneficio {String(index + 1).padStart(2, '0')}
+                            </span>
+                          </div>
+
+                          {/* Title */}
+                          <h3 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-6 leading-tight">
+                            {benefit.title}
+                          </h3>
+
+                          {/* Description */}
+                          <p className="text-lg text-neutral-600 leading-relaxed mb-8">
+                            {benefit.description}
+                          </p>
+
+                          {/* CTA Button */}
+                          <button
+                              onClick={() => document.getElementById('booking-form')?.scrollIntoView({ behavior: 'smooth' })}
+                              className={`
+                                group/btn inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold
+                                bg-gradient-to-r ${colors.gradient} text-white
+                                hover:shadow-xl hover:scale-105 transition-all duration-200
+                              `}
+                          >
+                            Comenzar Ahora
+                            <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                          </button>
+                        </div>
+                      </div>
+
+                    </div>
                   </motion.div>
               );
             })}
-          </motion.div>
+          </div>
 
-          {/* Success Cases CTA - Restaurado a colores Primary */}
+          {/* Final CTA - MÁS COMPACTO Y NEGRO CON BOTONES AZULES */}
           <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.8 }}
-              className="mt-20"
+              transition={{ duration: 0.6, delay: 1 }}
+              className="mt-24"
           >
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-2xl">
-              {/* Decorative Background Elements (adaptados para fondo azul) */}
-              <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-64 h-64 bg-white rounded-full blur-3xl opacity-20 pointer-events-none"></div>
-              <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/3 w-64 h-64 bg-primary-900 rounded-full blur-3xl opacity-40 pointer-events-none"></div>
+            <div className="relative overflow-hidden rounded-2xl bg-black">
 
-              <div className="relative z-10 px-10 py-10 md:px-12 md:py-12 flex flex-col md:flex-row items-center justify-between gap-8">
+              {/* Content - MÁS COMPACTO */}
+              <div className="relative px-6 py-10 md:px-12 md:py-12 text-center">
+                <div className="max-w-4xl mx-auto">
 
-                <div className="text-center md:text-left flex-1">
-                  <div className="flex items-center justify-center md:justify-start gap-2 mb-3">
+                  {/* Avatares y Rating */}
+                  <div className="flex items-center justify-center gap-3 mb-5">
                     <div className="flex -space-x-2">
-                      {[1,2,3].map(i => (
-                          <div key={i} className="w-8 h-8 rounded-full border-2 border-primary-600 bg-primary-500"></div>
+                      {[1,2,3,4,5].map(i => (
+                          <div key={i} className="w-10 h-10 rounded-full bg-neutral-700 border-2 border-black" />
                       ))}
                     </div>
-                    <div className="flex items-center gap-1 ml-2">
-                      <Star className="w-4 h-4 text-yellow-300 fill-yellow-300" />
-                      <span className="text-sm font-semibold text-primary-100">4.9/5</span>
+                    <div className="flex items-center gap-1.5">
+                      {[1,2,3,4,5].map(i => (
+                          <Star key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                      ))}
+                      <span className="ml-1 font-semibold text-white text-sm">4.9/5</span>
                     </div>
                   </div>
-                  <h3 className="text-2xl md:text-3xl font-bold mb-2 text-white">
-                    Casos de Éxito Reales
+
+                  {/* Título */}
+                  <h3 className="text-3xl md:text-4xl font-bold mb-4 text-white">
+                    ¿Lista para Cambiar Tu Vida?
                   </h3>
-                  <p className="text-primary-100 text-lg">
-                    Más de 500 personas ya han transformado sus vidas.
+
+                  {/* Descripción */}
+                  <p className="text-lg text-neutral-300 mb-8">
+                    Únete a más de 500 mujeres que ya lograron sus objetivos
                   </p>
+
+                  {/* Botones - AZUL PRIMARY */}
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <button
+                        onClick={() => document.getElementById('booking-form')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="group inline-flex items-center gap-2 px-7 py-3.5 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
+                    >
+                      Agendar Consulta Gratis
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                    <button
+                        onClick={() => document.getElementById('testimonios')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="inline-flex items-center gap-2 px-7 py-3.5 bg-neutral-800 text-white rounded-xl font-semibold hover:bg-neutral-700 transition-all duration-200"
+                    >
+                      Ver Testimonios
+                    </button>
+                  </div>
                 </div>
-
-                <button
-                    onClick={() => document.getElementById('testimonios')?.scrollIntoView({ behavior: 'smooth' })}
-                    className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 font-semibold text-primary-700 transition-all duration-200 bg-white rounded-xl hover:bg-primary-50 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white focus:ring-offset-primary-700 text-base shadow-lg"
-                >
-                  Ver Testimonios
-                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                </button>
-
               </div>
             </div>
           </motion.div>
