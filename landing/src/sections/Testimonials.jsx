@@ -1,97 +1,90 @@
 import React, { useState, useEffect } from 'react';
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { Star, Quote, Users, TrendingUp, Award, CalendarCheck, ChevronLeft, ChevronRight, CheckCircle2, Sparkles, ArrowRight } from 'lucide-react';
+import { Star, CalendarCheck, CheckCircle2, Sparkles, ArrowRight, Heart } from 'lucide-react';
 
 const testimonials = [
   {
     name: "María González",
     age: 34,
-    result: "Perdí 12kg en 4 meses",
-    image: "👩",
+    result: "Perdí 12kg",
+    initials: "MG",
     rating: 5,
-    text: "Después de años probando dietas que no funcionaban, finalmente encontré un enfoque que se adapta a mi vida. Daniela no solo me ayudó a perder peso, sino que cambió completamente mi relación con la comida.",
-    transformation: "De talla 14 a talla 8"
+    text: "Después de años probando dietas que no funcionaban, finalmente encontré un enfoque que se adapta a mi vida.",
+    gradient: "from-rose-500 to-pink-600",
+    row: 1
   },
   {
     name: "Carmen Ruiz",
     age: 45,
-    result: "Controlé mi diabetes",
-    image: "👩‍🦰",
+    result: "Controlé diabetes",
+    initials: "CR",
     rating: 5,
-    text: "Mi médico estaba preocupado por mis niveles de glucosa. En solo 3 meses de seguir el plan de Daniela, mis análisis mejoraron significativamente. Me siento con más energía.",
-    transformation: "Hemoglobina de 8.2 a 6.1"
+    text: "En solo 3 meses de seguir el plan de Daniela, mis análisis mejoraron significativamente.",
+    gradient: "from-blue-500 to-cyan-600",
+    row: 1
   },
   {
     name: "Laura Mendoza",
     age: 28,
-    result: "Recuperé mi energía",
-    image: "👱‍♀️",
+    result: "Más energía",
+    initials: "LM",
     rating: 5,
-    text: "Siempre estaba cansada y sin ganas de nada. Daniela identificó deficiencias nutricionales que ningún médico había detectado. Ahora me levanto con energía y mi piel se ve radiante.",
-    transformation: "De 8 a 2 tazas de café"
+    text: "Daniela identificó deficiencias nutricionales que ningún médico había detectado.",
+    gradient: "from-amber-500 to-orange-600",
+    row: 1
   },
   {
     name: "Ana Pérez",
     age: 38,
-    result: "15kg menos, sin rebote",
-    image: "👩‍🦱",
+    result: "15kg sin rebote",
+    initials: "AP",
     rating: 5,
-    text: "Lo mejor es que te enseña a comer para toda la vida. Han pasado 6 meses desde que llegué a mi peso ideal y lo he mantenido sin esfuerzo. Esto no es una dieta, es un cambio de estilo de vida.",
-    transformation: "Peso estable 6 meses"
+    text: "Lo mejor es que te enseña a comer para toda la vida. Han pasado 6 meses sin rebote.",
+    gradient: "from-purple-500 to-pink-600",
+    row: 2
   },
   {
     name: "Patricia Silva",
     age: 52,
     result: "Salud cardiovascular",
-    image: "👵",
+    initials: "PS",
     rating: 5,
-    text: "Tenía colesterol y presión alta. Mi doctor me dijo que necesitaba cambiar urgentemente. Daniela creó un plan delicioso. En 4 meses, todos mis marcadores mejoraron y evité medicamentos.",
-    transformation: "Presión de 150/95 a 120/80"
+    text: "En 4 meses, todos mis marcadores mejoraron y evité medicamentos.",
+    gradient: "from-emerald-500 to-teal-600",
+    row: 2
   },
   {
     name: "Sofía Torres",
     age: 31,
-    result: "Adiós problemas digestivos",
-    image: "👩‍💼",
+    result: "Sin problemas digestivos",
+    initials: "ST",
     rating: 5,
-    text: "Años sufriendo de intestino irritable. Daniela identificó alimentos que me causaban problemas y creó un plan personalizado. En pocas semanas, mis síntomas desaparecieron casi por completo.",
-    transformation: "Sin dolor diario"
+    text: "En pocas semanas, mis síntomas de intestino irritable desaparecieron casi por completo.",
+    gradient: "from-indigo-500 to-purple-600",
+    row: 2
+  },
+  {
+    name: "Isabella Moreno",
+    age: 29,
+    result: "Piel radiante",
+    initials: "IM",
+    rating: 5,
+    text: "No solo bajé de peso, mi piel mejoró increíblemente y todos me preguntan qué hago.",
+    gradient: "from-pink-500 to-rose-600",
+    row: 1
+  },
+  {
+    name: "Valentina Castro",
+    age: 36,
+    result: "Control hormonal",
+    initials: "VC",
+    rating: 5,
+    text: "Mis ciclos se regularon y mi ánimo mejoró notablemente con el plan personalizado.",
+    gradient: "from-violet-500 to-purple-600",
+    row: 2
   }
 ];
-
-const stats = [
-  { value: "500+", numericValue: 500, label: "Pacientes Felices", icon: Users },
-  { value: "95%", numericValue: 95, label: "Tasa de Éxito", icon: TrendingUp },
-  { value: "4.9/5", numericValue: 4.9, label: "Valoración", icon: Star },
-  { value: "8+", numericValue: 8, label: "Años de Experiencia", icon: Award },
-];
-
-function AnimatedNumber({ value, suffix = "", delay = 0 }) {
-  const count = useMotionValue(0);
-
-  const [displayValue, setDisplayValue] = useState('0');
-
-  useEffect(() => {
-    count.set(0);
-    const controls = animate(count, value, {
-      duration: 2,
-      delay: delay,
-      ease: "easeOut",
-      onUpdate: (latest) => {
-        if (suffix === '/5') {
-          setDisplayValue(latest.toFixed(1));
-        } else {
-          setDisplayValue(Math.round(latest).toString());
-        }
-      }
-    });
-
-    return controls.stop;
-  }, [value, delay, suffix]);
-
-  return <>{displayValue}{suffix}</>;
-}
 
 export default function Testimonials() {
   const [ref, inView] = useInView({
@@ -99,294 +92,235 @@ export default function Testimonials() {
     threshold: 0.1
   });
 
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [itemsPerPage, setItemsPerPage] = useState(3);
-  const [hasAnimated, setHasAnimated] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768) setItemsPerPage(1);
-      else if (window.innerWidth < 1024) setItemsPerPage(2);
-      else setItemsPerPage(3);
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      nextSlide();
-    }, 6000);
-    return () => clearInterval(timer);
-  }, [currentIndex, itemsPerPage]);
-
-  useEffect(() => {
-    if (inView && !hasAnimated) {
-      setHasAnimated(true);
-    }
-  }, [inView]);
-
-  const maxIndex = Math.max(0, testimonials.length - itemsPerPage);
-
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
-  };
-
-  const prevSlide = () => {
-    setCurrentIndex((prev) => (prev === 0 ? maxIndex : prev - 1));
-  };
+  const row1 = testimonials.filter(t => t.row === 1);
+  const row2 = testimonials.filter(t => t.row === 2);
 
   return (
       <section id="testimonios" className="py-24 bg-white relative overflow-hidden">
 
-        <div className="absolute inset-0 z-0 opacity-[0.3] pointer-events-none">
+        {/* Background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-neutral-50 via-white to-neutral-50" />
+
+        {/* Subtle Grid Pattern */}
+        <div className="absolute inset-0 opacity-[0.3]">
           <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <pattern id="dot-pattern-testi" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
-                <circle cx="2" cy="2" r="1" className="text-neutral-200" fill="currentColor" />
+              <pattern id="grid-wall" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+                <path d="M0 32V0h32" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-neutral-200" />
               </pattern>
             </defs>
-            <rect width="100%" height="100%" fill="url(#dot-pattern-testi)" />
+            <rect width="100%" height="100%" fill="url(#grid-wall)" />
           </svg>
         </div>
 
-        <div className="absolute top-0 left-0 -translate-y-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-primary-50/60 rounded-full blur-3xl pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-4 relative z-10">
 
-        <div className="max-w-6xl mx-auto px-4 relative z-10">
-
+          {/* Header */}
           <motion.div
               ref={ref}
               initial={{ opacity: 0, y: 30 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6 }}
-              className="text-center max-w-3xl mx-auto mb-16"
+              className="text-center max-w-3xl mx-auto mb-12 md:mb-16"
           >
-            <span className="inline-block px-4 py-1.5 bg-neutral-50 text-neutral-600 rounded-full font-bold text-xs tracking-wider mb-6 border border-neutral-100 shadow-sm">
-              HISTORIAS REALES
-            </span>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-neutral-900 tracking-tight leading-tight">
-              Lo Que Dicen Nuestras
-              <span className="block mt-1 text-primary-600">
-                Pacientes Satisfechas
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary-50 to-purple-50 border border-primary-100 mb-6">
+              <Heart className="w-4 h-4 text-primary-600 fill-primary-600" />
+              <span className="text-xs font-bold text-primary-700 uppercase tracking-wider">Wall of Love</span>
+            </div>
+
+            <h2 className="text-3xl md:text-6xl font-black mb-4 md:mb-6 leading-tight px-4">
+              <span className="text-neutral-900">Más de </span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 via-purple-600 to-pink-600">
+                500 Mujeres
               </span>
+              <br />
+              <span className="text-neutral-900">Ya lo Lograron</span>
             </h2>
-            <p className="text-xl text-neutral-500 max-w-2xl mx-auto leading-relaxed">
-              Resultados tangibles. Más allá de la pérdida de peso, transformamos vidas y hábitos para siempre.
+
+            <p className="text-base md:text-lg text-neutral-600 px-4">
+              Lee lo que nuestras pacientes tienen que decir sobre su experiencia.
             </p>
           </motion.div>
 
-          <div className="relative mb-24 group/carousel">
-
-            <div className="hidden md:block">
-              <button
-                  onClick={prevSlide}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 z-20 w-12 h-12 bg-white rounded-full shadow-lg border border-neutral-100 flex items-center justify-center text-neutral-400 hover:text-primary-600 hover:scale-110 transition-all focus:outline-none"
-                  aria-label="Anterior"
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-
-              <button
-                  onClick={nextSlide}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 z-20 w-12 h-12 bg-white rounded-full shadow-lg border border-neutral-100 flex items-center justify-center text-neutral-400 hover:text-primary-600 hover:scale-110 transition-all focus:outline-none"
-                  aria-label="Siguiente"
-              >
-                <ChevronRight className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="overflow-hidden px-2 py-8 -mx-2">
-              <motion.div
-                  className="flex gap-8"
-                  initial={false}
-                  animate={{ x: `-${currentIndex * (100 / testimonials.length)}%` }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  style={{ width: `${(testimonials.length / itemsPerPage) * 100}%` }}
-              >
-                {testimonials.map((testimonial, index) => (
-                    <div
-                        key={index}
-                        className="relative px-0"
-                        style={{ width: `${100 / testimonials.length}%` }}
-                    >
-                      <div className="bg-white rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-neutral-100 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 h-full flex flex-col relative group hover:-translate-y-1">
-
-                        <div className="absolute top-0 left-8 right-8 h-1 bg-gradient-to-r from-primary-400 to-primary-600 rounded-b-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-                        <div className="flex justify-between items-start mb-6">
-                          <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-full bg-neutral-50 border border-neutral-100 flex items-center justify-center text-3xl shadow-inner">
-                              {testimonial.image}
-                            </div>
-                            <div>
-                              <h4 className="font-bold text-neutral-900 text-lg leading-tight">{testimonial.name}</h4>
-                              <p className="text-sm text-neutral-400">{testimonial.age} años</p>
-                            </div>
-                          </div>
-                          <div className="flex gap-0.5 bg-neutral-50 px-2 py-1 rounded-lg">
-                            {[...Array(testimonial.rating)].map((_, i) => (
-                                <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="mb-5">
-                          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-50 text-primary-700 font-semibold text-sm w-full">
-                            <CheckCircle2 className="w-4 h-4 text-primary-600 flex-shrink-0" />
-                            <span className="truncate">{testimonial.result}</span>
-                          </div>
-                        </div>
-
-                        <div className="relative mb-6 flex-grow">
-                          <Quote className="absolute -top-2 -left-2 w-6 h-6 text-primary-100 -z-10 opacity-50" />
-                          <p className="text-neutral-600 leading-relaxed text-[0.95rem] pl-2">
-                            "{testimonial.text}"
-                          </p>
-                        </div>
-
-                        <div className="pt-4 border-t border-dashed border-neutral-200 flex items-center gap-3 mt-auto">
-                          <div className="w-8 h-8 rounded-full bg-accent-50 flex items-center justify-center flex-shrink-0">
-                            <TrendingUp className="w-4 h-4 text-accent-600" />
-                          </div>
-                          <div className="overflow-hidden">
-                            <p className="text-[10px] text-neutral-400 uppercase font-bold tracking-wider">Transformación</p>
-                            <p className="text-sm font-bold text-neutral-800 truncate">{testimonial.transformation}</p>
-                          </div>
-                        </div>
-
-                      </div>
-                    </div>
-                ))}
-              </motion.div>
-            </div>
-
-            <div className="flex justify-center gap-3 mt-4">
-              {Array.from({ length: maxIndex + 1 }).map((_, idx) => (
-                  <button
-                      key={idx}
-                      onClick={() => setCurrentIndex(idx)}
-                      className={`transition-all duration-300 rounded-full h-2 ${
-                          currentIndex === idx
-                              ? "bg-primary-600 w-8"
-                              : "bg-neutral-200 w-2 hover:bg-primary-300"
-                      }`}
-                      aria-label={`Ir a diapositiva ${idx + 1}`}
-                  />
+          {/* MOBILE: Static Grid */}
+          <div className="block md:hidden mb-12">
+            <div className="grid grid-cols-1 gap-4 px-2">
+              {testimonials.slice(0, 4).map((testimonial, index) => (
+                  <motion.div
+                      key={`mobile-${index}`}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={inView ? { opacity: 1, y: 0 } : {}}
+                      transition={{ duration: 0.4, delay: index * 0.1 }}
+                  >
+                    <TestimonialCard testimonial={testimonial} isMobile={true} />
+                  </motion.div>
               ))}
             </div>
+          </div>
+
+          {/* DESKTOP: Marquee Rows */}
+          <div className="hidden md:block space-y-6 mb-16 overflow-hidden">
+
+            {/* Row 1 - Left to Right */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={inView ? { opacity: 1 } : {}}
+                transition={{ duration: 0.8 }}
+                className="relative"
+            >
+              <div className="flex gap-4 animate-marquee-slow">
+                {[...row1, ...row1].map((testimonial, index) => (
+                    <TestimonialCard key={`row1-${index}`} testimonial={testimonial} />
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Row 2 - Right to Left */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={inView ? { opacity: 1 } : {}}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="relative"
+            >
+              <div className="flex gap-4 animate-marquee-slow-reverse">
+                {[...row2, ...row2].map((testimonial, index) => (
+                    <TestimonialCard key={`row2-${index}`} testimonial={testimonial} />
+                ))}
+              </div>
+            </motion.div>
 
           </div>
 
-          {/* REFINED COMPACT CTA CONTAINER - DARK MODE (NEGRO ABSOLUTO) */}
+          {/* CTA Card - Clean & Simple (NO STATS) */}
           <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.6 }}
-              // CAMBIO: max-w-6xl (Antes max-w-5xl) para hacerlo más panorámico y delgado
-              className="relative max-w-6xl mx-auto mt-12 px-4 md:px-0"
+              className="max-w-4xl mx-auto"
           >
-            <div className="relative rounded-2xl md:rounded-3xl overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] bg-black border border-neutral-800">
+            <div className="relative group">
+              {/* Animated Glow */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-primary-600 via-purple-600 to-pink-600 rounded-2xl md:rounded-3xl blur-xl opacity-20 group-hover:opacity-30 transition duration-500" />
 
-              <div className="absolute inset-0 bg-black" />
+              {/* Card */}
+              <div className="relative rounded-2xl md:rounded-3xl bg-gradient-to-br from-neutral-900 via-neutral-950 to-black border border-neutral-800 shadow-2xl overflow-hidden">
 
-              {/* CAMBIO: Layout asimétrico 2:1 para Stats:CTA */}
-              <div className="grid lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-neutral-800 relative z-10">
+                {/* Decorative Elements */}
+                <div className="absolute top-0 right-0 w-48 md:w-64 h-48 md:h-64 bg-gradient-to-br from-primary-600/20 to-purple-600/20 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 left-0 w-32 md:w-48 h-32 md:h-48 bg-gradient-to-tr from-pink-600/20 to-orange-600/20 rounded-full blur-3xl" />
 
-                {/* LEFT SIDE: STATS IN ONE SINGLE ROW (col-span-2) */}
-                <div className="hidden md:grid lg:col-span-2 grid-cols-4 bg-transparent">
-                  {stats.map((stat, index) => {
-                    const Icon = stat.icon;
-                    const suffix = stat.value.includes('%') ? '%' :
-                        stat.value.includes('+') ? '+' :
-                            stat.value.includes('/') ? '/5' : '';
+                <div className="relative z-10 p-8 md:p-12">
+                  <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8">
 
-                    // Solo borde derecho para los primeros 3 (ahora que están en fila de 4)
-                    const showBorderRight = index < 3;
-
-                    return (
-                        <div
-                            key={index}
-                            // Padding ajustado para reducir altura
-                            className={`
-                          p-6 flex flex-col items-center justify-center text-center hover:bg-neutral-900 transition-all duration-300 group/stat
-                          ${showBorderRight ? 'lg:border-r border-neutral-800' : ''}
-                        `}
-                        >
-                          <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-800 flex items-center justify-center mb-2 text-white group-hover/stat:scale-110 transition-transform duration-300">
-                            <Icon className="w-5 h-5" strokeWidth={2.5} />
-                          </div>
-                          <div className="text-2xl font-black text-white mb-0.5 tracking-tight">
-                            {hasAnimated && <AnimatedNumber value={stat.numericValue} suffix={suffix} delay={0.8 + (index * 0.1)} />}
-                          </div>
-                          <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider leading-tight">
-                            {stat.label}
-                          </div>
-                        </div>
-                    );
-                  })}
-                </div>
-
-                {/* RIGHT SIDE: CTA (col-span-1) */}
-                <div className="lg:col-span-1 px-6 py-8 flex flex-col justify-center items-center text-center relative bg-transparent">
-
-                  <div className="hidden md:block absolute top-4 right-4">
-                    <Sparkles className="w-4 h-4 text-neutral-700 animate-pulse" />
-                  </div>
-
-                  <div className="relative z-10 w-full max-w-sm mx-auto space-y-5">
-
-                    {/* Heading simplificado para ahorrar espacio vertical */}
-                    <h3 className="text-xl md:text-2xl font-black text-white leading-tight">
-                      ¿Lista para tu
-                      <span className="inline-block ml-1.5 text-white border-b-2 border-primary-600">
-                        Transformación?
-                      </span>
-                    </h3>
-
-                    {/* COMPACT CTA BUTTON - AZUL */}
-                    <button
-                        onClick={() => document.getElementById('booking-form')?.scrollIntoView({ behavior: 'smooth' })}
-                        className="group relative w-full overflow-hidden rounded-xl bg-primary-600 hover:bg-primary-700 shadow-[0_8px_30px_rgba(37,99,235,0.4)] hover:shadow-[0_10px_35px_rgba(37,99,235,0.5)] hover:scale-[1.02] transition-all duration-300"
-                    >
-                      <div className="relative px-5 py-3.5 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 w-full">
-                          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-white text-primary-600 flex-shrink-0 group-hover:scale-110 transition-transform duration-300 shadow-sm">
-                            <CalendarCheck className="w-4 h-4" strokeWidth={2.5} />
-                          </div>
-
-                          <div className="flex flex-row items-center gap-2 text-left flex-grow">
-                            <span className="text-sm md:text-base font-black text-white leading-none">
-                              Agendar Consulta
-                            </span>
-                            <span className="px-1.5 py-0.5 rounded bg-white text-primary-700 text-[10px] font-bold uppercase tracking-wide leading-none shadow-sm">
-                              Gratis
-                            </span>
-                          </div>
-                        </div>
-
-                        <ArrowRight className="w-4 h-4 text-white flex-shrink-0 group-hover:translate-x-1 transition-transform duration-300" />
+                    {/* Left: Icon & Text */}
+                    <div className="flex-1 text-center md:text-left w-full">
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-4">
+                        <Sparkles className="w-4 h-4 text-primary-400" />
+                        <span className="text-xs font-bold text-white uppercase tracking-wider">Empieza Hoy</span>
                       </div>
-                    </button>
 
-                    {/* Compact Urgency */}
-                    <p className="text-[10px] text-neutral-500 font-medium flex items-center justify-center gap-2">
-                       <span className="relative flex h-2 w-2 flex-shrink-0">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                      </span>
-                      Cupos limitados esta semana
-                    </p>
+                      <h3 className="text-3xl md:text-4xl font-black text-white mb-3 leading-tight">
+                        Únete a Ellas
+                      </h3>
+
+                      <p className="text-neutral-300 text-base md:text-lg mb-6 md:mb-0">
+                        Agenda tu primera consulta gratuita y descubre cómo podemos ayudarte.
+                      </p>
+                    </div>
+
+                    {/* Right: CTA Button */}
+                    <div className="flex-shrink-0 w-full md:w-auto">
+                      <button
+                          onClick={() => document.getElementById('booking-form')?.scrollIntoView({ behavior: 'smooth' })}
+                          className="group/btn w-full md:w-auto px-6 md:px-8 py-4 rounded-xl md:rounded-2xl bg-gradient-to-r from-primary-600 to-primary-700 text-white font-black text-base md:text-lg shadow-[0_10px_40px_rgba(37,99,235,0.4)] hover:shadow-[0_15px_50px_rgba(37,99,235,0.5)] hover:scale-105 transition-all duration-300"
+                      >
+                        <span className="flex items-center justify-center gap-2 md:gap-3">
+                          <CalendarCheck className="w-5 md:w-6 h-5 md:h-6" strokeWidth={2.5} />
+                          <span className="whitespace-nowrap">Agendar Consulta Gratis</span>
+                          <ArrowRight className="w-4 md:w-5 h-4 md:h-5 group-hover/btn:translate-x-1 transition-transform duration-300" />
+                        </span>
+                      </button>
+
+                      <p className="mt-4 text-center text-xs text-neutral-400 flex items-center justify-center gap-2">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        Últimos cupos disponibles esta semana
+                      </p>
+                    </div>
 
                   </div>
                 </div>
-
               </div>
             </div>
           </motion.div>
 
         </div>
+
+        <style jsx>{`
+          @keyframes marquee-slow {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          
+          @keyframes marquee-slow-reverse {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(0); }
+          }
+
+          .animate-marquee-slow {
+            animation: marquee-slow 40s linear infinite;
+          }
+
+          .animate-marquee-slow-reverse {
+            animation: marquee-slow-reverse 40s linear infinite;
+          }
+
+          .animate-marquee-slow:hover,
+          .animate-marquee-slow-reverse:hover {
+            animation-play-state: paused;
+          }
+        `}</style>
       </section>
+  );
+}
+
+// Componente de Card Compacto
+function TestimonialCard({ testimonial, isMobile = false }) {
+  return (
+      <div className={`${isMobile ? 'w-full' : 'flex-shrink-0 w-[320px] md:w-[380px]'} p-5 rounded-2xl bg-white border border-neutral-200 shadow-sm hover:shadow-lg hover:border-neutral-300 transition-all duration-300 group`}>
+
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-3">
+          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${testimonial.gradient} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300`}>
+            <span className="text-white font-black text-xs">{testimonial.initials}</span>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <h4 className="font-bold text-neutral-900 text-sm leading-tight truncate">{testimonial.name}</h4>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-neutral-500">{testimonial.age} años</span>
+              <span className="text-neutral-300">•</span>
+              <div className="flex gap-0.5">
+                {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Result Badge */}
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary-50 border border-primary-100 mb-3">
+          <CheckCircle2 className="w-3.5 h-3.5 text-primary-600 flex-shrink-0" />
+          <span className="text-xs font-bold text-primary-700">{testimonial.result}</span>
+        </div>
+
+        {/* Quote */}
+        <p className={`text-neutral-600 text-sm leading-relaxed ${isMobile ? '' : 'line-clamp-3'}`}>
+          "{testimonial.text}"
+        </p>
+      </div>
   );
 }
