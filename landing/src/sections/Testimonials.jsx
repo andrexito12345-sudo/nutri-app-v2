@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Star, Quote, Users, TrendingUp, Award, CalendarCheck, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 
@@ -61,11 +61,42 @@ const testimonials = [
 ];
 
 const stats = [
-  { value: "500+", label: "Pacientes Felices", icon: Users },
-  { value: "95%", label: "Tasa de Éxito", icon: TrendingUp },
-  { value: "4.9/5", label: "Valoración", icon: Star },
-  { value: "8+", label: "Años de Experiencia", icon: Award },
+  { value: "500+", numericValue: 500, label: "Pacientes Felices", icon: Users },
+  { value: "95%", numericValue: 95, label: "Tasa de Éxito", icon: TrendingUp },
+  { value: "4.9/5", numericValue: 4.9, label: "Valoración", icon: Star },
+  { value: "8+", numericValue: 8, label: "Años de Experiencia", icon: Award },
 ];
+
+// Componente contador que reinicia desde 0
+function AnimatedNumber({ value, suffix = "", delay = 0 }) {
+  const count = useMotionValue(0);
+  const rounded = useTransform(count, (latest) => {
+    if (suffix === '/5') return latest.toFixed(1);
+    return Math.round(latest);
+  });
+
+  const [displayValue, setDisplayValue] = useState('0');
+
+  useEffect(() => {
+    count.set(0);
+    const controls = animate(count, value, {
+      duration: 2,
+      delay: delay,
+      ease: "easeOut",
+      onUpdate: (latest) => {
+        if (suffix === '/5') {
+          setDisplayValue(latest.toFixed(1));
+        } else {
+          setDisplayValue(Math.round(latest).toString());
+        }
+      }
+    });
+
+    return controls.stop;
+  }, [value, delay, suffix]);
+
+  return <>{displayValue}{suffix}</>;
+}
 
 export default function Testimonials() {
   const [ref, inView] = useInView({
@@ -75,8 +106,9 @@ export default function Testimonials() {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(3);
+  const [currentStatIndex, setCurrentStatIndex] = useState(0);
+  const [hasAnimated, setHasAnimated] = useState(false);
 
-  // Ajustar número de items visibles según el tamaño de pantalla
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) setItemsPerPage(1);
@@ -84,18 +116,30 @@ export default function Testimonials() {
       else setItemsPerPage(3);
     };
 
-    handleResize(); // Ejecutar al inicio
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Auto-play del carrusel
   useEffect(() => {
     const timer = setInterval(() => {
       nextSlide();
-    }, 6000); // 6 segundos para dar más tiempo de lectura
+    }, 6000);
     return () => clearInterval(timer);
   }, [currentIndex, itemsPerPage]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentStatIndex((prev) => (prev + 1) % stats.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (inView && !hasAnimated) {
+      setHasAnimated(true);
+    }
+  }, [inView]);
 
   const maxIndex = Math.max(0, testimonials.length - itemsPerPage);
 
@@ -110,7 +154,6 @@ export default function Testimonials() {
   return (
       <section id="testimonios" className="py-24 bg-white relative overflow-hidden">
 
-        {/* --- Background Elements --- */}
         <div className="absolute inset-0 z-0 opacity-[0.3] pointer-events-none">
           <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -122,12 +165,10 @@ export default function Testimonials() {
           </svg>
         </div>
 
-        {/* Decorative Gradient Blob (Subtle) */}
         <div className="absolute top-0 left-0 -translate-y-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-primary-50/60 rounded-full blur-3xl pointer-events-none" />
 
         <div className="max-w-6xl mx-auto px-4 relative z-10">
 
-          {/* Header */}
           <motion.div
               ref={ref}
               initial={{ opacity: 0, y: 30 }}
@@ -135,24 +176,22 @@ export default function Testimonials() {
               transition={{ duration: 0.6 }}
               className="text-center max-w-3xl mx-auto mb-16"
           >
-          <span className="inline-block px-4 py-1.5 bg-neutral-50 text-neutral-600 rounded-full font-bold text-xs tracking-wider mb-6 border border-neutral-100 shadow-sm">
-            HISTORIAS REALES
-          </span>
+            <span className="inline-block px-4 py-1.5 bg-neutral-50 text-neutral-600 rounded-full font-bold text-xs tracking-wider mb-6 border border-neutral-100 shadow-sm">
+              HISTORIAS REALES
+            </span>
             <h2 className="text-4xl md:text-5xl font-bold mb-6 text-neutral-900 tracking-tight leading-tight">
               Lo Que Dicen Nuestras
               <span className="block mt-1 text-primary-600">
-              Pacientes Satisfechas
-            </span>
+                Pacientes Satisfechas
+              </span>
             </h2>
             <p className="text-xl text-neutral-500 max-w-2xl mx-auto leading-relaxed">
               Resultados tangibles. Más allá de la pérdida de peso, transformamos vidas y hábitos para siempre.
             </p>
           </motion.div>
 
-          {/* --- CAROUSEL AREA --- */}
           <div className="relative mb-24 group/carousel">
 
-            {/* Navigation Buttons (Outside container for cleaner look on desktop) */}
             <div className="hidden md:block">
               <button
                   onClick={prevSlide}
@@ -171,12 +210,10 @@ export default function Testimonials() {
               </button>
             </div>
 
-            {/* Slider Track Wrapper */}
             <div className="overflow-hidden px-2 py-8 -mx-2">
               <motion.div
                   className="flex gap-8"
                   initial={false}
-                  // FIX: Usamos testimonials.length en lugar de itemsPerPage para calcular el % exacto de desplazamiento por item
                   animate={{ x: `-${currentIndex * (100 / testimonials.length)}%` }}
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   style={{ width: `${(testimonials.length / itemsPerPage) * 100}%` }}
@@ -189,10 +226,8 @@ export default function Testimonials() {
                     >
                       <div className="bg-white rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-neutral-100 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 h-full flex flex-col relative group hover:-translate-y-1">
 
-                        {/* Top Color Accent */}
                         <div className="absolute top-0 left-8 right-8 h-1 bg-gradient-to-r from-primary-400 to-primary-600 rounded-b-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-                        {/* Header: Avatar & Rating */}
                         <div className="flex justify-between items-start mb-6">
                           <div className="flex items-center gap-4">
                             <div className="w-14 h-14 rounded-full bg-neutral-50 border border-neutral-100 flex items-center justify-center text-3xl shadow-inner">
@@ -210,7 +245,6 @@ export default function Testimonials() {
                           </div>
                         </div>
 
-                        {/* Highlighted Result */}
                         <div className="mb-5">
                           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-50 text-primary-700 font-semibold text-sm w-full">
                             <CheckCircle2 className="w-4 h-4 text-primary-600 flex-shrink-0" />
@@ -218,7 +252,6 @@ export default function Testimonials() {
                           </div>
                         </div>
 
-                        {/* Text */}
                         <div className="relative mb-6 flex-grow">
                           <Quote className="absolute -top-2 -left-2 w-6 h-6 text-primary-100 -z-10 opacity-50" />
                           <p className="text-neutral-600 leading-relaxed text-[0.95rem] pl-2">
@@ -226,7 +259,6 @@ export default function Testimonials() {
                           </p>
                         </div>
 
-                        {/* Footer: Data Point */}
                         <div className="pt-4 border-t border-dashed border-neutral-200 flex items-center gap-3 mt-auto">
                           <div className="w-8 h-8 rounded-full bg-accent-50 flex items-center justify-center flex-shrink-0">
                             <TrendingUp className="w-4 h-4 text-accent-600" />
@@ -243,7 +275,6 @@ export default function Testimonials() {
               </motion.div>
             </div>
 
-            {/* Dots Indicators (Improved) */}
             <div className="flex justify-center gap-3 mt-4">
               {Array.from({ length: maxIndex + 1 }).map((_, idx) => (
                   <button
@@ -261,35 +292,124 @@ export default function Testimonials() {
 
           </div>
 
-          {/* --- TRUST INDICATORS (STATS BAR) - NUEVO DISEÑO --- */}
+          {/* TRUST INDICATORS - MINIMALISTA Y PROFESIONAL */}
           <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.6 }}
               className="relative max-w-6xl mx-auto"
           >
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+            {/* DESKTOP - GRID CON NÚMEROS ANIMADOS */}
+            <div className="hidden md:grid md:grid-cols-4 gap-6">
               {stats.map((stat, index) => {
                 const Icon = stat.icon;
-                return (
-                    <div key={index} className="relative bg-white p-6 rounded-2xl border border-neutral-100 shadow-sm hover:shadow-xl hover:shadow-primary-900/5 transition-all duration-300 hover:-translate-y-1 group overflow-hidden">
-                      {/* Decorative background circle */}
-                      <div className="absolute -right-4 -top-4 w-20 h-20 bg-primary-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                const suffix = stat.value.includes('%') ? '%' :
+                    stat.value.includes('+') ? '+' :
+                        stat.value.includes('/') ? '/5' : '';
 
-                      <div className="relative z-10 flex flex-col items-center text-center">
-                        <div className="mb-4 inline-flex items-center justify-center w-14 h-14 rounded-full bg-neutral-50 text-primary-600 group-hover:bg-primary-600 group-hover:text-white transition-all duration-300 shadow-sm">
-                          <Icon className="w-7 h-7" strokeWidth={2} />
+                return (
+                    <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={inView ? { opacity: 1, y: 0 } : {}}
+                        transition={{ duration: 0.5, delay: 0.7 + (index * 0.1) }}
+                        className="relative bg-gradient-to-b from-white to-neutral-50/50 rounded-3xl p-8 border border-neutral-100/50 shadow-sm hover:shadow-lg transition-all duration-300 group"
+                    >
+                      {/* Icono minimalista */}
+                      <div className="flex justify-center mb-6">
+                        <div className="w-16 h-16 rounded-2xl bg-primary-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                          <Icon className="w-8 h-8 text-primary-600" strokeWidth={1.5} />
                         </div>
-                        <div className="text-3xl md:text-4xl font-bold text-neutral-900 font-display mb-1 tracking-tight">
-                          {stat.value}
-                        </div>
-                        <p className="text-xs md:text-sm font-semibold text-neutral-500 uppercase tracking-wide group-hover:text-primary-600 transition-colors">
-                          {stat.label}
-                        </p>
                       </div>
-                    </div>
-                )
+
+                      {/* Número con animación desde 0 */}
+                      <div className="text-center mb-3">
+                        <div className="text-5xl font-bold text-neutral-900 tracking-tight">
+                          {hasAnimated && <AnimatedNumber value={stat.numericValue} suffix={suffix} delay={0.8 + (index * 0.15)} />}
+                        </div>
+                      </div>
+
+                      {/* Label */}
+                      <p className="text-center text-sm font-semibold text-neutral-500 uppercase tracking-wider">
+                        {stat.label}
+                      </p>
+                    </motion.div>
+                );
               })}
+            </div>
+
+            {/* MOBILE - CARRUSEL MINIMALISTA */}
+            <div className="md:hidden">
+              <div className="overflow-hidden rounded-3xl">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                      key={currentStatIndex}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.4 }}
+                      className="relative bg-gradient-to-b from-white to-neutral-50/30 rounded-3xl p-12 border border-neutral-100 shadow-lg"
+                  >
+                    {(() => {
+                      const stat = stats[currentStatIndex];
+                      const Icon = stat.icon;
+                      const suffix = stat.value.includes('%') ? '%' :
+                          stat.value.includes('+') ? '+' :
+                              stat.value.includes('/') ? '/5' : '';
+
+                      return (
+                          <div className="text-center">
+                            {/* Icono */}
+                            <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
+                                className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary-50 mb-8"
+                            >
+                              <Icon className="w-10 h-10 text-primary-600" strokeWidth={1.5} />
+                            </motion.div>
+
+                            {/* Número animado desde 0 */}
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.2 }}
+                                className="text-6xl font-bold text-neutral-900 mb-4 tracking-tight"
+                            >
+                              <AnimatedNumber value={stat.numericValue} suffix={suffix} delay={0.3} />
+                            </motion.div>
+
+                            {/* Label */}
+                            <motion.p
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.4 }}
+                                className="text-sm font-semibold text-neutral-500 uppercase tracking-wider"
+                            >
+                              {stat.label}
+                            </motion.p>
+                          </div>
+                      );
+                    })()}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Indicadores minimalistas */}
+              <div className="flex justify-center gap-2 mt-6">
+                {stats.map((_, idx) => (
+                    <button
+                        key={idx}
+                        onClick={() => setCurrentStatIndex(idx)}
+                        className={`transition-all duration-300 rounded-full ${
+                            currentStatIndex === idx
+                                ? "bg-primary-600 w-8 h-2"
+                                : "bg-neutral-200 w-2 h-2"
+                        }`}
+                        aria-label={`Ver estadística ${idx + 1}`}
+                    />
+                ))}
+              </div>
             </div>
           </motion.div>
 
