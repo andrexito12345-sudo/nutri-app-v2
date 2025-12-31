@@ -1,10 +1,11 @@
-// frontend/src/pages/LoginPage.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api, { saveAuthData } from '../services/api';  // ← Agregado saveAuthData
-import './LoginPage.css';
+import { motion } from 'framer-motion';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Shield, Activity, ArrowLeft } from 'lucide-react';
+import api, { saveAuthData } from '../services/api';
 
 function LoginPage() {
+    // --- LÓGICA ---
     const [form, setForm] = useState({
         email: 'nutri@example.com',
         password: 'ClaveSegura123',
@@ -30,14 +31,12 @@ function LoginPage() {
             const data = res.data || {};
 
             if (data.ok) {
-                // ✅ Guardar token JWT y datos del doctor
                 saveAuthData(data.token, data.doctor);
                 navigate('/doctora/dashboard');
             } else {
                 setError(data.message || 'Credenciales incorrectas.');
             }
         } catch (err) {
-            // Manejar errores de respuesta del servidor
             if (err.response?.data?.message) {
                 setError(err.response.data.message);
             } else {
@@ -48,147 +47,138 @@ function LoginPage() {
         }
     };
 
+    // Función para volver al inicio
+    const handleGoBack = () => {
+        navigate('/'); // Cambia esto si tu página principal tiene otra ruta
+    };
+
     return (
-        <div className="login-page">
-            <div className="login-container">
-                <div className="login-grid">
-                    {/* LADO IZQUIERDO: HERO */}
-                    <div className="login-hero">
-                        <div className="hero-content">
-                            {/* BADGE CON CANDADO ANIMADO SVG */}
-                            <div className="badge">
-                                <svg className="lock-anim-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                                <span>Panel Privado</span>
-                            </div>
+        <div className="min-h-screen w-full flex font-sans text-neutral-900">
 
-                            <div className="hero-title">
-                                <span className="hero-title-small">Acceso para</span>
-                                <span className="hero-title-main">la Doctora</span>
-                            </div>
+            {/* ================= IZQUIERDA (Desktop) ================= */}
+            <div className="hidden lg:flex lg:w-[55%] relative bg-neutral-900 overflow-hidden flex-col justify-between p-12 text-white">
 
-                            <p className="hero-text">
-                                Gestiona citas, revisa el estado de pacientes y monitorea tu práctica desde un solo lugar.
-                            </p>
+                {/* BOTÓN VOLVER (Versión Desktop - Blanco) */}
+                <button
+                    onClick={handleGoBack}
+                    className="absolute top-8 left-8 z-20 flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all text-sm font-medium group"
+                >
+                    <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                    <span>Volver al inicio</span>
+                </button>
 
-                            <ul className="features-list">
-                                <li>
-                                    <div className="check-icon">
-                                        {/* CHECK SVG */}
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-                                    Resumen rápido de citas
-                                </li>
-                                <li>
-                                    <div className="check-icon">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-                                    Historial clínico seguro
-                                </li>
-                                <li>
-                                    <div className="check-icon">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-                                    Estadísticas de visitas
-                                </li>
-                            </ul>
-                        </div>
+                {/* Fondo y Efectos */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-900 via-slate-900 to-black opacity-90 z-0"></div>
+                <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-indigo-600/30 rounded-full mix-blend-screen filter blur-[120px] animate-pulse"></div>
 
-                        <div className="hero-footer">
-                            <div className="avatar-circle">DN</div>
-                            <div className="doctor-info">
-                                <h4>Dra. Daniela Vaca</h4>
-                                <p>Licenciada en Nutrición</p>
-                            </div>
+                {/* Contenido Visual */}
+                <div className="relative z-10 h-full flex flex-col justify-center max-w-xl mx-auto">
+                    <div className="w-16 h-16 mb-8 rounded-2xl bg-gradient-to-tr from-white/20 to-white/5 backdrop-blur-md flex items-center justify-center border border-white/10 shadow-xl">
+                        <Activity className="text-white w-8 h-8" strokeWidth={2} />
+                    </div>
+                    <h1 className="text-6xl font-extrabold leading-none tracking-tight mb-6">
+                        Panel <br/>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-emerald-200">
+                            Profesional
+                        </span>
+                    </h1>
+                    <p className="text-xl text-indigo-100/80 leading-relaxed font-light">
+                        Gestiona tu consultorio nutricional con la tecnología más avanzada. Seguridad, rapidez y eficiencia en un solo lugar.
+                    </p>
+                </div>
+
+                {/* Copyright simple */}
+                <div className="relative z-10 text-xs text-white/40 font-mono">
+                    ID DEL SISTEMA: PRO-V2.5 // SECURE
+                </div>
+            </div>
+
+            {/* ================= DERECHA (Formulario) ================= */}
+            <div className="w-full lg:w-[45%] flex flex-col justify-center items-center p-6 bg-neutral-50 lg:bg-white relative">
+
+                {/* BOTÓN VOLVER (Versión Móvil - Oscuro) */}
+                {/* Solo visible en pantallas pequeñas (lg:hidden) */}
+                <button
+                    onClick={handleGoBack}
+                    className="lg:hidden absolute top-6 left-6 flex items-center gap-2 text-neutral-500 hover:text-indigo-600 transition-colors"
+                >
+                    <ArrowLeft className="w-5 h-5" />
+                    <span className="text-sm font-semibold">Inicio</span>
+                </button>
+
+                <div className="w-full max-w-[400px] space-y-8 relative z-10">
+
+                    {/* Logo solo móvil */}
+                    <div className="lg:hidden flex justify-center mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                            <Activity className="text-white w-6 h-6" />
                         </div>
                     </div>
 
-                    {/* LADO DERECHO: FORMULARIO */}
-                    <div className="login-form-container">
-                        <div className="form-wrapper">
-                            <div className="form-header">
-                                <h2>Bienvenida</h2>
-                                <p>Ingresa tus credenciales para acceder.</p>
+                    <div className="text-center space-y-2">
+                        <h2 className="text-3xl font-extrabold text-neutral-900">Bienvenida</h2>
+                        <p className="text-neutral-500 text-sm">Ingresa tus credenciales de doctora.</p>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-neutral-600 uppercase ml-1">Email</label>
+                            <div className="relative group">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 group-focus-within:text-indigo-600 transition-colors" />
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={form.email}
+                                    onChange={handleChange}
+                                    className="w-full pl-12 pr-4 py-3.5 bg-white border border-neutral-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none font-medium text-neutral-900"
+                                    placeholder="doctora@ejemplo.com"
+                                    required
+                                />
                             </div>
+                        </div>
 
-                            <form onSubmit={handleSubmit}>
-                                {/* EMAIL */}
-                                <div className="input-group">
-                                    <label>Correo electrónico</label>
-                                    <div className="input-field-wrapper">
-                                        <input
-                                            type="email"
-                                            name="email"
-                                            placeholder="nutri@example.com"
-                                            value={form.email}
-                                            onChange={handleChange}
-                                            required
-                                        />
-                                        <div className="input-icon-left">
-                                            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* PASSWORD */}
-                                <div className="input-group">
-                                    <label>Contraseña</label>
-                                    <div className="input-field-wrapper">
-                                        <input
-                                            type={showPassword ? "text" : "password"}
-                                            name="password"
-                                            placeholder="••••••••••••"
-                                            value={form.password}
-                                            onChange={handleChange}
-                                            required
-                                        />
-                                        <div className="input-icon-left">
-                                            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            className="toggle-password-btn"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                        >
-                                            {showPassword ? (
-                                                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858-5.908a9.04 9.04 0 012.122-.383c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18"></path></svg>
-                                            ) : (
-                                                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                            )}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {error && <div className="login-error">⚠️ {error}</div>}
-
-                                <button
-                                    type="submit"
-                                    className="btn-login"
-                                    disabled={loading}
-                                >
-                                    {loading ? (
-                                        <div className="btn-content-loading">
-                                            <span className="spinner"></span>
-                                            <span>Ingresando...</span>
-                                        </div>
-                                    ) : 'Ingresar al Sistema'}
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-neutral-600 uppercase ml-1">Contraseña</label>
+                            <div className="relative group">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 group-focus-within:text-indigo-600 transition-colors" />
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    value={form.password}
+                                    onChange={handleChange}
+                                    className="w-full pl-12 pr-12 py-3.5 bg-white border border-neutral-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none font-medium text-neutral-900"
+                                    placeholder="••••••••"
+                                    required
+                                />
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-indigo-600">
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                 </button>
-                            </form>
-
-                            <div className="form-footer">
-                                <p>
-                                    ¿Olvidaste tu contraseña? <a href="#">Contacta al administrador</a>
-                                </p>
                             </div>
                         </div>
+
+                        {error && (
+                            <div className="p-3 rounded-lg bg-rose-50 border border-rose-100 text-rose-600 text-sm font-medium flex items-center gap-2">
+                                ⚠️ {error}
+                            </div>
+                        )}
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full py-3.5 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/30 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+                        >
+                            {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><span>Ingresar</span> <ArrowRight className="w-4 h-4" /></>}
+                        </button>
+                    </form>
+
+                    <div className="text-center">
+                        <a href="#" className="text-sm text-indigo-600 font-semibold hover:underline">¿Olvidaste tu contraseña?</a>
                     </div>
+                </div>
+
+                {/* Footer móvil */}
+                <div className="absolute bottom-4 flex items-center gap-2 text-neutral-400 text-xs font-medium">
+                    <Shield className="w-3 h-3" /> Conexión Segura TLS
                 </div>
             </div>
         </div>

@@ -1,6 +1,6 @@
 // src/App.jsx
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'; // 1. Agregado useLocation
 import { Toaster } from 'react-hot-toast';
 
 // Components
@@ -55,6 +55,7 @@ function LandingPage() {
 // Main App Component
 function App() {
     const [loading, setLoading] = useState(true);
+    const location = useLocation(); // 2. Obtener la ubicación actual
 
     useEffect(() => {
         // Simular carga de recursos
@@ -64,6 +65,10 @@ function App() {
 
         return () => clearTimeout(timer);
     }, []);
+
+    // Lógica para ocultar el Header:
+    // El header se muestra si la ruta NO es '/doctora/login'
+    const showHeader = location.pathname !== '/doctora/login';
 
     // Mostrar loading screen mientras carga
     if (loading) {
@@ -100,8 +105,9 @@ function App() {
                 }}
             />
 
-            {/* Header Global - SIN onOpenTools porque el menú es interno del Dashboard */}
-            <Header />
+            {/* 3. Renderizado Condicional del Header Global */}
+            {/* Solo se renderiza si showHeader es true */}
+            {showHeader && <Header />}
 
             {/* Routes */}
             <Routes>
