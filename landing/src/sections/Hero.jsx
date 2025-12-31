@@ -75,10 +75,14 @@ export default function Hero() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold leading-[1.1] md:leading-tight text-neutral-900"
+                    className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold leading-[1.1] md:leading-tight text-neutral-900"
                 >
                   Transforma Tu Vida
-                  <span className="gradient-text block mt-1 md:mt-2 pb-2">
+                  {/* CORRECCIÓN AQUÍ:
+                      - whitespace-nowrap: Fuerza 1 línea en Móvil (donde tenemos text-3xl).
+                      - lg:whitespace-normal: Permite saltos de línea normales en Desktop (donde tenemos text-7xl), evitando que se rompa.
+                  */}
+                  <span className="gradient-text block mt-1 md:mt-2 pb-2 whitespace-nowrap lg:whitespace-normal">
                     Sin Dietas Restrictivas
                   </span>
                 </motion.h1>
@@ -111,7 +115,6 @@ export default function Hero() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
-                    // Se ajustó tamaño: text-lg (móvil), md:text-xl (tablet), lg:text-[1.7rem] (desktop apenas más grande)
                     className="text-lg md:text-xl lg:text-[1.7rem] text-neutral-600 mt-4 md:mt-6 leading-relaxed max-w-2xl mx-auto lg:mx-0"
                 >
                   Nutrición personalizada basada en ciencia. Resultados reales,
@@ -131,7 +134,6 @@ export default function Hero() {
                   <span className="text-xs md:text-sm font-medium">Nutricionista Certificada</span>
                 </div>
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-white/50 rounded-lg border border-neutral-100 text-neutral-600 shadow-sm">
-                  {/* Cambio: text-accent-500 -> text-blue-500 */}
                   <Sparkles className="w-4 h-4 text-blue-500" />
                   <span className="text-xs md:text-sm font-medium">Método Probado</span>
                 </div>
