@@ -17,6 +17,7 @@ import SoapConsultation from './pages/SoapConsultation';
 // Sections (Landing Page)
 import Hero from './sections/Hero';
 import Problems from './sections/Problems';
+import BMICalculator from "./sections/BMICalculator.jsx";
 import Benefits from './sections/Benefits';
 import Testimonials from './sections/Testimonials';
 import Booking from './sections/Booking';
@@ -40,6 +41,7 @@ function LandingPage() {
             <main>
                 <Hero />
                 <Problems />
+                <BMICalculator />
                 <Benefits />
                 <Testimonials />
                 <Booking />
