@@ -36,7 +36,7 @@ const AnimatedCounter = ({ value, suffix = "", decimals = 0, delay = 0 }) => {
 
 export default function Hero() {
   const scrollToBooking = () => {
-    document.getElementById('agendar')?.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('booking-form')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
