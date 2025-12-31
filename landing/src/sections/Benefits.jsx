@@ -93,7 +93,7 @@ export default function Benefits() {
           >
             <h2 className="text-5xl md:text-6xl font-bold mb-6 text-neutral-900 leading-tight">
               Transforma Tu Vida
-              <span className="block mt-2 bg-gradient-to-r from-primary-600 to-violet-600 bg-clip-text text-transparent">
+              <span className="block mt-2 bg-gradient-to-r from-primary-700 to-primary-500 bg-clip-text text-transparent">
                 En Todos los Niveles
               </span>
             </h2>
