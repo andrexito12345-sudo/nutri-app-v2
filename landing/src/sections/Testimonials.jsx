@@ -67,7 +67,6 @@ const stats = [
   { value: "8+", numericValue: 8, label: "Años de Experiencia", icon: Award },
 ];
 
-// Componente contador que reinicia desde 0
 function AnimatedNumber({ value, suffix = "", delay = 0 }) {
   const count = useMotionValue(0);
   const rounded = useTransform(count, (latest) => {
@@ -292,14 +291,12 @@ export default function Testimonials() {
 
           </div>
 
-          {/* TRUST INDICATORS - MINIMALISTA Y PROFESIONAL */}
           <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.6 }}
               className="relative max-w-6xl mx-auto"
           >
-            {/* DESKTOP - GRID CON NÚMEROS ANIMADOS */}
             <div className="hidden md:grid md:grid-cols-4 gap-6">
               {stats.map((stat, index) => {
                 const Icon = stat.icon;
@@ -315,21 +312,18 @@ export default function Testimonials() {
                         transition={{ duration: 0.5, delay: 0.7 + (index * 0.1) }}
                         className="relative bg-gradient-to-b from-white to-neutral-50/50 rounded-3xl p-8 border border-neutral-100/50 shadow-sm hover:shadow-lg transition-all duration-300 group"
                     >
-                      {/* Icono minimalista */}
                       <div className="flex justify-center mb-6">
                         <div className="w-16 h-16 rounded-2xl bg-primary-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                           <Icon className="w-8 h-8 text-primary-600" strokeWidth={1.5} />
                         </div>
                       </div>
 
-                      {/* Número con animación desde 0 */}
                       <div className="text-center mb-3">
                         <div className="text-5xl font-bold text-neutral-900 tracking-tight">
                           {hasAnimated && <AnimatedNumber value={stat.numericValue} suffix={suffix} delay={0.8 + (index * 0.15)} />}
                         </div>
                       </div>
 
-                      {/* Label */}
                       <p className="text-center text-sm font-semibold text-neutral-500 uppercase tracking-wider">
                         {stat.label}
                       </p>
@@ -338,7 +332,6 @@ export default function Testimonials() {
               })}
             </div>
 
-            {/* MOBILE - CARRUSEL MINIMALISTA */}
             <div className="md:hidden">
               <div className="overflow-hidden rounded-3xl">
                 <AnimatePresence mode="wait">
@@ -359,7 +352,6 @@ export default function Testimonials() {
 
                       return (
                           <div className="text-center">
-                            {/* Icono */}
                             <motion.div
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
@@ -369,7 +361,6 @@ export default function Testimonials() {
                               <Icon className="w-10 h-10 text-primary-600" strokeWidth={1.5} />
                             </motion.div>
 
-                            {/* Número animado desde 0 */}
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -379,7 +370,6 @@ export default function Testimonials() {
                               <AnimatedNumber value={stat.numericValue} suffix={suffix} delay={0.3} />
                             </motion.div>
 
-                            {/* Label */}
                             <motion.p
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -395,7 +385,6 @@ export default function Testimonials() {
                 </AnimatePresence>
               </div>
 
-              {/* Indicadores minimalistas */}
               <div className="flex justify-center gap-2 mt-6">
                 {stats.map((_, idx) => (
                     <button
@@ -413,7 +402,7 @@ export default function Testimonials() {
             </div>
           </motion.div>
 
-          {/* Final CTA */}
+          {/* Final CTA - CON "GRATIS" LLAMATIVO */}
           <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -424,11 +413,17 @@ export default function Testimonials() {
               ¿Lista para ser la próxima historia de éxito?
             </p>
             <button
-                onClick={() => document.getElementById('agendar')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => document.getElementById('booking-form')?.scrollIntoView({ behavior: 'smooth' })}
                 className="group relative inline-flex items-center gap-3 px-10 py-5 bg-neutral-900 text-white rounded-xl font-bold text-lg shadow-xl shadow-neutral-900/20 hover:bg-neutral-800 hover:scale-105 transition-all duration-300"
             >
               <CalendarCheck className="w-5 h-5 text-primary-400" />
-              Agendar Mi Primera Consulta Gratis
+              Agendar Mi Primera Consulta{' '}
+              <span className="relative inline-block ml-1">
+                <span className="relative z-10 px-3 py-1 bg-gradient-to-r from-emerald-400 to-teal-400 text-neutral-900 rounded-full text-base font-black uppercase tracking-wide animate-pulse">
+                  Gratis
+                </span>
+                <span className="absolute inset-0 bg-emerald-400 rounded-full blur-md animate-pulse opacity-50"></span>
+              </span>
             </button>
           </motion.div>
 
