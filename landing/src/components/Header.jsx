@@ -61,7 +61,7 @@ function Header({ onOpenTools }) {
     };
 
     return (
-        <header className={`header ${scrolled ? "header--scrolled" : ""}`}>
+        <header className={`header ${scrolled ? "header--scrolled" : ""} ${isDashboard ? "header--dashboard" : ""}`}>
             <div className="header__container">
                 {/* Logo + Nombre */}
                 <div

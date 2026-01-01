@@ -8,7 +8,7 @@ function UpcomingTimeline({ appointments, formatDate }) {
         .filter(apt => apt.status === 'pendiente')
         .filter(apt => new Date(apt.appointment_datetime) >= new Date())
         .sort((a, b) => new Date(a.appointment_datetime) - new Date(b.appointment_datetime))
-        .slice(0, 5);
+        .slice(0, 2);
 
     if (upcomingAppointments.length === 0) {
         return (

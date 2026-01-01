@@ -204,3 +204,91 @@
         font-size: 1.1rem;
     }
 }
+
+/* ============================================
+   HEADER PREMIUM - SOLO DASHBOARD
+   ============================================ */
+
+/* Cuando está en dashboard, cambiar completamente el estilo */
+.header--dashboard {
+    background: linear-gradient(135deg,
+    rgba(5, 5, 5, 0.95) 0%,
+    rgba(5, 5, 5, 0.95) 50%,
+    rgba(11, 37, 208, 0.95) 100%
+    ) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+/* Logo contenedor */
+.header--dashboard .header__logo {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Logo SVG en blanco */
+.header--dashboard .header__logo-svg {
+    color: white !important;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+}
+
+.header--dashboard .header__logo-svg path {
+    stroke: white !important;
+}
+
+/* Nombre en blanco */
+.header--dashboard .header__name {
+    background: white !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    font-weight: 700;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+}
+
+/* Botones premium para dashboard */
+.header--dashboard .header-btn--ghost {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.header--dashboard .header-btn--ghost:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.header--dashboard .header-btn--logout {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.9));
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.header--dashboard .header-btn--logout:hover {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 1), rgba(220, 38, 38, 1));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+}
+
+/* Iconos de botones en dashboard */
+.header--dashboard .header-btn__icon-svg {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* Efecto de scroll mejorado para dashboard */
+.header--dashboard.header--scrolled {
+    background: linear-gradient(135deg,
+    rgba(5, 5, 5, 0.95) 0%,
+    rgba(5, 5, 5, 0.95) 50%,
+    rgba(11, 37, 208, 0.95) 100%
+    ) !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
