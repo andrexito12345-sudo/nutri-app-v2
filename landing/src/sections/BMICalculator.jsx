@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Calculator, TrendingDown, TrendingUp, Minus, CheckCircle, Calendar, Clock, Phone, X } from 'lucide-react';
 import toast from 'react-hot-toast';
-import api from '../../services/api';
+import api from '../services/api';
 
 export default function BMICalculator() {
   const [ref, inView] = useInView({
