@@ -95,7 +95,7 @@ export default function Hero() {
                     className="lg:hidden relative w-full max-w-[320px] mx-auto my-6 aspect-[4/5] rounded-2xl overflow-hidden shadow-xl"
                 >
                   <img
-                      src="/images/Doctora3.png"
+                      src="/images/aliss.png"
                       alt="Daniela Vaca"
                       className="w-full h-full object-cover object-top"
                   />
@@ -220,7 +220,7 @@ export default function Hero() {
               <div className="relative w-full h-[600px] rounded-3xl overflow-hidden shadow-2xl">
                 {/* Imagen Real */}
                 <img
-                    src="/images/Doctora3.png"
+                    src="/images/aliss.png"
                     alt="Daniela Vaca - Nutricionista Certificada en Guayaquil"
                     className="w-full h-full object-cover object-top"
                     style={{ objectPosition: 'center 8%' }}
