@@ -3,13 +3,14 @@
 // ------------------------------------------------------------
 // Versión con JWT - Sin sesiones SQLite
 // ============================================================
-
-require('dotenv').config();
+const path = require('path');
+const envFile = process.env.NODE_ENV === 'production' ? '.env' : '.env.local';
+require('dotenv').config({ path: path.resolve(__dirname, '..', envFile) });
 
 const express = require('express');
 const cors = require('cors');
 const pgPool = require('./pgClient');
-const path = require('path');
+
 
 // Rutas
 const authRoutes = require('./routes/auth');

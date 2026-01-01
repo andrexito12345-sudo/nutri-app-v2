@@ -10,22 +10,33 @@ if (!connectionString) {
 let pool = null;
 
 if (connectionString) {
-    pool = new Pool({
+    // Detectar si es localhost o producción
+    const isLocalhost = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
+
+    const poolConfig = {
         connectionString,
         max: 10,
         idleTimeoutMillis: 30000,
-        ssl: {
-            rejectUnauthorized: false, // necesario en Render
-        },
-    });
+    };
+
+    // Solo usar SSL en producción (Render), NO en localhost
+    if (!isLocalhost) {
+        poolConfig.ssl = {
+            rejectUnauthorized: false
+        };
+    }
+
+    pool = new Pool(poolConfig);
 
     pool.on('error', (err) => {
         console.error('❌ Error inesperado en el pool de PostgreSQL:', err);
     });
 
-    console.log('✅ Pool de PostgreSQL inicializado con SSL');
+    if (isLocalhost) {
+        console.log('✅ Pool de PostgreSQL inicializado (LOCAL - sin SSL)');
+    } else {
+        console.log('✅ Pool de PostgreSQL inicializado (PRODUCCIÓN - con SSL)');
+    }
 }
 
-// Exportamos el pool directamente.
-// En las rutas podrás hacer: const pg = require('../pgClient');  y luego pg.query(...)
 module.exports = pool;
