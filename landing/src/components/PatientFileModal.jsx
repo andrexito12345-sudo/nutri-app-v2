@@ -93,69 +93,42 @@ const PatientFileModal = ({ isOpen, onClose, patient, consultations = [], weight
         const [isExpanded, setIsExpanded] = useState(false);
 
         return (
-            <article className="consultation-card" style={{
-                background: 'white',
-                border: '1.5px solid #e2e8f0',
-                borderRadius: '12px',
-                marginBottom: '16px',
-                overflow: 'hidden',
-                transition: 'all 0.2s'
-            }}>
+            <article className="consultation-card-premium">
                 {/* HEADER CLICKEABLE */}
                 <div
-                    className="consultation-header"
+                    className="consultation-header-premium"
                     onClick={() => setIsExpanded(!isExpanded)}
-                    style={{
-                        padding: '16px 20px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        cursor: 'pointer',
-                        background: isExpanded ? '#f8fafc' : 'white',
-                        borderBottom: isExpanded ? '1px solid #e2e8f0' : 'none',
-                        transition: 'all 0.2s'
-                    }}
                 >
-                    <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
+                    <div className="consultation-header-left">
                         {/* ICONO COLLAPSE */}
-                        <svg
-                            width="20"
-                            height="20"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            style={{
-                                transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                                transition: 'transform 0.2s',
-                                color: '#64748b'
-                            }}
-                        >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                        </svg>
-
-                        {/* FECHA */}
-                        <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
-                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <div className={`collapse-icon ${isExpanded ? 'is-expanded' : ''}`}>
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
                             </svg>
-                            <span style={{fontWeight:'600', color:'#334155', fontSize:'0.95rem'}}>
-                            {formatDate(consultation.consultation_date)}
-                        </span>
                         </div>
 
-                        {/* PESO Y IMC QUICK INFO */}
-                        {consultation.weight && (
-                            <span style={{
-                                padding: '4px 10px',
-                                background: '#f1f5f9',
-                                borderRadius: '6px',
-                                fontSize: '0.85rem',
-                                color: '#64748b',
-                                fontWeight: '500'
-                            }}>
-                            {consultation.weight} kg {consultation.bmi && `• IMC ${consultation.bmi}`}
-                        </span>
-                        )}
+                        {/* FECHA Y QUICK INFO */}
+                        <div className="consultation-info">
+                            <div className="consultation-date-info">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <span className="date-text">{formatDate(consultation.consultation_date)}</span>
+                            </div>
+
+                            {consultation.weight && (
+                                <div className="quick-metrics">
+                                <span className="metric-badge metric-badge--weight">
+                                    {consultation.weight} kg
+                                </span>
+                                    {consultation.bmi && (
+                                        <span className="metric-badge metric-badge--bmi">
+                                        IMC {consultation.bmi}
+                                    </span>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* BOTÓN EDITAR */}
@@ -164,168 +137,294 @@ const PatientFileModal = ({ isOpen, onClose, patient, consultations = [], weight
                             e.stopPropagation();
                             navigate(`/consulta/editar/${consultation.id}`);
                         }}
-                        style={{
-                            background: '#f59e0b',
-                            color: 'white',
-                            border: 'none',
-                            padding: '8px 16px',
-                            borderRadius: '6px',
-                            fontSize: '0.85rem',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            transition: 'all 0.15s'
-                        }}
-                        onMouseOver={(e) => e.target.style.background = '#d97706'}
-                        onMouseOut={(e) => e.target.style.background = '#f59e0b'}
+                        className="btn-edit-consultation"
                     >
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                         Editar
                     </button>
                 </div>
 
-                {/* CONTENIDO COLAPSABLE */}
+                {/* CONTENIDO COLAPSABLE - SOAP */}
                 {isExpanded && (
-                    <div className="soap-sections" style={{padding: '20px'}}>
+                    <div className="consultation-body-premium">
+                        <div className="soap-sections-premium">
 
-                        {/* S: SUBJETIVO */}
-                        <div className="soap-section soap-subjective">
-                            <div className="soap-indicator indicator-subjective"></div>
-                            <div className="soap-content">
-                                <h4 className="soap-section-title">Subjetivo</h4>
-                                {consultation.subjective && (
-                                    <div className="soap-field">
-                                        <span className="field-label">Motivo/Historia:</span>
-                                        <p className="field-text">{consultation.subjective}</p>
-                                    </div>
-                                )}
-                                {consultation.symptoms && (
-                                    <div className="soap-field">
-                                        <span className="field-label" style={{color:'#ef4444'}}>Síntomas:</span>
-                                        <p className="field-text">{consultation.symptoms}</p>
-                                    </div>
-                                )}
-                                {(consultation.appetite || consultation.sleep_quality || consultation.stress_level || consultation.physical_activity || consultation.water_intake || consultation.bowel_habits) && (
-                                    <div className="measurement-group">
-                                        <span className="group-label">Estilo de Vida</span>
-                                        <div className="measurements-grid">
-                                            {consultation.appetite && <div className="measurement-item"><span>Apetito</span><strong>{consultation.appetite}</strong></div>}
-                                            {consultation.sleep_quality && <div className="measurement-item"><span>Sueño</span><strong>{consultation.sleep_quality}</strong></div>}
-                                            {consultation.stress_level && <div className="measurement-item"><span>Estrés</span><strong>{consultation.stress_level}</strong></div>}
-                                            {consultation.physical_activity && <div className="measurement-item"><span>Actividad</span><strong>{consultation.physical_activity}</strong></div>}
-                                            {consultation.water_intake && <div className="measurement-item"><span>Agua</span><strong>{consultation.water_intake}</strong></div>}
-                                            {consultation.bowel_habits && <div className="measurement-item"><span>Intestino</span><strong>{consultation.bowel_habits}</strong></div>}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* O: OBJETIVO */}
-                        <div className="soap-section soap-objective">
-                            <div className="soap-indicator indicator-objective"></div>
-                            <div className="soap-content">
-                                <h4 className="soap-section-title">Objetivo</h4>
-                                {(consultation.weight || consultation.height || consultation.bmi) && (
-                                    <div className="measurement-group">
-                                        <span className="group-label">Antropometría</span>
-                                        <div className="measurements-grid">
-                                            {consultation.weight && <div className="measurement-item"><span>Peso</span><strong>{consultation.weight} kg</strong></div>}
-                                            {consultation.height && <div className="measurement-item"><span>Talla</span><strong>{consultation.height} cm</strong></div>}
-                                            {consultation.bmi && <div className="measurement-item"><span>IMC</span><strong>{consultation.bmi}</strong></div>}
-                                            {consultation.waist && <div className="measurement-item"><span>Cintura</span><strong>{consultation.waist} cm</strong></div>}
-                                            {consultation.hip && <div className="measurement-item"><span>Cadera</span><strong>{consultation.hip} cm</strong></div>}
-                                            {consultation.body_fat && <div className="measurement-item"><span>Grasa</span><strong>{consultation.body_fat}%</strong></div>}
-                                            {consultation.muscle_mass && <div className="measurement-item"><span>Músculo</span><strong>{consultation.muscle_mass} kg</strong></div>}
-                                        </div>
-                                    </div>
-                                )}
-                                {(consultation.blood_pressure || consultation.glucose || consultation.cholesterol) && (
-                                    <div className="measurement-group">
-                                        <span className="group-label">Clínico / Laboratorio</span>
-                                        <div className="measurements-grid">
-                                            {consultation.blood_pressure && <div className="measurement-item"><span>PA</span><strong>{consultation.blood_pressure}</strong></div>}
-                                            {consultation.heart_rate && <div className="measurement-item"><span>FC</span><strong>{consultation.heart_rate} lpm</strong></div>}
-                                            {consultation.temperature && <div className="measurement-item"><span>Temp</span><strong>{consultation.temperature}°C</strong></div>}
-                                            {consultation.glucose && <div className="measurement-item"><span>Glucosa</span><strong>{consultation.glucose} mg/dL</strong></div>}
-                                            {consultation.hba1c && <div className="measurement-item"><span>HbA1c</span><strong>{consultation.hba1c}%</strong></div>}
-                                            {consultation.cholesterol && <div className="measurement-item"><span>Colest.</span><strong>{consultation.cholesterol}</strong></div>}
-                                            {consultation.triglycerides && <div className="measurement-item"><span>Triglic.</span><strong>{consultation.triglycerides}</strong></div>}
-                                        </div>
-                                    </div>
-                                )}
-                                {consultation.objective_notes && <p className="field-notes">"{consultation.objective_notes}"</p>}
-                            </div>
-                        </div>
-
-                        {/* A: ANÁLISIS */}
-                        <div className="soap-section soap-assessment">
-                            <div className="soap-indicator indicator-assessment"></div>
-                            <div className="soap-content">
-                                <h4 className="soap-section-title">Análisis</h4>
-                                {consultation.pes_problem && (
-                                    <div className="pes-diagnosis">
-                                        <div className="pes-item"><strong>P:</strong> {consultation.pes_problem}</div>
-                                        {consultation.pes_etiology && <div className="pes-item"><strong>E:</strong> {consultation.pes_etiology}</div>}
-                                        {consultation.pes_signs && <div className="pes-item"><strong>S:</strong> {consultation.pes_signs}</div>}
-                                    </div>
-                                )}
-                                <div className="clinical-data-row">
-                                    {consultation.nutritional_status && <div className="data-item-inline"><span className="data-label-inline">Estado</span><span className="data-value-inline">{consultation.nutritional_status}</span></div>}
-                                    {consultation.risk_level && <div className="data-item-inline"><span className="data-label-inline">Riesgo</span><span className="data-value-inline">{consultation.risk_level}</span></div>}
-                                    {consultation.priority && <div className="data-item-inline"><span className="data-label-inline">Prioridad</span><span className="data-value-inline">{consultation.priority}</span></div>}
+                            {/* S: SUBJETIVO */}
+                            <div className="soap-card soap-card--subjective">
+                                <div className="soap-card-header">
+                                    <div className="soap-badge soap-badge--blue">S</div>
+                                    <h5 className="soap-card-title">Subjetivo</h5>
                                 </div>
-                                {consultation.assessment_notes && <p className="field-notes">{consultation.assessment_notes}</p>}
-                            </div>
-                        </div>
-
-                        {/* P: PLAN */}
-                        <div className="soap-section soap-plan">
-                            <div className="soap-indicator indicator-plan"></div>
-                            <div className="soap-content">
-                                <h4 className="soap-section-title">Plan</h4>
-                                {consultation.treatment_goals && (
-                                    <div className="soap-field">
-                                        <span className="field-label">Metas:</span>
-                                        <p className="field-text">{consultation.treatment_goals}</p>
-                                    </div>
-                                )}
-                                {consultation.calories_prescribed && (
-                                    <div className="prescription-box">
-                                        <span className="prescription-label">Prescripción</span>
-                                        <div className="prescription-grid">
-                                            <div className="prescription-item"><span>Calorías</span><strong>{consultation.calories_prescribed} kcal</strong></div>
-                                            {consultation.protein_prescribed && <div className="prescription-item"><span>Proteína</span><strong>{consultation.protein_prescribed}g</strong></div>}
-                                            {consultation.carbs_prescribed && <div className="prescription-item"><span>Carbos</span><strong>{consultation.carbs_prescribed}g</strong></div>}
-                                            {consultation.fats_prescribed && <div className="prescription-item"><span>Grasas</span><strong>{consultation.fats_prescribed}g</strong></div>}
+                                <div className="soap-card-body">
+                                    {consultation.subjective && (
+                                        <div className="soap-field-premium">
+                                            <span className="field-label-premium">Motivo/Historia</span>
+                                            <p className="field-text-premium">{consultation.subjective}</p>
                                         </div>
-                                    </div>
-                                )}
-                                {consultation.diet_type && (
-                                    <div className="soap-field">
-                                        <span className="field-label">Dieta:</span>
-                                        <p className="field-text">{consultation.diet_type}</p>
-                                    </div>
-                                )}
-                                {consultation.supplements_recommended && (
-                                    <div className="soap-field">
-                                        <span className="field-label">Suplementos:</span>
-                                        <p className="field-text">{consultation.supplements_recommended}</p>
-                                    </div>
-                                )}
-                                {consultation.next_appointment && (
-                                    <div className="next-appointment">
-                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                        <span>Próxima Cita: <strong>{formatDate(consultation.next_appointment)}</strong></span>
-                                    </div>
-                                )}
+                                    )}
+                                    {consultation.symptoms && (
+                                        <div className="soap-field-premium">
+                                            <span className="field-label-premium field-label--alert">Síntomas</span>
+                                            <p className="field-text-premium">{consultation.symptoms}</p>
+                                        </div>
+                                    )}
+                                    {(consultation.appetite || consultation.sleep_quality || consultation.stress_level ||
+                                        consultation.physical_activity || consultation.water_intake || consultation.bowel_habits) && (
+                                        <div className="lifestyle-grid">
+                                            {consultation.appetite && (
+                                                <div className="lifestyle-item">
+                                                    <span className="lifestyle-label">Apetito</span>
+                                                    <span className="lifestyle-value">{consultation.appetite}</span>
+                                                </div>
+                                            )}
+                                            {consultation.sleep_quality && (
+                                                <div className="lifestyle-item">
+                                                    <span className="lifestyle-label">Sueño</span>
+                                                    <span className="lifestyle-value">{consultation.sleep_quality}</span>
+                                                </div>
+                                            )}
+                                            {consultation.stress_level && (
+                                                <div className="lifestyle-item">
+                                                    <span className="lifestyle-label">Estrés</span>
+                                                    <span className="lifestyle-value">{consultation.stress_level}</span>
+                                                </div>
+                                            )}
+                                            {consultation.physical_activity && (
+                                                <div className="lifestyle-item">
+                                                    <span className="lifestyle-label">Actividad</span>
+                                                    <span className="lifestyle-value">{consultation.physical_activity}</span>
+                                                </div>
+                                            )}
+                                            {consultation.water_intake && (
+                                                <div className="lifestyle-item">
+                                                    <span className="lifestyle-label">Agua</span>
+                                                    <span className="lifestyle-value">{consultation.water_intake}</span>
+                                                </div>
+                                            )}
+                                            {consultation.bowel_habits && (
+                                                <div className="lifestyle-item">
+                                                    <span className="lifestyle-label">Intestino</span>
+                                                    <span className="lifestyle-value">{consultation.bowel_habits}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
+
+                            {/* O: OBJETIVO */}
+                            <div className="soap-card soap-card--objective">
+                                <div className="soap-card-header">
+                                    <div className="soap-badge soap-badge--orange">O</div>
+                                    <h5 className="soap-card-title">Objetivo</h5>
+                                </div>
+                                <div className="soap-card-body">
+                                    {(consultation.weight || consultation.height || consultation.bmi) && (
+                                        <div className="measurements-section">
+                                            <span className="measurements-title">Antropometría</span>
+                                            <div className="measurements-grid-premium">
+                                                {consultation.weight && (
+                                                    <div className="measurement-pill">
+                                                        <span>Peso</span>
+                                                        <strong>{consultation.weight} kg</strong>
+                                                    </div>
+                                                )}
+                                                {consultation.height && (
+                                                    <div className="measurement-pill">
+                                                        <span>Talla</span>
+                                                        <strong>{consultation.height} cm</strong>
+                                                    </div>
+                                                )}
+                                                {consultation.bmi && (
+                                                    <div className="measurement-pill">
+                                                        <span>IMC</span>
+                                                        <strong>{consultation.bmi}</strong>
+                                                    </div>
+                                                )}
+                                                {consultation.waist && (
+                                                    <div className="measurement-pill">
+                                                        <span>Cintura</span>
+                                                        <strong>{consultation.waist} cm</strong>
+                                                    </div>
+                                                )}
+                                                {consultation.hip && (
+                                                    <div className="measurement-pill">
+                                                        <span>Cadera</span>
+                                                        <strong>{consultation.hip} cm</strong>
+                                                    </div>
+                                                )}
+                                                {consultation.body_fat && (
+                                                    <div className="measurement-pill">
+                                                        <span>Grasa</span>
+                                                        <strong>{consultation.body_fat}%</strong>
+                                                    </div>
+                                                )}
+                                                {consultation.muscle_mass && (
+                                                    <div className="measurement-pill">
+                                                        <span>Músculo</span>
+                                                        <strong>{consultation.muscle_mass} kg</strong>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {(consultation.blood_pressure || consultation.glucose || consultation.cholesterol) && (
+                                        <div className="measurements-section">
+                                            <span className="measurements-title">Clínico / Laboratorio</span>
+                                            <div className="measurements-grid-premium">
+                                                {consultation.blood_pressure && (
+                                                    <div className="measurement-pill">
+                                                        <span>PA</span>
+                                                        <strong>{consultation.blood_pressure}</strong>
+                                                    </div>
+                                                )}
+                                                {consultation.heart_rate && (
+                                                    <div className="measurement-pill">
+                                                        <span>FC</span>
+                                                        <strong>{consultation.heart_rate} lpm</strong>
+                                                    </div>
+                                                )}
+                                                {consultation.temperature && (
+                                                    <div className="measurement-pill">
+                                                        <span>Temp</span>
+                                                        <strong>{consultation.temperature}°C</strong>
+                                                    </div>
+                                                )}
+                                                {consultation.glucose && (
+                                                    <div className="measurement-pill">
+                                                        <span>Glucosa</span>
+                                                        <strong>{consultation.glucose} mg/dL</strong>
+                                                    </div>
+                                                )}
+                                                {consultation.hba1c && (
+                                                    <div className="measurement-pill">
+                                                        <span>HbA1c</span>
+                                                        <strong>{consultation.hba1c}%</strong>
+                                                    </div>
+                                                )}
+                                                {consultation.cholesterol && (
+                                                    <div className="measurement-pill">
+                                                        <span>Colest.</span>
+                                                        <strong>{consultation.cholesterol}</strong>
+                                                    </div>
+                                                )}
+                                                {consultation.triglycerides && (
+                                                    <div className="measurement-pill">
+                                                        <span>Triglic.</span>
+                                                        <strong>{consultation.triglycerides}</strong>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {consultation.objective_notes && (
+                                        <p className="field-notes-premium">"{consultation.objective_notes}"</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* A: ANÁLISIS */}
+                            <div className="soap-card soap-card--assessment">
+                                <div className="soap-card-header">
+                                    <div className="soap-badge soap-badge--purple">A</div>
+                                    <h5 className="soap-card-title">Análisis</h5>
+                                </div>
+                                <div className="soap-card-body">
+                                    {consultation.pes_problem && (
+                                        <div className="pes-diagnosis-premium">
+                                            <div className="pes-item-premium"><strong>P:</strong> {consultation.pes_problem}</div>
+                                            {consultation.pes_etiology && (
+                                                <div className="pes-item-premium"><strong>E:</strong> {consultation.pes_etiology}</div>
+                                            )}
+                                            {consultation.pes_signs && (
+                                                <div className="pes-item-premium"><strong>S:</strong> {consultation.pes_signs}</div>
+                                            )}
+                                        </div>
+                                    )}
+                                    <div className="clinical-badges">
+                                        {consultation.nutritional_status && (
+                                            <span className="clinical-badge">Estado: {consultation.nutritional_status}</span>
+                                        )}
+                                        {consultation.risk_level && (
+                                            <span className="clinical-badge">Riesgo: {consultation.risk_level}</span>
+                                        )}
+                                        {consultation.priority && (
+                                            <span className="clinical-badge">Prioridad: {consultation.priority}</span>
+                                        )}
+                                    </div>
+                                    {consultation.assessment_notes && (
+                                        <p className="field-notes-premium">{consultation.assessment_notes}</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* P: PLAN */}
+                            <div className="soap-card soap-card--plan">
+                                <div className="soap-card-header">
+                                    <div className="soap-badge soap-badge--green">P</div>
+                                    <h5 className="soap-card-title">Plan</h5>
+                                </div>
+                                <div className="soap-card-body">
+                                    {consultation.treatment_goals && (
+                                        <div className="soap-field-premium">
+                                            <span className="field-label-premium">Metas de Tratamiento</span>
+                                            <p className="field-text-premium">{consultation.treatment_goals}</p>
+                                        </div>
+                                    )}
+                                    {consultation.calories_prescribed && (
+                                        <div className="prescription-premium">
+                                            <span className="prescription-title">Prescripción Nutricional</span>
+                                            <div className="prescription-grid-premium">
+                                                <div className="prescription-pill">
+                                                    <span>Calorías</span>
+                                                    <strong>{consultation.calories_prescribed} kcal</strong>
+                                                </div>
+                                                {consultation.protein_prescribed && (
+                                                    <div className="prescription-pill">
+                                                        <span>Proteína</span>
+                                                        <strong>{consultation.protein_prescribed}g</strong>
+                                                    </div>
+                                                )}
+                                                {consultation.carbs_prescribed && (
+                                                    <div className="prescription-pill">
+                                                        <span>Carbos</span>
+                                                        <strong>{consultation.carbs_prescribed}g</strong>
+                                                    </div>
+                                                )}
+                                                {consultation.fats_prescribed && (
+                                                    <div className="prescription-pill">
+                                                        <span>Grasas</span>
+                                                        <strong>{consultation.fats_prescribed}g</strong>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {consultation.diet_type && (
+                                        <div className="soap-field-premium">
+                                            <span className="field-label-premium">Tipo de Dieta</span>
+                                            <p className="field-text-premium">{consultation.diet_type}</p>
+                                        </div>
+                                    )}
+                                    {consultation.supplements_recommended && (
+                                        <div className="soap-field-premium">
+                                            <span className="field-label-premium">Suplementos Recomendados</span>
+                                            <p className="field-text-premium">{consultation.supplements_recommended}</p>
+                                        </div>
+                                    )}
+                                    {consultation.next_appointment && (
+                                        <div className="next-appointment-premium">
+                                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            <span>Próxima Cita: <strong>{formatDate(consultation.next_appointment)}</strong></span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 )}
@@ -543,141 +642,337 @@ const PatientFileModal = ({ isOpen, onClose, patient, consultations = [], weight
                 <div className="modal-body" style={{paddingTop:'20px'}}>
                     {activeTab === 'ficha' && (
                         <section className="expediente-section">
-                            <div className="professional-info-grid">
-                                <div className="info-card">
-                                    <div className="info-card-header">
-                                        <svg className="info-card-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                                        <h4 className="info-card-title">Perfil</h4>
+                            <div className="premium-info-grid">
+
+                                {/* PERFIL PERSONAL */}
+                                <div className="premium-card">
+                                    <div className="premium-card-header">
+                                        <div className="premium-header-line"></div>
+                                        <h4 className="premium-card-title">PERFIL PERSONAL</h4>
+                                        <div className="premium-header-line"></div>
                                     </div>
-                                    <div className="data-row">
-                                        <DataItem label="Género" value={patient.gender} />
-                                        <DataItem label="Edad" value={calculateAge(patient.birth_date)} />
-                                        <DataItem label="Nacimiento" value={formatDate(patient.birth_date)} />
-                                        <DataItem label="Ocupación" value={patient.occupation} />
-                                    </div>
-                                </div>
-                                <div className="info-card">
-                                    <div className="info-card-header">
-                                        <svg className="info-card-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                                        <h4 className="info-card-title">Información Médica</h4>
-                                    </div>
-                                    <div className="data-row">
-                                        <DataItem label="Tipo de Sangre" value={patient.blood_type} />
-                                        <div className="data-item-inline">
-                                            <span className="data-label-inline">Alergias</span>
-                                            <span className={`data-value-inline ${patient.allergies ? 'alert-value' : ''}`}>{patient.allergies || "Ninguna registrada"}</span>
+                                    <div className="premium-card-body">
+                                        <div className="premium-data-grid">
+                                            <div className="premium-data-item">
+                                                <span className="premium-label">Género</span>
+                                                <span className="premium-value">{patient.gender || "—"}</span>
+                                            </div>
+                                            <div className="premium-data-item">
+                                                <span className="premium-label">Edad</span>
+                                                <span className="premium-value">{calculateAge(patient.birth_date)}</span>
+                                            </div>
+                                            <div className="premium-data-item">
+                                                <span className="premium-label">Nacimiento</span>
+                                                <span className="premium-value">{formatDate(patient.birth_date)}</span>
+                                            </div>
+                                            <div className="premium-data-item">
+                                                <span className="premium-label">Ocupación</span>
+                                                <span className="premium-value">{patient.occupation || "—"}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="info-card">
-                                    <div className="info-card-header">
-                                        <svg className="info-card-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                                        <h4 className="info-card-title">Contacto</h4>
+
+                                {/* INFORMACIÓN MÉDICA */}
+                                <div className="premium-card premium-card--medical">
+                                    <div className="premium-card-header">
+                                        <div className="premium-header-line premium-header-line--red"></div>
+                                        <h4 className="premium-card-title">INFORMACIÓN MÉDICA</h4>
+                                        <div className="premium-header-line premium-header-line--red"></div>
                                     </div>
-                                    <div className="data-row">
-                                        <DataItem label="Dirección" value={patient.address} />
-                                        <DataItem label="Contacto de Emergencia" value={patient.emergency_contact} />
-                                        <DataItem label="Tel. Emergencia" value={patient.emergency_phone} />
+                                    <div className="premium-card-body">
+                                        <div className="premium-data-grid">
+                                            <div className="premium-data-item">
+                                                <span className="premium-label">Tipo de Sangre</span>
+                                                <span className="premium-value premium-value--highlight">{patient.blood_type || "—"}</span>
+                                            </div>
+                                            <div className="premium-data-item premium-data-item--full">
+                                                <span className="premium-label">Alergias</span>
+                                                <span className={`premium-value ${patient.allergies ? 'premium-value--alert' : ''}`}>
+                                {patient.allergies || "Ninguna registrada"}
+                            </span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+
+                                {/* CONTACTO */}
+                                <div className="premium-card premium-card--contact">
+                                    <div className="premium-card-header">
+                                        <div className="premium-header-line premium-header-line--blue"></div>
+                                        <h4 className="premium-card-title">CONTACTO</h4>
+                                        <div className="premium-header-line premium-header-line--blue"></div>
+                                    </div>
+                                    <div className="premium-card-body">
+                                        <div className="premium-data-grid">
+                                            <div className="premium-data-item premium-data-item--full">
+                                                <span className="premium-label">Dirección</span>
+                                                <span className="premium-value">{patient.address || "—"}</span>
+                                            </div>
+                                            <div className="premium-data-item">
+                                                <span className="premium-label">Contacto Emergencia</span>
+                                                <span className="premium-value">{patient.emergency_contact || "—"}</span>
+                                            </div>
+                                            <div className="premium-data-item">
+                                                <span className="premium-label">Teléfono Emergencia</span>
+                                                <span className="premium-value">{patient.emergency_phone || "—"}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* NOTAS GENERALES */}
                                 {patient.notes && (
-                                    <div className="info-card full-width-card">
-                                        <div className="info-card-header">
-                                            <svg className="info-card-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                            <h4 className="info-card-title">Notas Generales</h4>
+                                    <div className="premium-card premium-card--notes premium-card--full">
+                                        <div className="premium-card-header">
+                                            <div className="premium-header-line premium-header-line--orange"></div>
+                                            <h4 className="premium-card-title">NOTAS GENERALES</h4>
+                                            <div className="premium-header-line premium-header-line--orange"></div>
                                         </div>
-                                        <p className="notes-text">{patient.notes}</p>
+                                        <div className="premium-card-body">
+                                            <p className="premium-notes-text">{patient.notes}</p>
+                                        </div>
                                     </div>
                                 )}
+
                             </div>
                         </section>
                     )}
 
                     {activeTab === 'evolucion' && (
                         <section className="expediente-section">
-                            <h3 className="expediente-section-title">
-                                <svg className="section-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                                Evolución del Peso y Composición
-                            </h3>
-                            {weightHistory && weightHistory.length > 0 ? (
-                                <div className="chart-container" style={{height:'400px'}}>
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <ComposedChart data={weightHistory}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                                            <XAxis dataKey="date" stroke="#64748b" tickFormatter={(val) => formatDate(val).slice(0,6)} />
-                                            <YAxis yAxisId="left" orientation="left" stroke="#4B0082" label={{ value: 'Kg', angle: -90, position: 'insideLeft' }} />
-                                            <YAxis yAxisId="right" orientation="right" stroke="#e67e22" label={{ value: '% Grasa', angle: 90, position: 'insideRight' }} />
-                                            <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px' }} />
-                                            <Legend />
-                                            <Line yAxisId="left" type="monotone" dataKey="weight" name="Peso (kg)" stroke="#4B0082" strokeWidth={3} dot={{ r: 4 }} />
-                                            <Line yAxisId="left" type="monotone" dataKey="muscle_mass" name="Músculo (kg)" stroke="#10b981" strokeWidth={2} />
-                                            <Line yAxisId="right" type="monotone" dataKey="body_fat_percentage" name="Grasa (%)" stroke="#e67e22" strokeWidth={2} strokeDasharray="5 5" />
-                                        </ComposedChart>
-                                    </ResponsiveContainer>
+                            <div className="evolution-premium-container">
+
+                                {/* HEADER CON ESTADÍSTICAS */}
+                                <div className="evolution-header">
+                                    <div className="evolution-title-section">
+                                        <h3 className="evolution-main-title">Evolución Corporal</h3>
+                                        <p className="evolution-subtitle">Seguimiento de peso, músculo y composición</p>
+                                    </div>
+
+                                    {weightHistory && weightHistory.length > 0 && (
+                                        <div className="evolution-stats-grid">
+                                            <div className="evolution-stat-card">
+                                                <div className="stat-icon stat-icon--purple">
+                                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                                    </svg>
+                                                </div>
+                                                <div className="stat-content">
+                                                    <span className="stat-label">Registros</span>
+                                                    <span className="stat-value">{weightHistory.length}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="evolution-stat-card">
+                                                <div className="stat-icon stat-icon--blue">
+                                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                                                    </svg>
+                                                </div>
+                                                <div className="stat-content">
+                                                    <span className="stat-label">Peso Actual</span>
+                                                    <span className="stat-value">{weightHistory[weightHistory.length - 1]?.weight || "—"} kg</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="evolution-stat-card">
+                                                <div className="stat-icon stat-icon--green">
+                                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                                    </svg>
+                                                </div>
+                                                <div className="stat-content">
+                                                    <span className="stat-label">Cambio Total</span>
+                                                    <span className="stat-value stat-value--change">
+                                    {weightHistory.length > 1
+                                        ? `${(weightHistory[weightHistory.length - 1]?.weight - weightHistory[0]?.weight).toFixed(1)} kg`
+                                        : "—"
+                                    }
+                                </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                            ) : (
-                                <div style={{textAlign:'center', padding:'40px', color:'#64748b'}}><p>No hay suficientes datos registrados para mostrar la gráfica.</p></div>
-                            )}
+
+                                {/* GRÁFICA */}
+                                {weightHistory && weightHistory.length > 0 ? (
+                                    <div className="evolution-chart-container">
+                                        <div className="chart-glass-card">
+                                            <div className="chart-header">
+                                                <h4 className="chart-title">Progreso en el Tiempo</h4>
+                                                <div className="chart-legend-custom">
+                                                    <div className="legend-item">
+                                                        <span className="legend-dot legend-dot--purple"></span>
+                                                        <span className="legend-text">Peso</span>
+                                                    </div>
+                                                    <div className="legend-item">
+                                                        <span className="legend-dot legend-dot--green"></span>
+                                                        <span className="legend-text">Músculo</span>
+                                                    </div>
+                                                    <div className="legend-item">
+                                                        <span className="legend-dot legend-dot--orange"></span>
+                                                        <span className="legend-text">Grasa %</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="chart-body">
+                                                <ResponsiveContainer width="100%" height={400}>
+                                                    <ComposedChart data={weightHistory}>
+                                                        <defs>
+                                                            <linearGradient id="colorWeight" x1="0" y1="0" x2="0" y2="1">
+                                                                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                                                                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                                                            </linearGradient>
+                                                        </defs>
+                                                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.5} />
+                                                        <XAxis
+                                                            dataKey="date"
+                                                            stroke="#64748b"
+                                                            style={{ fontSize: '0.75rem', fontWeight: '600' }}
+                                                            tickFormatter={(val) => formatDate(val).slice(0,6)}
+                                                        />
+                                                        <YAxis
+                                                            yAxisId="left"
+                                                            orientation="left"
+                                                            stroke="#8b5cf6"
+                                                            style={{ fontSize: '0.75rem', fontWeight: '700' }}
+                                                            label={{ value: 'Kg', angle: -90, position: 'insideLeft', style: { fill: '#8b5cf6', fontWeight: '700' } }}
+                                                        />
+                                                        <YAxis
+                                                            yAxisId="right"
+                                                            orientation="right"
+                                                            stroke="#f97316"
+                                                            style={{ fontSize: '0.75rem', fontWeight: '700' }}
+                                                            label={{ value: '% Grasa', angle: 90, position: 'insideRight', style: { fill: '#f97316', fontWeight: '700' } }}
+                                                        />
+                                                        <Tooltip
+                                                            contentStyle={{
+                                                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                                                border: '2px solid #e2e8f0',
+                                                                borderRadius: '0.75rem',
+                                                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                                                backdropFilter: 'blur(10px)'
+                                                            }}
+                                                            labelStyle={{ fontWeight: '700', color: '#0f172a' }}
+                                                        />
+                                                        <Legend
+                                                            wrapperStyle={{ display: 'none' }}
+                                                        />
+                                                        <Line
+                                                            yAxisId="left"
+                                                            type="monotone"
+                                                            dataKey="weight"
+                                                            name="Peso (kg)"
+                                                            stroke="#8b5cf6"
+                                                            strokeWidth={3}
+                                                            dot={{ r: 5, fill: '#8b5cf6', strokeWidth: 2, stroke: '#fff' }}
+                                                            activeDot={{ r: 7 }}
+                                                            fill="url(#colorWeight)"
+                                                        />
+                                                        <Line
+                                                            yAxisId="left"
+                                                            type="monotone"
+                                                            dataKey="muscle_mass"
+                                                            name="Músculo (kg)"
+                                                            stroke="#10b981"
+                                                            strokeWidth={2.5}
+                                                            dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }}
+                                                            strokeDasharray="5 5"
+                                                        />
+                                                        <Line
+                                                            yAxisId="right"
+                                                            type="monotone"
+                                                            dataKey="body_fat_percentage"
+                                                            name="Grasa (%)"
+                                                            stroke="#f97316"
+                                                            strokeWidth={2.5}
+                                                            dot={{ r: 4, fill: '#f97316', strokeWidth: 2, stroke: '#fff' }}
+                                                            strokeDasharray="3 3"
+                                                        />
+                                                    </ComposedChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="evolution-empty-state">
+                                        <div className="empty-icon-circle">
+                                            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                            </svg>
+                                        </div>
+                                        <p className="empty-title">No hay datos suficientes</p>
+                                        <p className="empty-description">Registra al menos 2 consultas con mediciones para ver la gráfica de evolución</p>
+                                    </div>
+                                )}
+
+                            </div>
                         </section>
                     )}
 
                     {activeTab === 'historial' && (
                         <section className="expediente-section">
-                            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
-                                <h3 className="expediente-section-title" style={{margin:0}}>
-                                    <svg className="section-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    Historial de Consultas SOAP ({consultations?.length || 0})
-                                </h3>
-                                <button
-                                    className="btn-new-consultation"
-                                    onClick={() => navigate(`/consulta/nueva/${patient.id}`)}
-                                    style={{
-                                        background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-                                        color: 'white',
-                                        border: 'none',
-                                        padding: '10px 20px',
-                                        borderRadius: '8px',
-                                        fontSize: '0.9rem',
-                                        fontWeight: '600',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '8px',
-                                        boxShadow: '0 2px 4px rgba(139, 92, 246, 0.3)',
-                                        transition: 'all 0.2s'
-                                    }}
-                                    onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
-                                    onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-                                >
-                                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    Nueva Consulta
-                                </button>
-                            </div>
+                            <div className="history-premium-container">
 
-                            {consultations && consultations.length > 0 ? (
-                                <div className="consultations-timeline">
-                                    {consultations.map((consultation, idx) => (
-                                        <ConsultationCard
-                                            key={consultation.id || idx}
-                                            consultation={consultation}
-                                            formatDate={formatDate}
-                                            navigate={navigate}
-                                        />
-                                    ))}
+                                {/* HEADER */}
+                                <div className="history-header-premium">
+                                    <div className="history-title-section">
+                                        <h3 className="history-main-title">Historial Clínico</h3>
+                                        <p className="history-subtitle">
+                                            <span className="history-count-badge">{consultations?.length || 0}</span>
+                                            {consultations?.length === 1 ? 'Consulta registrada' : 'Consultas registradas'}
+                                        </p>
+                                    </div>
+                                    <button
+                                        className="btn-new-consultation-premium"
+                                        onClick={() => navigate(`/consulta/nueva/${patient.id}`)}
+                                    >
+                                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Nueva Consulta
+                                    </button>
                                 </div>
-                            ) : (
-                                <div style={{textAlign:'center', padding:'60px 20px', color:'#94a3b8', background:'white', borderRadius:'12px', border:'2px dashed #e2e8f0'}}>
-                                    <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{margin:'0 auto 16px', opacity:0.3}}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    <p style={{fontSize:'1.1rem', fontWeight:'600', color:'#64748b', margin:'0 0 8px'}}>No hay consultas registradas</p>
-                                    <p style={{fontSize:'0.9rem', color:'#cbd5e1', margin:0}}>Comienza el seguimiento clínico creando la primera consulta</p>
-                                </div>
-                            )}
+
+                                {/* TIMELINE DE CONSULTAS */}
+                                {consultations && consultations.length > 0 ? (
+                                    <div className="history-timeline-premium">
+                                        {consultations.map((consultation, idx) => (
+                                            <ConsultationCard
+                                                key={consultation.id || idx}
+                                                consultation={consultation}
+                                                formatDate={formatDate}
+                                                navigate={navigate}
+                                            />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="history-empty-state-premium">
+                                        <div className="empty-icon-circle-premium">
+                                            <svg width="56" height="56" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </div>
+                                        <h4 className="empty-title-premium">Sin consultas registradas</h4>
+                                        <p className="empty-description-premium">
+                                            Comienza el seguimiento clínico creando la primera consulta SOAP
+                                        </p>
+                                        <button
+                                            className="btn-empty-action"
+                                            onClick={() => navigate(`/consulta/nueva/${patient.id}`)}
+                                        >
+                                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            Crear Primera Consulta
+                                        </button>
+                                    </div>
+                                )}
+
+                            </div>
                         </section>
                     )}
 
