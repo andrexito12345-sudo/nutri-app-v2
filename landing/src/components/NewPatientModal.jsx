@@ -35,7 +35,7 @@ const NewPatientModal = ({
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-white tracking-tight">Nuevo Paciente</h2>
-                            <p className="text-sm text-slate-400 font-medium mt-0.5">Complete los datos del expediente</p>
+                            <p className="text-sm text-slate-400 font-medium mt-0.5">Complete los datos</p>
                         </div>
                     </div>
 
