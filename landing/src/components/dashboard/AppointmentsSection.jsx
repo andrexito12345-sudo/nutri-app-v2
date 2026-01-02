@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Calendar, ChevronRight, User, Mail, Phone, Clock } from 'lucide-react';
+import { Search, Filter, Calendar, ChevronRight, Mail, Phone, Clock, Trash2 } from 'lucide-react';
 
 const AppointmentsSection = ({
                                  appointments,
@@ -16,13 +16,13 @@ const AppointmentsSection = ({
                                  handleCreatePatientFromAppointment
                              }) => {
 
-    // Helper para iniciales (Estilo Premium)
+    // Helper para iniciales
     const getInitials = (name) => {
         if (!name) return "P";
         return name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
     };
 
-    // Helper para gradientes de Avatar
+    // Helper para gradientes
     const getAvatarGradient = (name) => {
         const gradients = [
             'from-blue-400 to-indigo-500',
@@ -36,10 +36,10 @@ const AppointmentsSection = ({
     };
 
     return (
-        <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden mb-8">
+        <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden mb-8 flex flex-col h-full">
 
-            {/* --- HEADER & FILTROS (Compacto) --- */}
-            <div className="p-6 border-b border-slate-100 flex flex-col xl:flex-row gap-4 justify-between items-start xl:items-center">
+            {/* --- HEADER & FILTROS --- */}
+            <div className="p-6 border-b border-slate-100 flex flex-col xl:flex-row gap-4 justify-between items-start xl:items-center bg-white z-20 relative">
 
                 {/* Título */}
                 <div>
@@ -52,15 +52,15 @@ const AppointmentsSection = ({
                         )}
                     </h2>
                     <p className="text-sm text-slate-400 font-medium mt-1">
-                        Administra y da seguimiento a tu agenda
+                        Mostrando las últimas actualizaciones
                     </p>
                 </div>
 
-                {/* Filtros en Fila (Glass Style) */}
+                {/* Filtros */}
                 <div className="flex flex-col md:flex-row gap-3 w-full xl:w-auto">
                     {/* Buscador */}
                     <div className="relative group w-full md:w-64">
-
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                         <input
                             type="text"
                             placeholder="Buscar paciente..."
@@ -70,7 +70,7 @@ const AppointmentsSection = ({
                         />
                     </div>
 
-                    {/* Select Estado */}
+                    {/* Estado */}
                     <div className="relative w-full md:w-48">
                         <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <select
@@ -86,7 +86,7 @@ const AppointmentsSection = ({
                         <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 rotate-90 pointer-events-none" />
                     </div>
 
-                    {/* Select Fecha */}
+                    {/* Fecha */}
                     <div className="relative w-full md:w-48">
                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <select
@@ -104,25 +104,27 @@ const AppointmentsSection = ({
                 </div>
             </div>
 
-            {/* --- TABLA MODERNA --- */}
-            <div className="overflow-x-auto">
+            {/* --- TABLA CON SCROLL (Altura limitada) --- */}
+            {/* max-h-[650px] es aprox 10 filas. overflow-y-auto activa el scroll */}
+            <div className="overflow-x-auto overflow-y-auto max-h-[650px] custom-scrollbar bg-white">
                 <table className="w-full text-left border-collapse">
-                    {/* Header Sutil (Adiós barra negra) */}
-                    <thead>
-                    <tr className="bg-slate-50/50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-400 font-bold">
-                        <th className="px-6 py-4">Paciente</th>
-                        <th className="px-6 py-4">Contacto</th>
-                        <th className="px-6 py-4">Motivo / Lead</th>
-                        <th className="px-6 py-4">Fecha</th>
-                        <th className="px-6 py-4 text-center">Estado</th>
-                        <th className="px-6 py-4 text-center">Acciones</th>
+
+                    {/* Header Sticky (Se queda fijo al hacer scroll) */}
+                    <thead className="sticky top-0 z-10 bg-slate-50 shadow-sm">
+                    <tr className="text-xs uppercase tracking-wider text-slate-400 font-bold border-b border-slate-200">
+                        <th className="px-6 py-4 whitespace-nowrap bg-slate-50">Paciente</th>
+                        <th className="px-6 py-4 whitespace-nowrap bg-slate-50">Contacto</th>
+                        <th className="px-6 py-4 whitespace-nowrap bg-slate-50">Motivo / Lead</th>
+                        <th className="px-6 py-4 whitespace-nowrap bg-slate-50">Fecha</th>
+                        <th className="px-6 py-4 whitespace-nowrap text-center bg-slate-50">Estado</th>
+                        <th className="px-6 py-4 whitespace-nowrap text-center bg-slate-50">Acciones</th>
                     </tr>
                     </thead>
 
                     <tbody className="divide-y divide-slate-50">
                     {appointments.length === 0 ? (
                         <tr>
-                            <td colSpan="6" className="px-6 py-12 text-center">
+                            <td colSpan="6" className="px-6 py-20 text-center">
                                 <div className="flex flex-col items-center justify-center opacity-50">
                                     <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
                                         <Calendar className="w-8 h-8 text-slate-400" />
@@ -148,7 +150,7 @@ const AppointmentsSection = ({
                                         `}
                                 >
                                     {/* Paciente */}
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center gap-3">
                                             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm bg-gradient-to-br ${getAvatarGradient(appointment.patient_name)}`}>
                                                 {getInitials(appointment.patient_name)}
@@ -160,7 +162,7 @@ const AppointmentsSection = ({
                                     </td>
 
                                     {/* Contacto */}
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex flex-col gap-1">
                                             {appointment.patient_email && (
                                                 <div className="flex items-center text-xs text-slate-500">
@@ -190,7 +192,7 @@ const AppointmentsSection = ({
                                     </td>
 
                                     {/* Fecha */}
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex flex-col">
                                                 <span className="text-sm font-bold text-slate-700">
                                                     {formatDate(appointment.appointment_datetime)}
@@ -202,15 +204,14 @@ const AppointmentsSection = ({
                                         </div>
                                     </td>
 
-                                    {/* Estado (Badges Modernos) */}
-                                    <td className="px-6 py-4 text-center">
+                                    {/* Estado */}
+                                    <td className="px-6 py-4 whitespace-nowrap text-center">
                                             <span className={`
                                                 inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border
                                                 ${appointment.status === 'pendiente' ? 'bg-amber-50 text-amber-600 border-amber-100' : ''}
                                                 ${appointment.status === 'realizada' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : ''}
                                                 ${appointment.status === 'cancelada' ? 'bg-rose-50 text-rose-600 border-rose-100' : ''}
                                             `}>
-                                                {/* Icono de estado */}
                                                 <span className={`w-1.5 h-1.5 rounded-full mr-2 
                                                     ${appointment.status === 'pendiente' ? 'bg-amber-500 animate-pulse' : ''}
                                                     ${appointment.status === 'realizada' ? 'bg-emerald-500' : ''}
@@ -220,8 +221,8 @@ const AppointmentsSection = ({
                                             </span>
                                     </td>
 
-                                    {/* Acciones (Botones Sutiles) */}
-                                    <td className="px-6 py-4 text-center">
+                                    {/* Acciones */}
+                                    <td className="px-6 py-4 whitespace-nowrap text-center">
                                         <div className="flex items-center justify-center gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                                             {/* Pendiente */}
                                             <button
@@ -265,9 +266,7 @@ const AppointmentsSection = ({
                                                 className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                                                 title="Eliminar"
                                             >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
+                                                <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
                                     </td>
