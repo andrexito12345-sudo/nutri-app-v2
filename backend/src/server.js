@@ -11,7 +11,7 @@ const express = require('express');
 const cors = require('cors');
 const pgPool = require('./pgClient');
 
-// 👇 1. IMPORTAR EL BOT (Corregido: usamos './' porque están en la misma carpeta)
+// 👇 1. IMPORTAR EL BOT (Al importarlo, ya se ejecuta la lógica segura de whatsappBot.js)
 const whatsappClient = require('../whatsappBot');
 
 // Rutas
@@ -43,8 +43,6 @@ const allowedOrigins = [
     'https://nutri-app-frontend.onrender.com',
     process.env.FRONTEND_URL
 ].filter(Boolean); // Eliminar valores undefined
-
-// (Nota: Moví el initialize() al final para asegurar que el servidor arranque primero)
 
 app.use(cors({
     origin: function (origin, callback) {
@@ -158,9 +156,10 @@ async function start() {
         await seedDoctor();
         console.log('✅ seedDoctor() completado');
 
-        // 👇 2. INICIAR EL BOT (Aquí es el lugar seguro)
-        console.log('🤖 Iniciando Bot de WhatsApp...');
-        whatsappClient.initialize();
+        // 👇 2. OJO: COMENTADO PORQUE EL BOT YA SE INICIA EN whatsappBot.js
+        // Si descomentas esto, Render fallará. Déjalo comentado.
+        // console.log('🤖 Iniciando Bot de WhatsApp...');
+        // whatsappClient.initialize();
 
     } catch (err) {
         console.error('❌ Error durante inicialización:', err.message || err);
@@ -179,4 +178,4 @@ async function start() {
 
 start();
 
-// Actualizacion forzosa
+// Actualizacion forzosa para Render - Fix Final

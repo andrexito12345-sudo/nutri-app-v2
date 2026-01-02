@@ -49,13 +49,12 @@ async function saveLead(msg) {
             if (rawId.includes('@c.us')) {
                 phone = rawId.replace(/\D/g, '');
             } else {
-                // Si es un ID encriptado (@lid) y falló, guardamos el ID temporal
                 phone = 'LID_' + rawId.replace('@lid', '');
                 console.log('⚠️ Lead guardado con ID oculto (LID).');
             }
         }
 
-        // Si logramos sacar algo, lo guardamos
+        // Guardar en DB
         const payload = JSON.stringify({
             source: 'WhatsApp Bot',
             phone: phone,
@@ -116,27 +115,30 @@ client.on('message', async msg => {
     }
 });
 
-// 👇 LÓGICA DE INICIO SEGURA (MODIFICADA) 👇
+// 👇 LÓGICA DE PROTECCIÓN PARA RENDER (NO TOCAR) 👇
+// Esta función evita que Render intente abrir Chrome y explote
 const startBot = async () => {
     try {
         console.log('🔄 Verificando entorno para WhatsApp Bot...');
 
-        // Si estamos en RENDER o PRODUCCIÓN, NO iniciamos
+        // 1. SI ESTAMOS EN RENDER (Nube), SALIMOS INMEDIATAMENTE
+        // Render define automáticamente la variable 'RENDER'
         if (process.env.RENDER || process.env.NODE_ENV === 'production') {
             console.log('🛑 RENDER DETECTADO: El Bot se quedará APAGADO para evitar crash.');
-            return; // ¡Salimos aquí! No se ejecuta nada más.
+            console.log('✅ El Dashboard y la Base de Datos funcionarán correctamente.');
+            return; // ⛔ AQUÍ SE DETIENE EL BOT EN LA NUBE
         }
 
-        // Si es tu PC, iniciamos
-        console.log('💻 MODO LOCAL: Iniciando Bot...');
+        // 2. SI ESTAMOS EN TU PC (Local), INICIAMOS
+        console.log('💻 MODO LOCAL: Iniciando NutriBot... 🚀');
         await client.initialize();
 
     } catch (error) {
-        console.error('⚠️ El Bot no pudo iniciar (Esto es normal en Render):', error.message);
+        console.error('⚠️ ALERTA: El Bot falló al iniciar (Posible falta de Chrome en el entorno).');
     }
 };
 
-// Iniciamos con manejo de errores para callar la advertencia
+// Ejecutamos la función segura
 startBot().catch(e => console.log('Info: Bot en pausa.'));
 
 module.exports = client;
