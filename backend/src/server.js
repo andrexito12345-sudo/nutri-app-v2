@@ -11,6 +11,8 @@ const express = require('express');
 const cors = require('cors');
 const pgPool = require('./pgClient');
 
+// 👇 1. IMPORTAR EL BOT (Corregido: usamos './' porque están en la misma carpeta)
+const whatsappClient = require('../whatsappBot');
 
 // Rutas
 const authRoutes = require('./routes/auth');
@@ -19,7 +21,7 @@ const dashboardRoutes = require('./routes/dashboard');
 const visitsRoutes = require('./routes/visits');
 const patientsRoutes = require('./routes/patients');
 const consultationsRoutes = require('./routes/consultations');
-
+const leadsRoutes = require('./routes/leads');
 const db = require('./db');
 const { seedDoctor } = require('./seedDoctor');
 
@@ -41,6 +43,8 @@ const allowedOrigins = [
     'https://nutri-app-frontend.onrender.com',
     process.env.FRONTEND_URL
 ].filter(Boolean); // Eliminar valores undefined
+
+// (Nota: Moví el initialize() al final para asegurar que el servidor arranque primero)
 
 app.use(cors({
     origin: function (origin, callback) {
@@ -112,6 +116,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/visits', visitsRoutes);
 app.use('/api/patients', patientsRoutes);
 app.use('/api/consultations', consultationsRoutes);
+app.use('/api/leads', leadsRoutes);
 
 // ===== MANEJO DE ERRORES ===================================================
 
@@ -152,6 +157,10 @@ async function start() {
         console.log('👩‍⚕️ Ejecutando seedDoctor()...');
         await seedDoctor();
         console.log('✅ seedDoctor() completado');
+
+        // 👇 2. INICIAR EL BOT (Aquí es el lugar seguro)
+        console.log('🤖 Iniciando Bot de WhatsApp...');
+        whatsappClient.initialize();
 
     } catch (err) {
         console.error('❌ Error durante inicialización:', err.message || err);

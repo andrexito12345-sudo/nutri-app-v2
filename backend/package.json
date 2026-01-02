@@ -22,8 +22,18 @@
     "express-session": "^1.18.2",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.16.3",
+    "qrcode-terminal": "^0.12.0",
     "react-router-dom": "^7.9.6",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "whatsapp-web.js": "github:pedroslopez/whatsapp-web.js#main"
+  },
+  "overrides": {
+    "whatsapp-web.js": {
+      "puppeteer": {
+        "tar-fs": "^2.1.4",
+        "ws": "^8.17.1"
+      }
+    }
   },
   "devDependencies": {
     "nodemon": "^3.1.11"

@@ -16,6 +16,10 @@ import "./DashboardPage.css";
 import ConfirmDeleteModal from '../components/modals/ConfirmDeleteModal';
 import ConfirmCreationModal from '../components/modals/ConfirmCreationModal';
 
+// 👇 1. IMPORTAR LA SECCIÓN DE LEADS
+import LeadsSection from '../components/dashboard/LeadsSection';
+
+import ConfirmDeleteLeadModal from '../components/modals/ConfirmDeleteLeadModal';
 
 function DashboardPage() {
     const [isToolsOpen, setIsToolsOpen] = useState(false);
@@ -83,6 +87,9 @@ function DashboardPage() {
                     />
                 </div>
             </div>
+
+            {/* 👇 3. AQUÍ PONEMOS LA BANDEJA DE LEADS (Lo Nuevo) */}
+            <LeadsSection leads={logic.leads} onDelete={logic.deleteLead} />
 
             {/* Sección de Citas */}
             <AppointmentsSection
@@ -193,6 +200,12 @@ function DashboardPage() {
                 patientName={logic.appointmentToConvert?.patient_name}
             />
 
+
+            <ConfirmDeleteLeadModal
+                isOpen={!!logic.leadToDelete}
+                onClose={() => logic.setLeadToDelete(null)} // Cierra si cancelas
+                onConfirm={logic.confirmDeleteLead}         // Borra si confirmas
+            />
 
             <ToastContainer />
         </div>

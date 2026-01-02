@@ -8,13 +8,11 @@ import { printSoapReport } from "../utils/soapPrinter";
 export function useDashboardLogic() {
     const navigate = useNavigate();
 
-    // 👇 1. NUEVO ESTADO PARA CONTROLAR EL MODAL
+    const [leadToDelete, setLeadToDelete] = useState(null);
+
+    // --- ESTADOS DE MODALES DE CONFIRMACIÓN ---
     const [appointmentToDelete, setAppointmentToDelete] = useState(null);
-
-    // 1. ESTADO PARA MODAL DE ELIMINAR PACIENTE
-    const [patientToDelete, setPatientToDelete] = useState(null); // Guardará el objeto { id, name }
-
-    // 👇 1. NUEVO ESTADO PARA ESTE MODAL DE AGENDAR CITA
+    const [patientToDelete, setPatientToDelete] = useState(null);
     const [appointmentToConvert, setAppointmentToConvert] = useState(null);
 
     // --- ESTADOS DE HERRAMIENTAS (MODALES) ---
@@ -27,6 +25,10 @@ export function useDashboardLogic() {
     const [appointments, setAppointments] = useState([]);
     const [visitStats, setVisitStats] = useState({ total: 0, today: 0 });
     const [appointmentStats, setAppointmentStats] = useState(null);
+
+    // 👇 NUEVO: Estado para almacenar los Leads (WhatsApp/Web)
+    const [leads, setLeads] = useState([]);
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -40,7 +42,7 @@ export function useDashboardLogic() {
     const [patientsLoading, setPatientsLoading] = useState(false);
     const [patientSearch, setPatientSearch] = useState("");
 
-    // --- ESTADOS DE MODALES Y EDICIÓN ---
+    // --- ESTADOS DE EDICIÓN DE PACIENTE ---
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [showPatientModal, setShowPatientModal] = useState(false);
     const [patientConsultations, setPatientConsultations] = useState([]);
@@ -67,6 +69,27 @@ export function useDashboardLogic() {
         onPrintError: (error) => console.error("Error al imprimir:", error)
     });
 
+    // 1. SOLICITUD: Solo abre el modal (guarda el ID)
+    const requestDeleteLead = (id) => {
+        setLeadToDelete(id);
+    };
+
+    // 2. CONFIRMACIÓN: Ejecuta el borrado real (cuando das click en "Sí, Eliminar")
+    const confirmDeleteLead = async () => {
+        if (!leadToDelete) return;
+
+        try {
+            await api.delete(`/leads/${leadToDelete}`);
+            setLeads((prev) => prev.filter((lead) => lead.id !== leadToDelete));
+            toast.success("Lead eliminado correctamente");
+        } catch (error) {
+            console.error(error);
+            toast.error("Error al eliminar lead");
+        } finally {
+            setLeadToDelete(null); // Cerrar modal siempre
+        }
+    };
+
     useEffect(() => {
         if (printData) {
             setTimeout(() => {
@@ -75,19 +98,10 @@ export function useDashboardLogic() {
         }
     }, [printData, handlePrintProcess]);
 
-    // 👇 2. FUNCIÓN 1: CUANDO APRIETAS EL BOTÓN ROJO (ABRE MODAL)
-    // Reemplaza a la antigua deleteAppointment que tenía window.confirm
-    const requestDeleteAppointment = (id) => {
-        setAppointmentToDelete(id); // Solo guarda el ID y abre el modal visualmente
-    };
+    // --- HANDLERS PARA MODALES ---
+    const requestDeleteAppointment = (id) => setAppointmentToDelete(id);
+    const requestDeletePatient = (id, name) => setPatientToDelete({ id, name });
 
-    // 2. FUNCIÓN PARA SOLICITAR ELIMINACIÓN (ABRIR MODAL)
-    // Reemplaza a la antigua deletePatient
-    const requestDeletePatient = (id, name) => {
-        setPatientToDelete({ id, name });
-    };
-
-    // --- FUNCIONES AUXILIARES ---
     const formatDate = (isoString) => {
         if (!isoString) return "-";
         const d = new Date(isoString);
@@ -97,7 +111,7 @@ export function useDashboardLogic() {
         });
     };
 
-    // --- CÁLCULO DE MÉTRICAS (CORREGIDO) ---
+    // --- CÁLCULO DE MÉTRICAS ---
     const metrics = useMemo(() => {
         const list = Array.isArray(appointments) ? appointments : [];
         return {
@@ -114,10 +128,12 @@ export function useDashboardLogic() {
             if (!isBackgroundUpdate) setLoading(true);
             setError("");
 
-            const [appointmentsRes, visitsRes, statsRes] = await Promise.all([
+            // 👇 NUEVO: Agregamos api.get("/leads") al Promise.all
+            const [appointmentsRes, visitsRes, statsRes, leadsRes] = await Promise.all([
                 api.get("/appointments"),
                 api.get("/visits/stats"),
                 api.get("/appointments/stats"),
+                api.get("/leads"), // Trae los interesados de WhatsApp
             ]);
 
             setAppointments(Array.isArray(appointmentsRes.data?.appointments) ? appointmentsRes.data.appointments : []);
@@ -129,9 +145,16 @@ export function useDashboardLogic() {
             });
 
             setAppointmentStats(statsRes.data || null);
+
+            // 👇 NUEVO: Guardamos los leads en el estado
+            setLeads(leadsRes.data?.leads || []);
+
         } catch (err) {
             console.error("Error cargando dashboard:", err);
-            if (!isBackgroundUpdate) setError("No se pudieron cargar los datos.");
+            // No mostramos error global si falla solo leads, para no bloquear la app
+            if (!isBackgroundUpdate) {
+                // setError("No se pudieron cargar algunos datos."); // Opcional
+            }
         } finally {
             if (!isBackgroundUpdate) setLoading(false);
         }
@@ -144,13 +167,13 @@ export function useDashboardLogic() {
 
     useEffect(() => {
         const intervalId = setInterval(() => {
-            console.log("🔄 Radar: Buscando nuevas citas...");
+            console.log("🔄 Radar: Buscando nuevas citas y leads...");
             loadDashboardData(true);
-        }, 30000);
+        }, 30000); // Actualiza cada 30 segundos
         return () => clearInterval(intervalId);
     }, []);
 
-    // --- CARGA DE DATOS (PACIENTES) ---
+    // --- CARGA DE PACIENTES ---
     const fetchPatients = async (searchTerm = "") => {
         try {
             setPatientsLoading(true);
@@ -174,7 +197,7 @@ export function useDashboardLogic() {
         return () => clearTimeout(timer);
     }, [patientSearch]);
 
-    // --- LÓGICA DE CITAS (FILTROS Y ACCIONES) ---
+    // --- FILTROS DE CITAS ---
     const filteredAppointments = useMemo(() => {
         const list = Array.isArray(appointments) ? appointments : [];
         let result = [...list];
@@ -215,6 +238,7 @@ export function useDashboardLogic() {
         return result.sort((a, b) => b.id - a.id);
     }, [appointments, statusFilter, search, dateFilter]);
 
+    // --- ACCIONES (CRUD) ---
     const changeStatus = async (id, newStatus) => {
         try {
             await api.patch(`/appointments/${id}/status`, { status: newStatus });
@@ -226,7 +250,6 @@ export function useDashboardLogic() {
         }
     };
 
-    // --- ACCIONES DE PACIENTES ---
     const viewPatientRecord = async (patient) => {
         setSelectedPatient(patient);
         setShowPatientModal(true);
@@ -268,9 +291,8 @@ export function useDashboardLogic() {
         setShowPatientForm(true);
     };
 
-    // 👇 2. FUNCIÓN MODIFICADA (Ya no usa window.confirm, solo abre el modal)
     const handleCreatePatientFromAppointment = (appointment) => {
-        setAppointmentToConvert(appointment); // Guardamos la cita y abrimos el modal
+        setAppointmentToConvert(appointment);
     };
 
     const savePatient = async (e) => {
@@ -318,20 +340,6 @@ export function useDashboardLogic() {
         }
     };
 
-    const deletePatient = async (id, name) => {
-        if (!window.confirm(`⚠️ ¿Estás segura de que deseas eliminar a "${name}"?\n\nEsta acción borrará TODO su historial, consultas y citas. NO se puede deshacer.`)) {
-            return;
-        }
-        try {
-            await api.delete(`/patients/${id}`);
-            setPatients(prev => prev.filter(p => p.id !== id));
-            toast.success("Paciente eliminado correctamente");
-        } catch (error) {
-            console.error("Error eliminando:", error);
-            toast.error("No se pudo eliminar el paciente. Intenta de nuevo.");
-        }
-    };
-
     const printLatestConsultation = async (patient) => {
         try {
             const response = await api.get(`/consultations/patient/${patient.id}?limit=1`);
@@ -362,22 +370,9 @@ export function useDashboardLogic() {
         { periodo: "30 días", Pendientes: last30Stats.pending, Realizadas: last30Stats.done, Canceladas: last30Stats.cancelled },
     ];
 
-    // 👇 AGREGAR ESTA FUNCIÓN NUEVA
-    const deleteAppointment = async (id) => {
-        if (!window.confirm("⚠️ ¿Estás segura de que deseas ELIMINAR esta cita permanentemente?\n\nEsta acción no se puede deshacer.")) {
-            return;
-        }
-        try {
-            await api.delete(`/appointments/${id}`);
-            setAppointments((prev) => prev.filter((a) => a.id !== id));
-            toast.success("Cita eliminada del sistema");
-        } catch (error) {
-            console.error(error);
-            toast.error("Error al eliminar la cita");
-        }
-    };
+    // --- FUNCIONES DE CONFIRMACIÓN (ELIMINAR/CREAR) ---
+    const deleteAppointment = requestDeleteAppointment; // Alias para compatibilidad
 
-    // 👇 3. FUNCIÓN 2: CUANDO CONFIRMAS EN EL MODAL (BORRA DE VERDAD)
     const confirmDeleteAppointment = async () => {
         if (!appointmentToDelete) return;
 
@@ -389,11 +384,10 @@ export function useDashboardLogic() {
             console.error(error);
             toast.error("Error al eliminar la cita");
         } finally {
-            setAppointmentToDelete(null); // Cierra el modal
+            setAppointmentToDelete(null);
         }
     };
 
-    // 3. FUNCIÓN PARA CONFIRMAR ELIMINACIÓN (EJECUTAR BORRADO)
     const confirmDeletePatient = async () => {
         if (!patientToDelete) return;
 
@@ -405,17 +399,14 @@ export function useDashboardLogic() {
             console.error("Error eliminando:", error);
             toast.error("No se pudo eliminar el paciente.");
         } finally {
-            setPatientToDelete(null); // Cerrar modal
+            setPatientToDelete(null);
         }
     };
 
-    // 👇 3. NUEVA FUNCIÓN: Se ejecuta cuando das click en "Sí, Crear Ficha"
     const confirmCreatePatient = () => {
         if (!appointmentToConvert) return;
-
         const appointment = appointmentToConvert;
 
-        // Lógica original de llenado de formulario
         setPendingAppointment(appointment);
         setPatientFormData({
             full_name: appointment.patient_name || "",
@@ -426,12 +417,11 @@ export function useDashboardLogic() {
             emergency_contact: "", emergency_phone: "", blood_type: "", allergies: ""
         });
         setIsEditing(false);
-        setShowPatientForm(true); // Abre el formulario grande
-
-        setAppointmentToConvert(null); // Cierra el modal pequeño
+        setShowPatientForm(true);
+        setAppointmentToConvert(null);
     };
 
-    // ✅ RETURN PROFESIONAL Y COMPLETO
+    // ✅ RETURN FINAL COMPLETO
     return {
         // Datos y Estados
         loading,
@@ -441,6 +431,10 @@ export function useDashboardLogic() {
         filteredAppointments,
         patients,
         patientsLoading,
+
+        // 👇 NUEVO: Exportamos los leads para usarlos en el Dashboard
+        leads,
+        deleteLead: requestDeleteLead, // 👈 AGREGAR AQUÍ
 
         // Filtros
         search,
@@ -474,7 +468,7 @@ export function useDashboardLogic() {
             savingPatient
         },
 
-        // ✅ SETTERS DE MODALES (TODOS EXPORTADOS)
+        // Setters
         setShowStatsModal,
         setShowBMIModal,
         setShowDietModal,
@@ -482,7 +476,7 @@ export function useDashboardLogic() {
         setPendingAppointment,
         setShowHerramientasAvanzadas,
 
-        // Handlers / Acciones
+        // Handlers
         handlePatientFormChange: (e) => setPatientFormData(prev => ({ ...prev, [e.target.name]: e.target.value })),
         savePatient,
         deletePatient: requestDeletePatient,
@@ -491,15 +485,14 @@ export function useDashboardLogic() {
         closePatientModal,
         openPatientForm,
         changeStatus,
-        deleteAppointment: requestDeleteAppointment,
+        deleteAppointment,
         handleCreatePatientFromAppointment,
         printLatestConsultation,
         formatDate,
         navigate,
 
+        // Modales de Confirmación
         confirmDeleteAppointment,
-
-        // 👇 EXPORTAMOS EL ESTADO Y LAS DOS FUNCIONES
         appointmentToDelete,
         setAppointmentToDelete,
 
@@ -507,10 +500,13 @@ export function useDashboardLogic() {
         setPatientToDelete,
         confirmDeletePatient,
 
-        // 👇 AGREGAR ESTOS 3 AL FINAL DEL RETURN
-        appointmentToConvert,           // Estado del modal
-        setAppointmentToConvert,        // Para cerrar el modal (Cancel)
-        confirmCreatePatient,           // Para confirmar (Yes)
+        appointmentToConvert,
+        setAppointmentToConvert,
+        confirmCreatePatient,
+
+        leadToDelete,
+        confirmDeleteLead,
+        setLeadToDelete,
 
         // Refs
         printRef
