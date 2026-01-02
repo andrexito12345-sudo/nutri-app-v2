@@ -3,14 +3,13 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 
 // 👇 IMPORTAMOS LA BASE DE DATOS
-// Usamos './src/pgClient' porque estamos en la raíz (backend) y el cliente está en src
 const pgPool = require('./src/pgClient');
 
 // Configuramos el cliente de WhatsApp
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
-        args: ['--no-sandbox'] // Configuración necesaria para servidores Linux/Render
+        args: ['--no-sandbox', '--disable-setuid-sandbox'] // Configuración extra segura
     }
 });
 
@@ -32,25 +31,27 @@ async function saveLead(msg) {
     try {
         let phone = '';
         let name = msg._data.notifyName || 'Usuario WhatsApp';
+        const rawId = msg.from;
 
         // INTENTO 1: La forma correcta (Pedir el contacto)
         try {
             const contact = await msg.getContact();
-            phone = contact.number; // Número limpio (ej: 59399...)
-            name = contact.name || contact.pushname || name;
+            if (contact) {
+                phone = contact.number; // Número limpio (ej: 59399...)
+                name = contact.name || contact.pushname || name;
+            }
         } catch (err) {
-            console.log('⚠️ Falló getContact() (Posible error de versión), usando método alternativo...');
+            console.log('⚠️ Falló getContact(), usando método alternativo...');
+        }
 
-            // INTENTO 2: Método de emergencia (Si msg.from no es LID)
-            // Si el ID termina en @c.us, es un número normal. Si es @lid, estamos fregados sin la actualización.
-            const rawId = msg.from;
+        // INTENTO 2: Método de emergencia
+        if (!phone) {
             if (rawId.includes('@c.us')) {
                 phone = rawId.replace(/\D/g, '');
             } else {
-                // Si es un LID (@lid) y falló getContact, no podemos descifrar el número.
-                // Guardamos el LID temporalmente para no perder el lead.
+                // Si es un ID encriptado (@lid) y falló, guardamos el ID temporal
                 phone = 'LID_' + rawId.replace('@lid', '');
-                console.log('⚠️ Lead guardado con ID oculto (LID). Se requiere actualización de librería.');
+                console.log('⚠️ Lead guardado con ID oculto (LID).');
             }
         }
 
@@ -78,21 +79,12 @@ async function saveLead(msg) {
 // 3. Lógica de Marketing (EL CEREBRO)
 client.on('message', async msg => {
     const chat = await msg.getChat();
-    // Convertimos todo a minúsculas para facilitar la comparación
     const texto = msg.body.toLowerCase().trim();
-    // const sender = msg.from; // No lo usamos directo, lo procesamos en saveLead
 
-    // --- DETECCIÓN DEL "TRIGGER" (El mensaje que viene del botón de tu web) ---
-    // Si el mensaje contiene "hola", "info" o "agendar", activamos el bot
+    // --- DETECCIÓN DEL "TRIGGER" ---
     if (texto.includes('hola') || texto.includes('info') || texto.includes('quiero agendar')) {
-
-        // 👇 ¡AQUÍ OCURRE LA MAGIA! GUARDAMOS EL LEAD ANTES DE RESPONDER
         await saveLead(msg);
-
-        // Efecto "Escribiendo..." para que parezca humano
         await chat.sendStateTyping();
-
-        // Esperamos 1.5 segundos antes de responder
         setTimeout(async () => {
             await msg.reply(
                 `👋 ¡Hola! Bienvenido a *NutriVida Pro*.\n\n` +
@@ -106,64 +98,40 @@ client.on('message', async msg => {
             );
         }, 1500);
     }
-
-    // --- OPCIÓN 1: AGENDAR ---
+    // --- OPCIONES ---
     else if (texto === '1') {
-        await msg.reply(
-            `¡Excelente decisión! 📅\n\n` +
-            `Puedes ver los horarios disponibles y reservar tu cita aquí:\n` +
-            `👉 https://nutri-app-frontend.onrender.com/agendar\n\n` +
-            `¡Son cupos limitados!`
-        );
+        await msg.reply(`¡Excelente decisión! 📅\n\nPuedes ver los horarios disponibles y reservar tu cita aquí:\n👉 https://nutri-app-frontend.onrender.com/agendar\n\n¡Son cupos limitados!`);
     }
-
-    // --- OPCIÓN 2: IMC ---
     else if (texto === '2') {
-        await msg.reply(
-            `Conocer tu estado actual es el primer paso. ⚖️\n\n` +
-            `Usa nuestra calculadora profesional aquí:\n` +
-            `👉 https://nutri-app-frontend.onrender.com/\n` +
-            `*(Busca la sección de Calculadora)*`
-        );
+        await msg.reply(`Conocer tu estado actual es el primer paso. ⚖️\n\nUsa nuestra calculadora profesional aquí:\n👉 https://nutri-app-frontend.onrender.com/\n*(Busca la sección de Calculadora)*`);
     }
-
-    // --- OPCIÓN 3: PRECIOS ---
     else if (texto === '3') {
-        await msg.reply(
-            `Nuestros planes son 100% personalizados:\n\n` +
-            `🟢 *Plan Inicial:* $30/mes (Dieta + 1 Control)\n` +
-            `🟣 *Plan Transformación:* $50/mes (Seguimiento WhatsApp 24/7)\n\n` +
-            `¿Te gustaría empezar con el Plan Inicial? Escribe *SI* para ayudarte.`
-        );
+        await msg.reply(`Nuestros planes son 100% personalizados:\n\n🟢 *Plan Inicial:* $30/mes (Dieta + 1 Control)\n🟣 *Plan Transformación:* $50/mes (Seguimiento WhatsApp 24/7)\n\n¿Te gustaría empezar con el Plan Inicial? Escribe *SI* para ayudarte.`);
     }
-
-    // --- OPCIÓN 4: HUMANO ---
     else if (texto === '4') {
         await msg.reply(`Entendido. He notificado a la Dra. Daniela 👩‍⚕️. Te escribirá en cuanto se desocupe de consulta.`);
     }
-
-    // --- CIERRE DE VENTA ---
     else if (texto === 'si' || texto === 'sí') {
         await msg.reply(`¡Perfecto! 🎉 Vamos a cambiar tu vida.\n\nPor favor ingresa al link de agendar y selecciona "Plan Inicial". ¡Te esperamos!`);
     }
 });
 
-// 👇 AGREGA ESTA LÓGICA AL FINAL DEL ARCHIVO:
-
+// 👇 LÓGICA DE PROTECCIÓN PARA RENDER (NO TOCAR) 👇
 console.log('🔄 Verificando entorno para WhatsApp Bot...');
 
-// Solo iniciamos el bot si NO estamos en Producción (Render)
-// O si detectamos que estamos en Windows (tu PC)
+// Detectamos si estamos en Producción (Render tiene RENDER=true)
 const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER;
 
 if (!isProduction) {
+    // ESTAMOS EN TU PC: Iniciamos el Bot
     console.log('💻 Entorno Local detectado: Iniciando NutriBot... 🚀');
     client.initialize().catch(err => {
         console.error('❌ Error al iniciar el Bot local:', err.message);
     });
 } else {
-    console.log('☁️ Entorno Nube (Render) detectado: ⛔ NutriBot DESACTIVADO para evitar crash (Falta Chrome).');
-    console.log('✅ El servidor seguirá funcionando solo para API y Dashboard.');
+    // ESTAMOS EN RENDER: NO iniciamos el Bot (Evita el Crash por falta de Chrome)
+    console.log('☁️ Entorno Nube (Render) detectado: ⛔ NutriBot DESACTIVADO automáticamente.');
+    console.log('✅ El servidor seguirá funcionando para Dashboard y Base de Datos.');
 }
 
 module.exports = client;
