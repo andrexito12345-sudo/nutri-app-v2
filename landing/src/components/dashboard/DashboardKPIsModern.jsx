@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Calendar, CheckCircle, XCircle, Clock, TrendingUp, Activity, Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// AHORA RECIBIMOS "onOpenMenu" COMO PROP
 function DashboardKPIsModern({ metrics, visitStats, appointmentStats, onOpenMenu }) {
     const [filter, setFilter] = useState('hoy');
 
@@ -78,42 +77,38 @@ function DashboardKPIsModern({ metrics, visitStats, appointmentStats, onOpenMenu
     ];
 
     return (
-        <div className="mb-8 mt-2">
-            {/* --- HEADER MEJORADO CON BOTÓN MÓVIL --- */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-4">
+        <div className="mb-6 mt-2">
+            {/* --- HEADER --- */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 gap-3">
 
-                {/* Contenedor Flex para Título y Botón Hamburguesa */}
+                {/* Título y Botón Móvil */}
                 <div className="flex justify-between items-center w-full md:w-auto">
                     <div>
-                        <h2 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-                            <Activity className="w-6 h-6 text-blue-600" />
+                        <h2 className="text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
+                            <Activity className="w-5 h-5 text-blue-600" />
                             {filter === 'hoy' ? 'Panel Diario' : 'Visión Global'}
                         </h2>
-                        <p className="text-sm text-slate-500 font-medium mt-1">
-                            {filter === 'hoy' ? 'Monitoreo de actividad en tiempo real' : 'Rendimiento acumulado'}
-                        </p>
                     </div>
 
-                    {/* BOTÓN HAMBURGUESA (Solo visible en Móvil lg:hidden) */}
                     <button
                         onClick={onOpenMenu}
                         className="lg:hidden p-2 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-200 active:scale-95 transition-transform"
                     >
-                        <Menu className="w-6 h-6" />
+                        <Menu className="w-5 h-5" />
                     </button>
                 </div>
 
-                {/* Switcher Sofisticado */}
-                <div className="flex bg-slate-100/80 p-1.5 rounded-2xl backdrop-blur-md border border-slate-200/50 self-start md:self-auto">
+                {/* Switcher Compacto */}
+                <div className="flex bg-slate-100/80 p-1 rounded-xl backdrop-blur-md border border-slate-200/50 self-start md:self-auto">
                     {['hoy', 'total'].map((item) => (
                         <button
                             key={item}
                             onClick={() => setFilter(item)}
                             className={`
-                                px-5 py-2 text-sm font-bold rounded-xl transition-all duration-500 ease-out capitalize
+                                px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-300 capitalize
                                 ${filter === item
-                                ? 'bg-white text-slate-800 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5 scale-[1.02]'
-                                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}
+                                ? 'bg-white text-slate-800 shadow-sm ring-1 ring-black/5'
+                                : 'text-slate-500 hover:text-slate-700'}
                             `}
                         >
                             {item === 'total' ? 'Histórico' : item}
@@ -122,58 +117,64 @@ function DashboardKPIsModern({ metrics, visitStats, appointmentStats, onOpenMenu
                 </div>
             </div>
 
-            {/* --- GRID PREMIUM "AURORA GLASS" --- */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+            {/* --- GRID COMPACTO --- */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                 <AnimatePresence mode="wait">
                     {kpis.map((kpi, index) => (
                         <motion.div
                             key={kpi.id + filter}
-                            initial={{ opacity: 0, y: 20, scale: 0.96 }}
+                            initial={{ opacity: 0, y: 10, scale: 0.98 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.96 }}
-                            transition={{ duration: 0.4, delay: index * 0.08, type: "spring", stiffness: 100 }}
+                            exit={{ opacity: 0, scale: 0.98 }}
+                            transition={{ duration: 0.3, delay: index * 0.05 }}
                             className="relative group z-0"
                         >
                             <div className={`
                                 relative h-full overflow-hidden
-                                rounded-[2rem]
+                                rounded-2xl
                                 bg-gradient-to-br ${kpi.premiumBg}
                                 border border-white/60
-                                shadow-xl shadow-slate-200/40
-                                transition-all duration-500
-                                group-hover:shadow-2xl group-hover:scale-[1.02] group-hover:-translate-y-1
-                                ${kpi.hasAlert ? 'ring-2 ring-amber-500/50 ring-offset-2' : ''}
+                                shadow-sm shadow-slate-200/50
+                                transition-all duration-300
+                                group-hover:shadow-md group-hover:-translate-y-0.5
+                                ${kpi.hasAlert ? 'ring-2 ring-amber-500/50 ring-offset-1' : ''}
                             `}>
-                                {/* Glows */}
-                                <div className={`absolute -top-20 -right-20 w-48 h-48 rounded-full ${kpi.glowColor} blur-[60px] opacity-40 md:opacity-30 mix-blend-multiply pointer-events-none z-0`} />
-                                <div className={`absolute -bottom-20 -left-20 w-40 h-40 rounded-full ${kpi.glowColor} blur-[60px] opacity-30 md:opacity-20 mix-blend-multiply pointer-events-none z-0`} />
+                                {/* Glows sutiles */}
+                                <div className={`absolute -top-10 -right-10 w-32 h-32 rounded-full ${kpi.glowColor} blur-[40px] opacity-30 pointer-events-none`} />
+                                <div className={`absolute -bottom-10 -left-10 w-24 h-24 rounded-full ${kpi.glowColor} blur-[40px] opacity-20 pointer-events-none`} />
 
-                                <div className="relative z-10 p-5 md:p-6 flex flex-col h-full justify-between backdrop-blur-[2px]">
-                                    <div className="flex justify-between items-start mb-4">
+                                {/* Contenido Compacto */}
+                                <div className="relative z-10 p-4 flex flex-col h-full justify-between backdrop-blur-[1px]">
+
+                                    {/* Header Icon */}
+                                    <div className="flex justify-between items-start mb-2">
                                         <div className={`
-                                            p-3 rounded-2xl bg-gradient-to-br ${kpi.iconGradient}
-                                            shadow-lg shadow-${kpi.theme}-500/20
-                                            group-hover:shadow-${kpi.theme}-500/40 group-hover:scale-110 transition-all duration-500
+                                            p-2 rounded-xl bg-gradient-to-br ${kpi.iconGradient}
+                                            shadow-md shadow-${kpi.theme}-500/20
                                         `}>
-                                            <kpi.icon className="w-6 h-6 text-white" strokeWidth={2.5} />
+                                            <kpi.icon className="w-4 h-4 text-white" strokeWidth={2.5} />
                                         </div>
                                         {kpi.alertPulse && (
-                                            <div className="relative flex h-4 w-4">
-                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                                <span className="relative inline-flex rounded-full h-4 w-4 bg-gradient-to-r from-amber-500 to-orange-500 border-2 border-white"></span>
-                                            </div>
+                                            <span className="relative flex h-2.5 w-2.5">
+                                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                                            </span>
                                         )}
                                     </div>
+
+                                    {/* Value & Label */}
                                     <div>
-                                        <h3 className="text-3xl md:text-5xl font-black text-slate-800 tracking-tight leading-none">
+                                        <h3 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight leading-none">
                                             {kpi.value}
                                         </h3>
-                                        <p className="text-sm md:text-base font-bold text-slate-600 mt-2 uppercase tracking-wider opacity-80">
+                                        <p className="text-[10px] md:text-xs font-bold text-slate-500 mt-1 uppercase tracking-wide opacity-90">
                                             {kpi.label}
                                         </p>
                                     </div>
-                                    <div className="mt-4 pt-3 border-t border-slate-200/30 flex items-center text-xs font-medium text-slate-500">
-                                        <TrendingUp className="w-3.5 h-3.5 mr-1.5 opacity-70" />
+
+                                    {/* Footer line */}
+                                    <div className="mt-2 pt-2 border-t border-slate-200/40 flex items-center text-[10px] font-medium text-slate-400">
+                                        <TrendingUp className="w-3 h-3 mr-1 opacity-70" />
                                         {currentStats.subtitle}
                                     </div>
                                 </div>
