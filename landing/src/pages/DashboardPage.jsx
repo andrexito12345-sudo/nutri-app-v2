@@ -81,11 +81,11 @@ function DashboardPage() {
                 />
             </div>
 
-            {/* Resumen de Hoy - NUEVO */}
+            {/* Resumen de Hoy - NUEVO
             <TodaySummary
                 appointments={logic.filteredAppointments}
                 visitStats={logic.visitStats}
-            />
+            />*/}
 
             {/* KPIs Modernos - REEMPLAZADO */}
             <DashboardKPIsModern

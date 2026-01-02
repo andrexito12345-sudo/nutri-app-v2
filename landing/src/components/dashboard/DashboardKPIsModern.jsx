@@ -1,24 +1,50 @@
-import React from 'react';
-import { Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { Calendar, CheckCircle, XCircle, Clock, Filter } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-function DashboardKPIsModern({ metrics, visitStats }) {
-    // Validación segura de datos para evitar el "undefined" de la imagen
-    const safeMetrics = {
-        totalAppointments: metrics?.totalAppointments || 0,
+function DashboardKPIsModern({ metrics, visitStats, appointmentStats }) {
+    // Estado para el filtro: 'hoy' | 'total'
+    const [filter, setFilter] = useState('hoy');
+
+    // Extraemos datos seguros (Valores por defecto si algo viene null)
+    // DATOS TOTALES (HISTÓRICO)
+    const statsTotal = {
+        total: metrics?.totalAppointments || 0,
         pending: metrics?.pending || 0,
         completed: metrics?.completed || 0,
-        completionRate: metrics?.completionRate || '0%',
         cancelled: metrics?.cancelled || 0,
-        cancellationRate: metrics?.cancellationRate || '0%',
+    };
+
+    // DATOS DE HOY (Simulados o reales si los pasas en appointmentStats)
+    // Asumo que appointmentStats.today viene del hook useDashboardLogic
+    const statsToday = appointmentStats?.today || {
+        total: 0,
+        pending: 0,
+        done: 0,
+        cancelled: 0
+    };
+
+    // Seleccionamos qué datos mostrar según el filtro
+    const currentStats = filter === 'hoy' ? {
+        total: statsToday.total || 0,
+        pending: statsToday.pending || 0,
+        completed: statsToday.done || 0,
+        cancelled: statsToday.cancelled || 0,
+        labelContext: 'Agenda de Hoy'
+    } : {
+        total: statsTotal.total,
+        pending: statsTotal.pending,
+        completed: statsTotal.completed,
+        cancelled: statsTotal.cancelled,
+        labelContext: 'Histórico Total'
     };
 
     const kpis = [
         {
             id: 'total',
-            label: 'Total Citas', // Texto más corto para móvil
-            value: safeMetrics.totalAppointments,
-            subtitle: 'Histórico',
+            label: filter === 'hoy' ? 'Citas Hoy' : 'Total Citas',
+            value: currentStats.total,
+            subtitle: currentStats.labelContext,
             icon: Calendar,
             theme: 'blue',
             gradient: 'from-blue-500 to-indigo-600',
@@ -29,21 +55,21 @@ function DashboardKPIsModern({ metrics, visitStats }) {
         {
             id: 'pending',
             label: 'Pendientes',
-            value: safeMetrics.pending,
-            subtitle: 'Requiere atención',
+            value: currentStats.pending,
+            subtitle: filter === 'hoy' ? 'Por atender hoy' : 'Total acumulado',
             icon: Clock,
             theme: 'amber',
             gradient: 'from-amber-400 to-orange-500',
             bgLight: 'bg-amber-50',
             textLight: 'text-amber-600',
-            hasAlert: safeMetrics.pending > 0,
-            alertPulse: true
+            hasAlert: currentStats.pending > 0, // Alerta si hay pendientes
+            alertPulse: currentStats.pending > 0
         },
         {
             id: 'completed',
             label: 'Completadas',
-            value: safeMetrics.completed,
-            subtitle: `Tasa: ${safeMetrics.completionRate}`,
+            value: currentStats.completed,
+            subtitle: 'Finalizadas',
             icon: CheckCircle,
             theme: 'emerald',
             gradient: 'from-emerald-400 to-teal-500',
@@ -54,8 +80,8 @@ function DashboardKPIsModern({ metrics, visitStats }) {
         {
             id: 'cancelled',
             label: 'Canceladas',
-            value: safeMetrics.cancelled,
-            subtitle: `Tasa: ${safeMetrics.cancellationRate}`,
+            value: currentStats.cancelled,
+            subtitle: 'No asistieron',
             icon: XCircle,
             theme: 'rose',
             gradient: 'from-rose-500 to-red-600',
@@ -67,13 +93,49 @@ function DashboardKPIsModern({ metrics, visitStats }) {
 
     return (
         <div className="mb-6">
-            {/* Título de sección opcional para dar contexto (se puede quitar si prefieres) */}
-            {/* <h3 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-3 px-1">Resumen General</h3> */}
+            {/* --- SECCIÓN DE FILTROS (LA MAGIA DE LA OPCIÓN B) --- */}
+            <div className="flex items-center justify-between mb-4">
+                <div>
+                    <h2 className="text-lg font-bold text-neutral-800">
+                        {filter === 'hoy' ? 'Resumen del Día' : 'Métricas Globales'}
+                    </h2>
+                    <p className="text-xs text-neutral-500">
+                        {filter === 'hoy' ? 'Lo que tienes programado para hoy' : 'Rendimiento histórico de tu consultorio'}
+                    </p>
+                </div>
 
+                {/* Switcher de Filtros */}
+                <div className="flex bg-neutral-100 p-1 rounded-xl">
+                    <button
+                        onClick={() => setFilter('hoy')}
+                        className={`
+                            px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-300
+                            ${filter === 'hoy'
+                            ? 'bg-white text-neutral-800 shadow-sm'
+                            : 'text-neutral-400 hover:text-neutral-600'}
+                        `}
+                    >
+                        Hoy
+                    </button>
+                    <button
+                        onClick={() => setFilter('total')}
+                        className={`
+                            px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-300
+                            ${filter === 'total'
+                            ? 'bg-white text-neutral-800 shadow-sm'
+                            : 'text-neutral-400 hover:text-neutral-600'}
+                        `}
+                    >
+                        Histórico
+                    </button>
+                </div>
+            </div>
+
+            {/* --- GRID DE TARJETAS --- */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                 {kpis.map((kpi, index) => (
                     <motion.div
-                        key={kpi.id}
+                        key={kpi.id + filter} // El key cambia para forzar la animación al cambiar filtro
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -82,12 +144,11 @@ function DashboardKPIsModern({ metrics, visitStats }) {
                         <div className={`
                             relative h-full flex flex-col justify-between
                             bg-white rounded-2xl border border-neutral-100 shadow-sm
-                            hover:shadow-lg hover:border-neutral-200 transition-all duration-300
-                            overflow-hidden
-                            ${kpi.hasAlert ? 'ring-2 ring-amber-400 ring-offset-1' : ''}
+                            transition-all duration-300
+                            ${kpi.hasAlert ? 'ring-2 ring-amber-400 ring-offset-1 shadow-amber-100' : 'hover:shadow-lg'}
                         `}>
 
-                            {/* Alert Pulse Background (Solo si hay alerta) */}
+                            {/* Alerta Pulsante */}
                             {kpi.alertPulse && (
                                 <div className="absolute top-0 right-0 p-2">
                                     <span className="relative flex h-3 w-3">
@@ -98,16 +159,11 @@ function DashboardKPIsModern({ metrics, visitStats }) {
                             )}
 
                             <div className="p-4 md:p-5">
-                                {/* Header: Icon & Label */}
+                                {/* Header: Icon */}
                                 <div className="flex items-center justify-between mb-3">
                                     <div className={`p-2 rounded-xl ${kpi.bgLight} ${kpi.textLight}`}>
                                         <kpi.icon className="w-5 h-5 md:w-6 md:h-6" strokeWidth={2} />
                                     </div>
-
-                                    {/* En móvil ocultamos el label largo arriba y lo ponemos abajo o viceversa */}
-                                    {/* <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider md:hidden">
-                                        {kpi.id === 'pending' ? 'URGENTE' : 'INFO'}
-                                    </span> */}
                                 </div>
 
                                 {/* Main Value */}
@@ -121,7 +177,7 @@ function DashboardKPIsModern({ metrics, visitStats }) {
                                 </div>
                             </div>
 
-                            {/* Footer / Subtitle Strip */}
+                            {/* Footer / Subtitle */}
                             <div className={`
                                 px-4 py-2 bg-gradient-to-r ${kpi.bgLight} border-t border-neutral-100
                                 flex items-center justify-between
@@ -131,7 +187,7 @@ function DashboardKPIsModern({ metrics, visitStats }) {
                                 </span>
                             </div>
 
-                            {/* Bottom Accent Line (Brand Identity) */}
+                            {/* Accent Line */}
                             <div className={`h-1 w-full bg-gradient-to-r ${kpi.gradient}`} />
                         </div>
                     </motion.div>
