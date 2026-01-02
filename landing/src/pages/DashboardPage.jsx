@@ -187,6 +187,20 @@ function DashboardPage() {
                 onConfirm={logic.confirmDeleteAppointment} // Confirmar borrado
             />
 
+            {/* 👇 AGREGAMOS EL SEGUNDO MODAL (PARA PACIENTES) */}
+            <ConfirmDeleteModal
+                isOpen={!!logic.patientToDelete}
+                onClose={() => logic.setPatientToDelete(null)}
+                onConfirm={logic.confirmDeletePatient}
+                title="¿Eliminar Paciente?"
+                message={
+                    <>
+                        Estás a punto de eliminar a <span className="font-bold text-slate-800">{logic.patientToDelete?.name}</span>.<br/>
+                        Esto borrará <span className="text-red-500 font-bold">todo su historial clínico y citas.</span>
+                    </>
+                }
+            />
+
             <ToastContainer />
         </div>
     );

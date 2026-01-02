@@ -11,6 +11,9 @@ export function useDashboardLogic() {
     // 👇 1. NUEVO ESTADO PARA CONTROLAR EL MODAL
     const [appointmentToDelete, setAppointmentToDelete] = useState(null);
 
+    // 1. ESTADO PARA MODAL DE ELIMINAR PACIENTE
+    const [patientToDelete, setPatientToDelete] = useState(null); // Guardará el objeto { id, name }
+
     // --- ESTADOS DE HERRAMIENTAS (MODALES) ---
     const [showHerramientasAvanzadas, setShowHerramientasAvanzadas] = useState(false);
     const [showStatsModal, setShowStatsModal] = useState(false);
@@ -73,6 +76,12 @@ export function useDashboardLogic() {
     // Reemplaza a la antigua deleteAppointment que tenía window.confirm
     const requestDeleteAppointment = (id) => {
         setAppointmentToDelete(id); // Solo guarda el ID y abre el modal visualmente
+    };
+
+    // 2. FUNCIÓN PARA SOLICITAR ELIMINACIÓN (ABRIR MODAL)
+    // Reemplaza a la antigua deletePatient
+    const requestDeletePatient = (id, name) => {
+        setPatientToDelete({ id, name });
     };
 
     // --- FUNCIONES AUXILIARES ---
@@ -392,6 +401,22 @@ export function useDashboardLogic() {
         }
     };
 
+    // 3. FUNCIÓN PARA CONFIRMAR ELIMINACIÓN (EJECUTAR BORRADO)
+    const confirmDeletePatient = async () => {
+        if (!patientToDelete) return;
+
+        try {
+            await api.delete(`/patients/${patientToDelete.id}`);
+            setPatients(prev => prev.filter(p => p.id !== patientToDelete.id));
+            toast.success("Paciente eliminado correctamente");
+        } catch (error) {
+            console.error("Error eliminando:", error);
+            toast.error("No se pudo eliminar el paciente.");
+        } finally {
+            setPatientToDelete(null); // Cerrar modal
+        }
+    };
+
     // ✅ RETURN PROFESIONAL Y COMPLETO
     return {
         // Datos y Estados
@@ -446,7 +471,7 @@ export function useDashboardLogic() {
         // Handlers / Acciones
         handlePatientFormChange: (e) => setPatientFormData(prev => ({ ...prev, [e.target.name]: e.target.value })),
         savePatient,
-        deletePatient,
+        deletePatient: requestDeletePatient,
         editPatient,
         viewPatientRecord,
         closePatientModal,
@@ -463,6 +488,10 @@ export function useDashboardLogic() {
         // 👇 EXPORTAMOS EL ESTADO Y LAS DOS FUNCIONES
         appointmentToDelete,
         setAppointmentToDelete,
+
+        patientToDelete,
+        setPatientToDelete,
+        confirmDeletePatient,
 
         // Refs
         printRef
