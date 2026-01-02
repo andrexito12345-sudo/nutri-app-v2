@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Calendar, CheckCircle, XCircle, Clock, TrendingUp, Activity } from 'lucide-react';
+import { Calendar, CheckCircle, XCircle, Clock, TrendingUp, Activity, Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-function DashboardKPIsModern({ metrics, visitStats, appointmentStats }) {
+// AHORA RECIBIMOS "onOpenMenu" COMO PROP
+function DashboardKPIsModern({ metrics, visitStats, appointmentStats, onOpenMenu }) {
     const [filter, setFilter] = useState('hoy');
 
-    // --- DATOS SEGUROS ---
     const statsTotal = {
         total: metrics?.totalAppointments || 0,
         pending: metrics?.pending || 0,
@@ -29,7 +29,6 @@ function DashboardKPIsModern({ metrics, visitStats, appointmentStats }) {
         subtitle: 'Histórico total'
     };
 
-    // --- CONFIGURACIÓN PREMIUM DE KPIS ---
     const kpis = [
         {
             id: 'total',
@@ -37,7 +36,6 @@ function DashboardKPIsModern({ metrics, visitStats, appointmentStats }) {
             value: currentStats.total,
             icon: Calendar,
             theme: 'blue',
-            // Nuevos gradientes premium
             premiumBg: 'from-slate-50 via-blue-50/50 to-indigo-50/20',
             iconGradient: 'from-blue-600 to-indigo-500',
             glowColor: 'bg-blue-500/20',
@@ -49,7 +47,6 @@ function DashboardKPIsModern({ metrics, visitStats, appointmentStats }) {
             value: currentStats.pending,
             icon: Clock,
             theme: 'amber',
-            // Gradiente cálido sofisticado
             premiumBg: 'from-slate-50 via-amber-50/50 to-orange-50/20',
             iconGradient: 'from-amber-500 to-orange-600',
             glowColor: 'bg-amber-500/20',
@@ -62,7 +59,6 @@ function DashboardKPIsModern({ metrics, visitStats, appointmentStats }) {
             value: currentStats.completed,
             icon: CheckCircle,
             theme: 'emerald',
-            // Gradiente fresco y lujoso
             premiumBg: 'from-slate-50 via-emerald-50/50 to-teal-50/20',
             iconGradient: 'from-emerald-500 to-teal-600',
             glowColor: 'bg-emerald-500/20',
@@ -74,7 +70,6 @@ function DashboardKPIsModern({ metrics, visitStats, appointmentStats }) {
             value: currentStats.cancelled,
             icon: XCircle,
             theme: 'rose',
-            // Gradiente serio pero elegante
             premiumBg: 'from-slate-50 via-rose-50/50 to-pink-50/20',
             iconGradient: 'from-rose-600 to-pink-600',
             glowColor: 'bg-rose-500/20',
@@ -83,17 +78,29 @@ function DashboardKPIsModern({ metrics, visitStats, appointmentStats }) {
     ];
 
     return (
-        <div className="mb-8">
-            {/* --- HEADER PREMIUM Y FILTROS --- */}
+        <div className="mb-8 mt-2">
+            {/* --- HEADER MEJORADO CON BOTÓN MÓVIL --- */}
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-4">
-                <div>
-                    <h2 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-                        <Activity className="w-6 h-6 text-blue-600" />
-                        {filter === 'hoy' ? 'Panel Diario' : 'Visión Global'}
-                    </h2>
-                    <p className="text-sm text-slate-500 font-medium mt-1">
-                        {filter === 'hoy' ? 'Monitoreo de actividad en tiempo real' : 'Rendimiento acumulado de tu consultorio'}
-                    </p>
+
+                {/* Contenedor Flex para Título y Botón Hamburguesa */}
+                <div className="flex justify-between items-center w-full md:w-auto">
+                    <div>
+                        <h2 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+                            <Activity className="w-6 h-6 text-blue-600" />
+                            {filter === 'hoy' ? 'Panel Diario' : 'Visión Global'}
+                        </h2>
+                        <p className="text-sm text-slate-500 font-medium mt-1">
+                            {filter === 'hoy' ? 'Monitoreo de actividad en tiempo real' : 'Rendimiento acumulado'}
+                        </p>
+                    </div>
+
+                    {/* BOTÓN HAMBURGUESA (Solo visible en Móvil lg:hidden) */}
+                    <button
+                        onClick={onOpenMenu}
+                        className="lg:hidden p-2 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-200 active:scale-95 transition-transform"
+                    >
+                        <Menu className="w-6 h-6" />
+                    </button>
                 </div>
 
                 {/* Switcher Sofisticado */}
@@ -129,28 +136,20 @@ function DashboardKPIsModern({ metrics, visitStats, appointmentStats }) {
                         >
                             <div className={`
                                 relative h-full overflow-hidden
-                                rounded-[2rem] // Bordes muy redondeados
-                                bg-gradient-to-br ${kpi.premiumBg} // Gradiente de fondo sutil
-                                border border-white/60 // Borde translúcido tipo cristal
-                                shadow-xl shadow-slate-200/40 // Sombra suave y difusa
+                                rounded-[2rem]
+                                bg-gradient-to-br ${kpi.premiumBg}
+                                border border-white/60
+                                shadow-xl shadow-slate-200/40
                                 transition-all duration-500
                                 group-hover:shadow-2xl group-hover:scale-[1.02] group-hover:-translate-y-1
                                 ${kpi.hasAlert ? 'ring-2 ring-amber-500/50 ring-offset-2' : ''}
                             `}>
-
-                                {/* --- EFECTO AURORA (GLOW INTERNO) --- */}
-                                {/* Luz superior derecha */}
+                                {/* Glows */}
                                 <div className={`absolute -top-20 -right-20 w-48 h-48 rounded-full ${kpi.glowColor} blur-[60px] opacity-40 md:opacity-30 mix-blend-multiply pointer-events-none z-0`} />
-                                {/* Luz inferior izquierda (más sutil) */}
                                 <div className={`absolute -bottom-20 -left-20 w-40 h-40 rounded-full ${kpi.glowColor} blur-[60px] opacity-30 md:opacity-20 mix-blend-multiply pointer-events-none z-0`} />
 
-
-                                {/* --- CONTENIDO DE LA TARJETA --- */}
                                 <div className="relative z-10 p-5 md:p-6 flex flex-col h-full justify-between backdrop-blur-[2px]">
-
-                                    {/* Header: Icono Joya y Alerta */}
                                     <div className="flex justify-between items-start mb-4">
-                                        {/* Icono "Joya" Flotante */}
                                         <div className={`
                                             p-3 rounded-2xl bg-gradient-to-br ${kpi.iconGradient}
                                             shadow-lg shadow-${kpi.theme}-500/20
@@ -158,8 +157,6 @@ function DashboardKPIsModern({ metrics, visitStats, appointmentStats }) {
                                         `}>
                                             <kpi.icon className="w-6 h-6 text-white" strokeWidth={2.5} />
                                         </div>
-
-                                        {/* Indicador de Alerta Pulsante Sofisticado */}
                                         {kpi.alertPulse && (
                                             <div className="relative flex h-4 w-4">
                                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
@@ -167,8 +164,6 @@ function DashboardKPIsModern({ metrics, visitStats, appointmentStats }) {
                                             </div>
                                         )}
                                     </div>
-
-                                    {/* Valor Principal */}
                                     <div>
                                         <h3 className="text-3xl md:text-5xl font-black text-slate-800 tracking-tight leading-none">
                                             {kpi.value}
@@ -177,13 +172,10 @@ function DashboardKPIsModern({ metrics, visitStats, appointmentStats }) {
                                             {kpi.label}
                                         </p>
                                     </div>
-
-                                    {/* Subtítulo integrado */}
                                     <div className="mt-4 pt-3 border-t border-slate-200/30 flex items-center text-xs font-medium text-slate-500">
                                         <TrendingUp className="w-3.5 h-3.5 mr-1.5 opacity-70" />
                                         {currentStats.subtitle}
                                     </div>
-
                                 </div>
                             </div>
                         </motion.div>
