@@ -113,6 +113,7 @@ function DashboardPage() {
                 setDateFilter={logic.setDateFilter}
                 formatDate={logic.formatDate}
                 changeStatus={logic.changeStatus}
+                deleteAppointment={logic.deleteAppointment}
                 navigate={logic.navigate}
                 handleCreatePatientFromAppointment={logic.handleCreatePatientFromAppointment}
             />

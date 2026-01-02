@@ -213,4 +213,22 @@ router.patch('/:id/status', requireAuth, async (req, res) => {
     }
 });
 
+// 👇 5. AGREGAR ESTA RUTA NUEVA AL FINAL (ANTES DEL MODULE.EXPORTS)
+router.delete('/:id', requireAuth, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await pgPool.query('DELETE FROM appointments WHERE id = $1', [id]);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ ok: false, message: 'Cita no encontrada' });
+        }
+
+        return res.json({ ok: true, message: 'Cita eliminada correctamente' });
+    } catch (err) {
+        console.error('❌ Error al eliminar cita (Postgres):', err);
+        return res.status(500).json({ ok: false, message: 'Error al eliminar cita' });
+    }
+});
+
 module.exports = router;

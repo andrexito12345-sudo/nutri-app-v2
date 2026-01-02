@@ -352,6 +352,21 @@ export function useDashboardLogic() {
         { periodo: "30 días", Pendientes: last30Stats.pending, Realizadas: last30Stats.done, Canceladas: last30Stats.cancelled },
     ];
 
+    // 👇 AGREGAR ESTA FUNCIÓN NUEVA
+    const deleteAppointment = async (id) => {
+        if (!window.confirm("⚠️ ¿Estás segura de que deseas ELIMINAR esta cita permanentemente?\n\nEsta acción no se puede deshacer.")) {
+            return;
+        }
+        try {
+            await api.delete(`/appointments/${id}`);
+            setAppointments((prev) => prev.filter((a) => a.id !== id));
+            toast.success("Cita eliminada del sistema");
+        } catch (error) {
+            console.error(error);
+            toast.error("Error al eliminar la cita");
+        }
+    };
+
     // ✅ RETURN PROFESIONAL Y COMPLETO
     return {
         // Datos y Estados
@@ -412,6 +427,7 @@ export function useDashboardLogic() {
         closePatientModal,
         openPatientForm,
         changeStatus,
+        deleteAppointment,
         handleCreatePatientFromAppointment,
         printLatestConsultation,
         formatDate,
