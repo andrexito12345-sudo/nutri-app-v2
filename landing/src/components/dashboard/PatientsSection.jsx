@@ -64,14 +64,19 @@ const PatientsSection = ({
                 <div>
                     <h2 className="patients-title">
                         Gestión de Pacientes
+                        {(() => {
+                            const newPatients = patients.filter(p => !p.total_consultations || p.total_consultations === 0).length;
+                            return newPatients > 0 && (
+                                <span className="badge-new">
+                                    {newPatients} NUEVO{newPatients > 1 ? 'S' : ''}
+                                </span>
+                            );
+                        })()}
                     </h2>
                     <p className="patients-subtitle">Historial clínico y seguimiento</p>
                 </div>
-                <div className="patients-actions">
-                    <div className="patients-count">
-                        <span className="count-number">{patients.length}</span>
-                        <span className="count-label">Total</span>
-                    </div>
+                <div className="patients-actions" style={{ justifyContent: 'flex-end' }}>
+
                     <button onClick={openPatientForm} className="btn-new-patient-modern">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />

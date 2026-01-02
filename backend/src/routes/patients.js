@@ -171,7 +171,7 @@ router.post('/', requireAuth, async (req, res) => {
       VALUES (
         $1, $2, $3, $4, $5, $6,
         $7, $8, $9, $10,
-        $11, $12, NOW()::TEXT, NOW()::TEXT
+        $11, $12, NOW(), NOW()
       )
       RETURNING *;
     `;
@@ -270,7 +270,7 @@ router.put('/:id', requireAuth, async (req, res) => {
         blood_type = $10,
         allergies = $11,
         notes = $12,
-        updated_at = NOW()::TEXT
+        updated_at = NOW()
       WHERE id = $13
       RETURNING *;
     `;
