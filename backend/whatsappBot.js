@@ -148,4 +148,22 @@ client.on('message', async msg => {
     }
 });
 
+// 👇 AGREGA ESTA LÓGICA AL FINAL DEL ARCHIVO:
+
+console.log('🔄 Verificando entorno para WhatsApp Bot...');
+
+// Solo iniciamos el bot si NO estamos en Producción (Render)
+// O si detectamos que estamos en Windows (tu PC)
+const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER;
+
+if (!isProduction) {
+    console.log('💻 Entorno Local detectado: Iniciando NutriBot... 🚀');
+    client.initialize().catch(err => {
+        console.error('❌ Error al iniciar el Bot local:', err.message);
+    });
+} else {
+    console.log('☁️ Entorno Nube (Render) detectado: ⛔ NutriBot DESACTIVADO para evitar crash (Falta Chrome).');
+    console.log('✅ El servidor seguirá funcionando solo para API y Dashboard.');
+}
+
 module.exports = client;
