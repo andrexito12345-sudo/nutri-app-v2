@@ -141,7 +141,7 @@ const startBot = async () => {
     }
 };
 
-// Ejecutamos la función segura
-startBot();
+// Agregamos .catch para silenciar la advertencia y asegurar que no haya errores sueltos
+startBot().catch(err => console.error('Error incontrolado al iniciar bot:', err));
 
 module.exports = client;
