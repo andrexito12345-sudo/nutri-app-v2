@@ -116,32 +116,27 @@ client.on('message', async msg => {
     }
 });
 
-// 👇 LÓGICA DE PROTECCIÓN PARA RENDER (NO TOCAR) 👇
+// 👇 LÓGICA DE INICIO SEGURA (MODIFICADA) 👇
 const startBot = async () => {
     try {
         console.log('🔄 Verificando entorno para WhatsApp Bot...');
 
-        // 1. Verificación explícita de Render
+        // Si estamos en RENDER o PRODUCCIÓN, NO iniciamos
         if (process.env.RENDER || process.env.NODE_ENV === 'production') {
-            console.log('☁️ Entorno Nube (Render) detectado:');
-            console.log('⛔ NutriBot se mantiene APAGADO para evitar errores de Chrome.');
-            console.log('✅ El servidor Web y la Base de Datos seguirán funcionando.');
-            return; // Salimos de la función, NO ejecutamos initialize()
+            console.log('🛑 RENDER DETECTADO: El Bot se quedará APAGADO para evitar crash.');
+            return; // ¡Salimos aquí! No se ejecuta nada más.
         }
 
-        // 2. Si llegamos aquí, es porque estamos en tu PC
-        console.log('💻 Entorno Local detectado: Iniciando NutriBot... 🚀');
+        // Si es tu PC, iniciamos
+        console.log('💻 MODO LOCAL: Iniciando Bot...');
         await client.initialize();
 
     } catch (error) {
-        // 3. LA RED DE SEGURIDAD: Si algo falla, atrapamos el error aquí
-        console.error('⚠️ ALERTA: El Bot falló al iniciar (Posible falta de Chrome).');
-        console.error('ℹ️ El servidor continuará funcionando SIN el bot.');
-        // NO lanzamos el error (no hacemos throw), así el servidor no se cae.
+        console.error('⚠️ El Bot no pudo iniciar (Esto es normal en Render):', error.message);
     }
 };
 
-// Agregamos .catch para silenciar la advertencia y asegurar que no haya errores sueltos
-startBot().catch(err => console.error('Error incontrolado al iniciar bot:', err));
+// Iniciamos con manejo de errores para callar la advertencia
+startBot().catch(e => console.log('Info: Bot en pausa.'));
 
 module.exports = client;

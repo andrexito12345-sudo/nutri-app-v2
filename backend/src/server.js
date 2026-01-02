@@ -178,3 +178,5 @@ async function start() {
 }
 
 start();
+
+// Actualizacion forzosa
