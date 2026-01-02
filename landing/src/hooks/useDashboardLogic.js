@@ -8,6 +8,9 @@ import { printSoapReport } from "../utils/soapPrinter";
 export function useDashboardLogic() {
     const navigate = useNavigate();
 
+    // 👇 1. NUEVO ESTADO PARA CONTROLAR EL MODAL
+    const [appointmentToDelete, setAppointmentToDelete] = useState(null);
+
     // --- ESTADOS DE HERRAMIENTAS (MODALES) ---
     const [showHerramientasAvanzadas, setShowHerramientasAvanzadas] = useState(false);
     const [showStatsModal, setShowStatsModal] = useState(false);
@@ -65,6 +68,12 @@ export function useDashboardLogic() {
             }, 100);
         }
     }, [printData, handlePrintProcess]);
+
+    // 👇 2. FUNCIÓN 1: CUANDO APRIETAS EL BOTÓN ROJO (ABRE MODAL)
+    // Reemplaza a la antigua deleteAppointment que tenía window.confirm
+    const requestDeleteAppointment = (id) => {
+        setAppointmentToDelete(id); // Solo guarda el ID y abre el modal visualmente
+    };
 
     // --- FUNCIONES AUXILIARES ---
     const formatDate = (isoString) => {
@@ -367,6 +376,22 @@ export function useDashboardLogic() {
         }
     };
 
+    // 👇 3. FUNCIÓN 2: CUANDO CONFIRMAS EN EL MODAL (BORRA DE VERDAD)
+    const confirmDeleteAppointment = async () => {
+        if (!appointmentToDelete) return;
+
+        try {
+            await api.delete(`/appointments/${appointmentToDelete}`);
+            setAppointments((prev) => prev.filter((a) => a.id !== appointmentToDelete));
+            toast.success("Cita eliminada correctamente");
+        } catch (error) {
+            console.error(error);
+            toast.error("Error al eliminar la cita");
+        } finally {
+            setAppointmentToDelete(null); // Cierra el modal
+        }
+    };
+
     // ✅ RETURN PROFESIONAL Y COMPLETO
     return {
         // Datos y Estados
@@ -427,11 +452,17 @@ export function useDashboardLogic() {
         closePatientModal,
         openPatientForm,
         changeStatus,
-        deleteAppointment,
+        deleteAppointment: requestDeleteAppointment,
         handleCreatePatientFromAppointment,
         printLatestConsultation,
         formatDate,
         navigate,
+
+        confirmDeleteAppointment,
+
+        // 👇 EXPORTAMOS EL ESTADO Y LAS DOS FUNCIONES
+        appointmentToDelete,
+        setAppointmentToDelete,
 
         // Refs
         printRef

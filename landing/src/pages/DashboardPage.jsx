@@ -13,6 +13,7 @@ import DashboardModals from '../components/dashboard/DashboardModals';
 import ToolsSidebar from '../components/ToolsSidebar';
 
 import "./DashboardPage.css";
+import ConfirmDeleteModal from '../components/modals/ConfirmDeleteModal';
 
 function DashboardPage() {
     const [isToolsOpen, setIsToolsOpen] = useState(false);
@@ -178,6 +179,13 @@ function DashboardPage() {
             <div style={{ display: 'none' }}>
                 <div ref={logic.printRef}></div>
             </div>
+
+            {/* 👇 AGREGAMOS EL MODAL AQUÍ */}
+            <ConfirmDeleteModal
+                isOpen={!!logic.appointmentToDelete} // Se abre si hay un ID seleccionado
+                onClose={() => logic.setAppointmentToDelete(null)} // Cerrar
+                onConfirm={logic.confirmDeleteAppointment} // Confirmar borrado
+            />
 
             <ToastContainer />
         </div>
