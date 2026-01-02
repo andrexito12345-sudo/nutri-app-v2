@@ -60,7 +60,7 @@ const AppointmentsSection = ({
                 <div className="flex flex-col md:flex-row gap-3 w-full xl:w-auto">
                     {/* Buscador */}
                     <div className="relative group w-full md:w-64">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+
                         <input
                             type="text"
                             placeholder="Buscar paciente..."
