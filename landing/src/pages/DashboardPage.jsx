@@ -49,24 +49,6 @@ function DashboardPage() {
     return (
         <div className="dash">
 
-            {/* --- SECCIÓN DESKTOP: HEADER DE ACCIONES RÁPIDAS --- */}
-            {/* Esto llena el espacio vacío arriba de los botones negros */}
-            <div className="hidden lg:flex justify-between items-end mb-4 mt-2 fade-in-up">
-                <div>
-                    <h2 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-                        Gestión Administrativa
-                    </h2>
-                    <p className="text-sm text-slate-500 font-medium">
-                        Accesos directos a herramientas frecuentes
-                    </p>
-                </div>
-
-                {/* La fecha ahora vive aquí como un badge elegante */}
-                <div className="px-4 py-2 bg-white rounded-xl shadow-sm border border-slate-100 text-sm font-semibold text-slate-600 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    {formattedDate}
-                </div>
-            </div>
 
             {/* Quick Actions - SOLO DESKTOP */}
             <div className="hidden lg:block mb-8">

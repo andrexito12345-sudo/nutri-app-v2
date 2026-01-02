@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Calendar } from 'lucide-react'; // Solo usamos Lucide para el calendario, el icono del título será SVG nativo
 
 function QuickActions({
                           onOpenPatientForm,
@@ -8,6 +9,11 @@ function QuickActions({
                           onOpenDiet,
                           onOpenHerramientasAvanzadas
                       }) {
+
+    // Fecha actual para el widget
+    const today = new Date().toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const formattedDate = today.charAt(0).toUpperCase() + today.slice(1);
+
     const actions = [
         {
             id: 'patient',
@@ -74,47 +80,77 @@ function QuickActions({
     ];
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
-            {actions.map((action, index) => (
-                <motion.button
-                    key={action.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={action.onClick}
-                    className="group relative"
-                >
-                    {/* Gradient Border */}
-                    <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${action.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-[2px]`}>
-                        <div className="h-full w-full bg-black rounded-2xl" />
-                    </div>
+        <div className="mb-8">
+            {/* --- HEADER NUEVO (Integrado) --- */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-4">
 
-                    {/* Content */}
-                    <div className="relative bg-black rounded-2xl p-4 border-2 border-neutral-800 group-hover:border-transparent transition-colors duration-300">
-                        <div className="flex items-center gap-3">
-                            {/* Icon */}
-                            <div className={`p-2.5 rounded-xl bg-gradient-to-br ${action.gradient} text-white flex-shrink-0`}>
-                                {action.svgIcon}
-                            </div>
+                {/* Título y Subtítulo */}
+                <div>
+                    <h2 className="text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
+                        {/* Icono SVG Nativo como pediste */}
+                        <svg className="w-6 h-6 text-slate-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="3" width="7" height="7" />
+                            <rect x="14" y="3" width="7" height="7" />
+                            <rect x="14" y="14" width="7" height="7" />
+                            <rect x="3" y="14" width="7" height="7" />
+                        </svg>
+                        Gestión Administrativa
+                    </h2>
+                    <p className="text-sm text-slate-400 font-medium mt-1 ml-8">
+                        Accesos directos a herramientas frecuentes
+                    </p>
+                </div>
 
-                            {/* Text */}
-                            <div className="flex-1 text-left min-w-0">
-                                <h3 className="font-bold text-white text-sm mb-0.5">
-                                    {action.label}
-                                </h3>
-                                <p className="text-xs text-neutral-500 group-hover:text-neutral-400 transition-colors truncate">
-                                    {action.description}
-                                </p>
-                            </div>
+                {/* Widget de Fecha */}
+                <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-slate-100 shadow-sm text-slate-500 text-sm font-medium">
+                    <Calendar className="w-4 h-4 text-slate-400" />
+                    {formattedDate}
+                </div>
+            </div>
 
-                            {/* Dot Indicator */}
-                            <div className={`w-2 h-2 rounded-full bg-gradient-to-br ${action.gradient} opacity-50 group-hover:opacity-100 transition-opacity flex-shrink-0`} />
+            {/* --- BOTONES ORIGINALES (Estilo Negro) --- */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+                {actions.map((action, index) => (
+                    <motion.button
+                        key={action.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={action.onClick}
+                        className="group relative"
+                    >
+                        {/* Gradient Border */}
+                        <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${action.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-[2px]`}>
+                            <div className="h-full w-full bg-black rounded-2xl" />
                         </div>
-                    </div>
-                </motion.button>
-            ))}
+
+                        {/* Content */}
+                        <div className="relative bg-black rounded-2xl p-4 border-2 border-neutral-800 group-hover:border-transparent transition-colors duration-300">
+                            <div className="flex items-center gap-3">
+                                {/* Icon */}
+                                <div className={`p-2.5 rounded-xl bg-gradient-to-br ${action.gradient} text-white flex-shrink-0`}>
+                                    {action.svgIcon}
+                                </div>
+
+                                {/* Text */}
+                                <div className="flex-1 text-left min-w-0">
+                                    <h3 className="font-bold text-white text-sm mb-0.5">
+                                        {action.label}
+                                    </h3>
+                                    <p className="text-xs text-neutral-500 group-hover:text-neutral-400 transition-colors truncate">
+                                        {action.description}
+                                    </p>
+                                </div>
+
+                                {/* Dot Indicator */}
+                                <div className={`w-2 h-2 rounded-full bg-gradient-to-br ${action.gradient} opacity-50 group-hover:opacity-100 transition-opacity flex-shrink-0`} />
+                            </div>
+                        </div>
+                    </motion.button>
+                ))}
+            </div>
         </div>
     );
 }
