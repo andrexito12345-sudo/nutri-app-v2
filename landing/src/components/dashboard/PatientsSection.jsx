@@ -67,7 +67,7 @@ const PatientsSection = ({
                         {(() => {
                             const newPatients = patients.filter(p => !p.total_consultations || p.total_consultations === 0).length;
                             return newPatients > 0 && (
-                                <span className="badge-new">
+                                <span className="badge-new ml-3">
                                     {newPatients} NUEVO{newPatients > 1 ? 'S' : ''}
                                 </span>
                             );
