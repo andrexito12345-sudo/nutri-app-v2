@@ -14,6 +14,8 @@ import ToolsSidebar from '../components/ToolsSidebar';
 
 import "./DashboardPage.css";
 import ConfirmDeleteModal from '../components/modals/ConfirmDeleteModal';
+import ConfirmCreationModal from '../components/modals/ConfirmCreationModal';
+
 
 function DashboardPage() {
     const [isToolsOpen, setIsToolsOpen] = useState(false);
@@ -182,6 +184,15 @@ function DashboardPage() {
                     </>
                 }
             />
+
+            {/* 👇 NUEVO MODAL DE CREACIÓN DE PACIENTE */}
+            <ConfirmCreationModal
+                isOpen={!!logic.appointmentToConvert}
+                onClose={() => logic.setAppointmentToConvert(null)}
+                onConfirm={logic.confirmCreatePatient}
+                patientName={logic.appointmentToConvert?.patient_name}
+            />
+
 
             <ToastContainer />
         </div>

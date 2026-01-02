@@ -188,10 +188,10 @@ router.patch('/:id/status', requireAuth, async (req, res) => {
     }
 
     try {
+        // CORRECCIÓN: Quitamos la línea de updated_at para evitar conflictos de tipo
         const updateSql = `
       UPDATE appointments
-      SET status = $1,
-          updated_at = NOW()::TEXT
+      SET status = $1
       WHERE id = $2
       RETURNING id;
     `;

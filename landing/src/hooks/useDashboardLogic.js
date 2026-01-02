@@ -14,6 +14,9 @@ export function useDashboardLogic() {
     // 1. ESTADO PARA MODAL DE ELIMINAR PACIENTE
     const [patientToDelete, setPatientToDelete] = useState(null); // Guardará el objeto { id, name }
 
+    // 👇 1. NUEVO ESTADO PARA ESTE MODAL DE AGENDAR CITA
+    const [appointmentToConvert, setAppointmentToConvert] = useState(null);
+
     // --- ESTADOS DE HERRAMIENTAS (MODALES) ---
     const [showHerramientasAvanzadas, setShowHerramientasAvanzadas] = useState(false);
     const [showStatsModal, setShowStatsModal] = useState(false);
@@ -265,20 +268,9 @@ export function useDashboardLogic() {
         setShowPatientForm(true);
     };
 
+    // 👇 2. FUNCIÓN MODIFICADA (Ya no usa window.confirm, solo abre el modal)
     const handleCreatePatientFromAppointment = (appointment) => {
-        if (window.confirm(`El paciente "${appointment.patient_name}" no tiene expediente.\n\n¿Deseas crearle una ficha nueva usando los datos de la cita?`)) {
-            setPendingAppointment(appointment);
-            setPatientFormData({
-                full_name: appointment.patient_name || "",
-                email: appointment.patient_email || "",
-                phone: appointment.patient_phone || "",
-                notes: `Motivo de consulta inicial: ${appointment.reason || "No especificado"}`,
-                birth_date: "", gender: "", occupation: "", address: "",
-                emergency_contact: "", emergency_phone: "", blood_type: "", allergies: ""
-            });
-            setIsEditing(false);
-            setShowPatientForm(true);
-        }
+        setAppointmentToConvert(appointment); // Guardamos la cita y abrimos el modal
     };
 
     const savePatient = async (e) => {
@@ -417,6 +409,28 @@ export function useDashboardLogic() {
         }
     };
 
+    // 👇 3. NUEVA FUNCIÓN: Se ejecuta cuando das click en "Sí, Crear Ficha"
+    const confirmCreatePatient = () => {
+        if (!appointmentToConvert) return;
+
+        const appointment = appointmentToConvert;
+
+        // Lógica original de llenado de formulario
+        setPendingAppointment(appointment);
+        setPatientFormData({
+            full_name: appointment.patient_name || "",
+            email: appointment.patient_email || "",
+            phone: appointment.patient_phone || "",
+            notes: `Motivo de consulta inicial: ${appointment.reason || "No especificado"}`,
+            birth_date: "", gender: "", occupation: "", address: "",
+            emergency_contact: "", emergency_phone: "", blood_type: "", allergies: ""
+        });
+        setIsEditing(false);
+        setShowPatientForm(true); // Abre el formulario grande
+
+        setAppointmentToConvert(null); // Cierra el modal pequeño
+    };
+
     // ✅ RETURN PROFESIONAL Y COMPLETO
     return {
         // Datos y Estados
@@ -492,6 +506,11 @@ export function useDashboardLogic() {
         patientToDelete,
         setPatientToDelete,
         confirmDeletePatient,
+
+        // 👇 AGREGAR ESTOS 3 AL FINAL DEL RETURN
+        appointmentToConvert,           // Estado del modal
+        setAppointmentToConvert,        // Para cerrar el modal (Cancel)
+        confirmCreatePatient,           // Para confirmar (Yes)
 
         // Refs
         printRef
