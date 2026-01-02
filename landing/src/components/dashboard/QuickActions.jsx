@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar } from 'lucide-react'; // Solo usamos Lucide para el calendario, el icono del título será SVG nativo
+import { Calendar, Clock } from 'lucide-react'; // Agregamos Clock
 
 function QuickActions({
                           onOpenPatientForm,
@@ -10,9 +10,22 @@ function QuickActions({
                           onOpenHerramientasAvanzadas
                       }) {
 
-    // Fecha actual para el widget
-    const today = new Date().toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    const formattedDate = today.charAt(0).toUpperCase() + today.slice(1);
+    // --- LÓGICA DEL RELOJ EN VIVO ---
+    const [currentDate, setCurrentDate] = useState(new Date());
+
+    useEffect(() => {
+        // Actualizar cada segundo para que sea preciso
+        const timer = setInterval(() => setCurrentDate(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    // Formatear Fecha: "Viernes, 2 de enero de 2026"
+    const dateOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+    const dateStr = currentDate.toLocaleDateString('es-EC', dateOptions);
+    const formattedDate = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+
+    // Formatear Hora: "10:42 AM"
+    const timeStr = currentDate.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', hour12: true });
 
     const actions = [
         {
@@ -81,13 +94,12 @@ function QuickActions({
 
     return (
         <div className="mb-8">
-            {/* --- HEADER NUEVO (Integrado) --- */}
+            {/* --- HEADER --- */}
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-4">
 
-                {/* Título y Subtítulo */}
+                {/* Título */}
                 <div>
                     <h2 className="text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
-                        {/* Icono SVG Nativo como pediste */}
                         <svg className="w-6 h-6 text-slate-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <rect x="3" y="3" width="7" height="7" />
                             <rect x="14" y="3" width="7" height="7" />
@@ -101,10 +113,18 @@ function QuickActions({
                     </p>
                 </div>
 
-                {/* Widget de Fecha */}
-                <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-slate-100 shadow-sm text-slate-500 text-sm font-medium">
-                    <Calendar className="w-4 h-4 text-slate-400" />
-                    {formattedDate}
+                {/* Widget de Fecha y Hora (Glass Style) */}
+                <div className="hidden md:flex items-center bg-white rounded-xl border border-slate-100 shadow-sm text-slate-600 text-sm font-medium overflow-hidden">
+                    {/* Fecha */}
+                    <div className="flex items-center gap-2 px-4 py-2 border-r border-slate-100 bg-slate-50/50">
+                        <Calendar className="w-4 h-4 text-slate-400" />
+                        <span>{formattedDate}</span>
+                    </div>
+                    {/* Hora */}
+                    <div className="flex items-center gap-2 px-4 py-2 bg-white text-slate-800 font-bold min-w-[100px] justify-center">
+                        <Clock className="w-4 h-4 text-blue-500" />
+                        <span>{timeStr}</span>
+                    </div>
                 </div>
             </div>
 
