@@ -52,7 +52,7 @@ function DashboardPage() {
             {/* Esto llena el espacio vacío arriba de los botones negros */}
             <div className="hidden lg:flex justify-between items-end mb-4 mt-2 fade-in-up">
                 <div>
-                    <h2 className="text-xl font-bold text-slate-800 tracking-tight">
+                    <h2 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
                         Gestión Administrativa
                     </h2>
                     <p className="text-sm text-slate-500 font-medium">

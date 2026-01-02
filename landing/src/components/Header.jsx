@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+// 👇 1. IMPORTAMOS EL ÍCONO "ACTIVITY" (EL DEL PULSO/CORAZÓN)
+import { Activity } from 'lucide-react';
 import "./Header.css";
 
 function Header({ onOpenTools }) {
@@ -61,29 +63,26 @@ function Header({ onOpenTools }) {
     return (
         <header className={`header ${scrolled ? "header--scrolled" : ""} ${isDashboard ? "header--dashboard" : ""}`}>
             <div className="header__container">
-                {/* --- LOGO + TÍTULO DINÁMICO --- */}
+                {/* --- LOGO NUEVO + TÍTULO --- */}
                 <div
                     className="header__brand"
                     onClick={handleLogoClick}
-                    style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+                    style={{ cursor: "pointer", display: "flex", alignItems: "center", color: "#ffffff" }}
                     title={isLoggedIn ? "Ir al Dashboard" : "Ir al Inicio"}
                 >
                     <div className="header__logo">
-                        <svg viewBox="0 0 24 24" fill="none" className="header__logo-svg">
-                            <path d="M12 2C13.5 2 14.5 3 14.5 3C14.5 3 15.5 2.5 16.5 3C17.5 3.5 17 5 17 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                            <path d="M12 5C8 5 5 8.5 5 12.5C5 17 8 21 12 21C16 21 19 17 19 12.5C19 8.5 16 5 12 5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M12 5V8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                            <path d="M14.5 3C16 3.5 17.5 3 18.5 2C18 4 16 5.5 14 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
+                        {/* 👇 2. AQUÍ REEMPLAZAMOS LA MANZANA POR EL ÍCONO "ACTIVITY" */}
+                        {/* Usamos la misma clase para mantener el tamaño, y strokeWidth para que se vea gordito y bien definido */}
+                        <Activity className="header__logo-svg" strokeWidth={2.5} />
                     </div>
 
-                    {/* LÓGICA DEL TÍTULO: SI ES DASHBOARD MUESTRA "PANEL DE CONTROL" */}
+                    {/* LÓGICA DEL TÍTULO (EN BLANCO) */}
                     {isDashboard ? (
                         <div style={{ display: "flex", flexDirection: "column", marginLeft: "10px", lineHeight: "1.2" }}>
                             <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#ffffff", letterSpacing: "-0.5px" }}>
                                 Panel de Control
                             </span>
-                            <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "500" }}>
+                            <span style={{ fontSize: "0.75rem", color: "#e2e8f0", fontWeight: "500" }}>
                                 Sistema de Gestión Nutricional
                             </span>
                         </div>
