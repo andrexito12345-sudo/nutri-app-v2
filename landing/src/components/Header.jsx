@@ -80,7 +80,7 @@ function Header({ onOpenTools }) {
                     {/* LÓGICA DEL TÍTULO: SI ES DASHBOARD MUESTRA "PANEL DE CONTROL" */}
                     {isDashboard ? (
                         <div style={{ display: "flex", flexDirection: "column", marginLeft: "10px", lineHeight: "1.2" }}>
-                            <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#1e293b", letterSpacing: "-0.5px" }}>
+                            <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#ffffff", letterSpacing: "-0.5px" }}>
                                 Panel de Control
                             </span>
                             <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "500" }}>
