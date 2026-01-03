@@ -258,8 +258,22 @@ const DietGeneratorWeekly = ({ onClose, onSave, initialData = {}, aiGeneratedMen
                 </div>
 
                 {/* COLUMNAS DEL DÍA */}
-                <div style={{flex:1, display:'flex', gap:'16px', overflowX:'auto', paddingBottom:'5px'}}>
-                    {Object.entries(MEAL_TIMES).map(([key, meal]) => {
+                {/*<div style={{flex:1, display:'flex', gap:'16px', overflowX:'auto', paddingBottom:'5px'}}>*/}
+                {/* COLUMNAS DEL DÍA */}
+                <div
+                    style={{
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",   // ✅ ahora van uno debajo del otro
+                        gap: "16px",
+                        overflowY: "auto",         // ✅ scroll vertical
+                        overflowX: "hidden",
+                        paddingBottom: "5px",
+                        paddingRight: "6px",
+                    }}
+                >
+
+                {Object.entries(MEAL_TIMES).map(([key, meal]) => {
                         const items = weeklyDiet[currentDay][key];
                         const totalMealKcal = items.reduce((sum, item) => sum + (Number(item.kcal) || 0), 0);
                         return (
