@@ -1,54 +1,176 @@
 // backend/src/controllers/aiDietController.js
 // ============================================
-// Controlador de dietas con Gemini (FETCH DIRECTO)
+// Gemini (v1) - Fetch directo + 3 reintentos + timeout + parse robusto
+// SIN responseMimeType (evita 400 en v1)
 // ============================================
 
-const fetch = require('node-fetch');
+const fetch = require("node-fetch");
+const crypto = require("crypto");
 
-// ✅ USAR VARIABLE DE ENTORNO
 const API_KEY = process.env.GEMINI_API_KEY;
 
 if (!API_KEY) {
-    console.error('❌ ERROR: GEMINI_API_KEY no está configurada');
-    throw new Error('GEMINI_API_KEY no configurada');
+    console.error("❌ ERROR: GEMINI_API_KEY no está configurada");
+    throw new Error("GEMINI_API_KEY no configurada");
+}
+
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const GEMINI_TIMEOUT_MS = Number(process.env.GEMINI_TIMEOUT_MS || 30000);
+const MAX_RETRIES = 3;
+
+function sleep(ms) {
+    return new Promise((r) => setTimeout(r, ms));
+}
+
+function shouldRetry(status) {
+    return status === 429 || (status >= 500 && status <= 599);
+}
+
+function extractJsonFromText(text) {
+    if (!text || typeof text !== "string") return null;
+
+    let t = text
+        .trim()
+        .replace(/```json/gi, "")
+        .replace(/```/g, "")
+        .trim();
+
+    const firstBrace = t.indexOf("{");
+    const lastBrace = t.lastIndexOf("}");
+
+    if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) return null;
+
+    return t.substring(firstBrace, lastBrace + 1);
+}
+
+function normalizeNumber(v) {
+    if (v === null || v === undefined || v === "") return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+}
+
+// Soporta payload antiguo (proteinGoal/carbsGoal/fatGoal) y tu payload actual (macros: {p,c,f})
+function readMacro(reqBody) {
+    const macros = reqBody?.macros || {};
+    const protein =
+        reqBody?.proteinGoal ?? reqBody?.protein_prescribed ?? macros?.p ?? macros?.protein ?? null;
+    const carbs =
+        reqBody?.carbsGoal ?? reqBody?.carbs_prescribed ?? macros?.c ?? macros?.carbs ?? null;
+    const fats =
+        reqBody?.fatGoal ?? reqBody?.fats_prescribed ?? reqBody?.fat_prescribed ?? macros?.f ?? macros?.fats ?? null;
+
+    return {
+        proteinGoal: normalizeNumber(protein),
+        carbsGoal: normalizeNumber(carbs),
+        fatGoal: normalizeNumber(fats),
+    };
+}
+
+async function callGemini({ prompt, requestId }) {
+    const url = `https://generativelanguage.googleapis.com/v1/models/${encodeURIComponent(
+        GEMINI_MODEL
+    )}:generateContent?key=${API_KEY}`;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
+
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            signal: controller.signal,
+            body: JSON.stringify({
+                contents: [
+                    {
+                        role: "user",
+                        parts: [{ text: prompt }],
+                    },
+                ],
+                // Importante: NO enviar generation_config / responseMimeType aquí en v1
+            }),
+        });
+
+        const status = response.status;
+        const statusText = response.statusText;
+
+        console.log(`📡 [${requestId}] Status: ${status} ${statusText}`);
+
+        if (!response.ok) {
+            const errorText = await response.text().catch(() => "");
+            const err = new Error(`Gemini API Error ${status}: ${errorText}`);
+            err.httpStatus = status;
+            throw err;
+        }
+
+        const data = await response.json();
+
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+
+        if (!text) {
+            const err = new Error("Gemini respondió sin texto (candidates vacío o parts vacío).");
+            err.httpStatus = 502;
+            throw err;
+        }
+
+        return { text };
+    } catch (err) {
+        if (err?.name === "AbortError") {
+            const e = new Error(`Timeout: Gemini tardó más de ${GEMINI_TIMEOUT_MS}ms`);
+            e.httpStatus = 504;
+            throw e;
+        }
+        throw err;
+    } finally {
+        clearTimeout(timeout);
+    }
 }
 
 exports.generateWeeklyDiet = async (req, res) => {
-    const {
-        patientName,
-        targetCalories,
-        restrictions,
-        preferences,
-        proteinGoal,
-        carbsGoal,
-        fatGoal
-    } = req.body;
+    console.log("✅ aiDietController activo:", __filename);
 
-    console.log("🔵 Generando dieta con Gemini 2.5 Flash (FETCH DIRECTO)...");
-    console.log("📊 Parámetros:", { patientName, targetCalories, restrictions });
+    const requestId = crypto.randomUUID();
 
-    try {
-        // Prompt mejorado
-        const prompt = `
-Eres una nutricionista experta ecuatoriana. Crea un menú semanal personalizado con las siguientes especificaciones:
+    const body = req.body || {};
+    const patientName = (body.patientName || "").toString().trim();
+    const targetCalories = normalizeNumber(body.targetCalories);
 
-**PACIENTE:** ${patientName}
-**CALORÍAS DIARIAS:** ${targetCalories} kcal
-**DISTRIBUCIÓN DE MACRONUTRIENTES:**
-- Proteína: ${proteinGoal || 'No especificada'}g
-- Carbohidratos: ${carbsGoal || 'No especificado'}g
-- Grasas: ${fatGoal || 'No especificado'}g
+    const { proteinGoal, carbsGoal, fatGoal } = readMacro(body);
 
-**RESTRICCIONES:** ${restrictions || 'Ninguna'}
-**PREFERENCIAS:** ${preferences || 'Ninguna'}
+    const restrictions = (body.restrictions || "").toString().trim();
+    const preferences = (body.preferences || "").toString().trim();
 
-**IMPORTANTE:**
-1. Usa SOLO alimentos ecuatorianos típicos (guineo, plátano, yuca, choclo, quinoa, pescado del pacífico, pollo criollo, etc.)
-2. Incluye 5 comidas diarias: Desayuno, Media Mañana, Almuerzo, Snack, Cena
-3. Cada comida debe tener su valor calórico aproximado
-4. Responde ÚNICAMENTE con un JSON válido (sin markdown, sin comentarios)
+    console.log(`🔵 [${requestId}] Procesando solicitud dieta IA para: ${patientName || "(sin nombre)"}`);
 
-**FORMATO JSON REQUERIDO:**
+    // Validación mínima
+    if (!patientName || !targetCalories) {
+        return res.status(400).json({
+            ok: false,
+            requestId,
+            message: "Faltan campos obligatorios: patientName y targetCalories",
+        });
+    }
+
+    const prompt = `
+Actúa como una API. Devuelve SOLO JSON válido (sin markdown, sin texto extra).
+
+Crea un MENÚ SEMANAL (lunes a domingo) con comida típica ecuatoriana saludable.
+
+PACIENTE: ${patientName}
+CALORÍAS DIARIAS: ${targetCalories} kcal
+MACROS (si aplica):
+- Proteína: ${proteinGoal ?? "No especificada"} g
+- Carbohidratos: ${carbsGoal ?? "No especificado"} g
+- Grasas: ${fatGoal ?? "No especificado"} g
+
+RESTRICCIONES: ${restrictions || "Ninguna"}
+PREFERENCIAS: ${preferences || "Ninguna"}
+
+Reglas:
+1) Usa platos y alimentos ecuatorianos (guineo, plátano, yuca, choclo, quinoa, pescado, pollo criollo, etc.)
+2) 5 comidas: desayuno, media_manana, almuerzo, snack, cena
+3) Cada comida debe incluir descripción completa y calorías estimadas
+4) Responde EXACTAMENTE con este formato:
+
 {
   "lunes": {
     "desayuno": { "comida": "Descripción", "calorias": 400 },
@@ -57,141 +179,93 @@ Eres una nutricionista experta ecuatoriana. Crea un menú semanal personalizado 
     "snack": { "comida": "Descripción", "calorias": 150 },
     "cena": { "comida": "Descripción", "calorias": 500 }
   },
-  "martes": { ... },
-  "miercoles": { ... },
-  "jueves": { ... },
-  "viernes": { ... },
-  "sabado": { ... },
-  "domingo": { ... }
+  "martes": { "...": "..." },
+  "miercoles": { "...": "..." },
+  "jueves": { "...": "..." },
+  "viernes": { "...": "..." },
+  "sabado": { "...": "..." },
+  "domingo": { "...": "..." }
 }
-        `;
+`.trim();
 
-        console.log("🤖 Enviando prompt a Gemini API (fetch directo)...");
+    let lastError = null;
 
-        // 🔥 LLAMADA DIRECTA A LA API (sin librería)
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+            console.log(`🤖 [${requestId}] Gemini attempt ${attempt}/${MAX_RETRIES} -> ${GEMINI_MODEL}`);
+
+            const { text } = await callGemini({ prompt, requestId });
+
+            const jsonText = extractJsonFromText(text);
+            if (!jsonText) {
+                throw new Error("La IA respondió pero no se pudo extraer un JSON (no llaves {}).");
+            }
+
+            let dietPlan;
+            try {
+                dietPlan = JSON.parse(jsonText);
+            } catch (e) {
+                throw new Error(`JSON inválido (parse falló): ${e.message}`);
+            }
+
+            console.log(`✅ [${requestId}] ÉXITO: Menú semanal generado correctamente`);
+
+            return res.json({
+                ok: true,
+                requestId,
+                menu: dietPlan,
+                metadata: {
+                    generatedAt: new Date().toISOString(),
+                    targetCalories,
+                    patientName,
+                    model: `${GEMINI_MODEL} (v1 API)`,
+                    attempts: attempt,
                 },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{
-                            text: prompt
-                        }]
-                    }]
-                })
+            });
+        } catch (err) {
+            lastError = err;
+            const status = err?.httpStatus;
+
+            console.error(`🔴 [${requestId}] Error attempt ${attempt}: ${err.message}`);
+
+            // Si es 400/401/403 normalmente NO conviene reintentar
+            if (status && !shouldRetry(status)) break;
+
+            if (attempt < MAX_RETRIES) {
+                await sleep(1000 * attempt);
             }
-        );
-
-        console.log("📡 Status:", response.status, response.statusText);
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("🔴 Error de API:", errorText);
-            throw new Error(`API Error: ${response.status} - ${errorText}`);
         }
-
-        const data = await response.json();
-
-        console.log("📝 Respuesta recibida, procesando...");
-
-        // Extraer el texto de la respuesta
-        const text = data.candidates[0].content.parts[0].text;
-
-        // Limpieza del texto
-        let cleanText = text
-            .replace(/```json/gi, '')
-            .replace(/```/g, '')
-            .trim();
-
-        // Extraer solo el JSON
-        const firstBrace = cleanText.indexOf('{');
-        const lastBrace = cleanText.lastIndexOf('}');
-
-        if (firstBrace === -1 || lastBrace === -1) {
-            console.error('🔴 No se encontró JSON válido en la respuesta');
-            throw new Error('Respuesta de IA no contiene JSON válido');
-        }
-
-        cleanText = cleanText.substring(firstBrace, lastBrace + 1);
-
-        // Parsear JSON
-        const dietPlan = JSON.parse(cleanText);
-
-        console.log("✅ ÉXITO: Menú semanal generado correctamente");
-
-        res.json({
-            ok: true,
-            menu: dietPlan,
-            metadata: {
-                generatedAt: new Date().toISOString(),
-                targetCalories,
-                patientName,
-                model: "gemini-2.5-flash (v1 API)"
-            }
-        });
-
-    } catch (error) {
-        console.error('🔴 Error DETALLADO al generar dieta:', error);
-
-        res.status(500).json({
-            ok: false,
-            message: 'Error al generar dieta con IA',
-            error: error.message
-        });
     }
+
+    return res.status(500).json({
+        ok: false,
+        requestId,
+        message: "Error al generar dieta con IA",
+        error: lastError?.message || "Error desconocido",
+    });
 };
 
-// ✅ FUNCIÓN ADICIONAL: Validar configuración
+// Endpoint para probar rápido
 exports.validateGeminiConfig = async (req, res) => {
+    const requestId = crypto.randomUUID();
+
     try {
-        if (!API_KEY) {
-            return res.status(500).json({
-                ok: false,
-                message: 'GEMINI_API_KEY no configurada'
-            });
-        }
+        const prompt = "Responde solo con: OK";
+        const { text } = await callGemini({ prompt, requestId });
 
-        console.log("🧪 Probando Gemini API con fetch directo...");
-
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{ text: "Responde solo: OK" }]
-                    }]
-                })
-            }
-        );
-
-        console.log("📡 Status de prueba:", response.status);
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`${response.status} - ${errorText}`);
-        }
-
-        const data = await response.json();
-        const text = data.candidates[0].content.parts[0].text;
-
-        res.json({
+        return res.json({
             ok: true,
-            message: 'Gemini configurado correctamente',
-            response: text,
-            model: "gemini-2.5-flash (v1 API)"
+            requestId,
+            message: "Gemini configurado correctamente",
+            response: (text || "").trim(),
+            model: `${GEMINI_MODEL} (v1 API)`,
         });
-
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             ok: false,
-            message: 'Error de configuración de Gemini',
-            error: error.message
+            requestId,
+            message: "Error de configuración de Gemini",
+            error: error?.message || "Error desconocido",
         });
     }
 };

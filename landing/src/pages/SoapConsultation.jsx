@@ -128,47 +128,79 @@ const SoapConsultation = () => {
         toast.success("✅ Plan Semanal importado a la consulta");
     };
 
-    // 👇 LA FUNCIÓN QUE LLAMA AL CEREBRO (IA)
+    // 👇 LA FUNCIÓN QUE LLAMA AL CEREBRO (IA) - MEJORADA
     const handleGenerateAIDiet = async () => {
         // Validaciones básicas
-        if (!formData.calories_prescribed || formData.calories_prescribed <= 0) {
+        const kcal = Number(formData.calories_prescribed);
+
+        if (!kcal || kcal <= 0) {
             return toast.warning("⚠️ Primero define las calorías en la Prescripción Dietética.");
         }
 
         setGeneratingAI(true);
+
+        // (opcional) limpia el menú previo para que no se abra con data vieja
+        setAiMenuData(null);
+
         try {
-            // Preparamos el paquete para el backend
+            // Preparamos el paquete para el backend (con nombres que tu backend ya usa)
             const payload = {
                 patientName: patient?.full_name || "Paciente",
-                targetCalories: formData.calories_prescribed,
-                macros: {
-                    p: formData.protein_prescribed || 0,
-                    c: formData.carbs_prescribed || 0,
-                    f: formData.fats_prescribed || 0
-                },
-                // Unimos las notas del PES y las alergias del paciente para las restricciones
-                restrictions: `${formData.pes_problem || ''}. ${patient?.allergies || ''}`,
-                preferences: formData.diet_type || "Comida ecuatoriana variada y saludable"
+                targetCalories: kcal,
+
+                // ✅ IMPORTANTE: tu backend usa estos nombres (no "macros: {p,c,f}")
+                proteinGoal: Number(formData.protein_prescribed) || 0,
+                carbsGoal: Number(formData.carbs_prescribed) || 0,
+                fatGoal: Number(formData.fats_prescribed) || 0,
+
+                restrictions: `${formData.pes_problem || ""}. ${patient?.allergies || ""}`.trim(),
+                preferences: formData.diet_type || "Comida ecuatoriana variada y saludable",
             };
 
             console.log("Enviando a la IA:", payload);
 
-            // Llamada al backend
-            const response = await api.post('/diets/generate-ai', payload);
+            const response = await api.post("/diets/generate-ai", payload);
 
-            if (response.data.ok) {
-                setAiMenuData(response.data.menu); // Guardamos el menú SEMANAL generado
-                setShowDietGenerator(true); // Abrimos el modal
-                toast.success("✨ ¡Menú Semanal generado con IA!");
+            // ✅ Manejo robusto del backend
+            const data = response?.data;
+
+            if (data?.ok === true && data?.menu) {
+                setAiMenuData(data.menu);
+                setShowDietGenerator(true);
+
+                const rid = data?.requestId ? ` (ID: ${data.requestId})` : "";
+                toast.success(`✨ ¡Menú Semanal generado con IA!${rid}`);
+                return;
             }
 
+            // Si el backend respondió pero ok=false o sin menu
+            const rid = data?.requestId ? ` (ID: ${data.requestId})` : "";
+            const msg = data?.message || "El servidor respondió, pero no devolvió un menú válido.";
+            toast.error(`❌ ${msg}${rid}`);
+            console.warn("Respuesta backend (no ok):", data);
+
         } catch (error) {
-            console.error("Error IA:", error);
-            toast.error("Error al generar la dieta. Intenta de nuevo.");
+            // Si fue error HTTP, intenta mostrar el mensaje del backend
+            const backendMsg = error?.response?.data?.message;
+            const backendErr = error?.response?.data?.error;
+            const requestId = error?.response?.data?.requestId;
+
+            const rid = requestId ? ` (ID: ${requestId})` : "";
+
+            console.error("Error IA (completo):", error);
+
+            toast.error(
+                backendMsg
+                    ? `❌ ${backendMsg}${rid}`
+                    : backendErr
+                        ? `❌ ${backendErr}${rid}`
+                        : `❌ Error al generar la dieta. Intenta de nuevo.${rid}`
+            );
         } finally {
             setGeneratingAI(false);
         }
     };
+
 
     // --- CARGAS DE DATOS (NO TOCAR) ---
     useEffect(() => {
