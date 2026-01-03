@@ -19,9 +19,9 @@ router.get('/summary', requireAuth, async (req, res) => {
                 COUNT(*)::integer AS total,
                 SUM(CASE WHEN status = 'pendiente' THEN 1 ELSE 0 END)::integer AS pendientes,
                 SUM(CASE WHEN status = 'realizada' THEN 1 ELSE 0 END)::integer AS realizadas,
-                -- Filtro específico para HOY (Zona horaria Ecuador)
-                SUM(CASE WHEN fecha = (CURRENT_DATE AT TIME ZONE 'America/Guayaquil')::date THEN 1 ELSE 0 END)::integer AS hoy_total,
-                SUM(CASE WHEN status = 'pendiente' AND fecha = (CURRENT_DATE AT TIME ZONE 'America/Guayaquil')::date THEN 1 ELSE 0 END)::integer AS hoy_pendientes
+                -- ✅ CORRECCIÓN: Usar CURRENT_DATE sin conversión de zona horaria
+                SUM(CASE WHEN fecha = CURRENT_DATE THEN 1 ELSE 0 END)::integer AS hoy_total,
+                SUM(CASE WHEN status = 'pendiente' AND fecha = CURRENT_DATE THEN 1 ELSE 0 END)::integer AS hoy_pendientes
             FROM all_data;
         `;
 
@@ -35,12 +35,12 @@ router.get('/summary', requireAuth, async (req, res) => {
             hoy_pendientes: stats.hoy_pendientes || 0
         };
 
-        // 2) Visitas (Se mantiene igual pero ajustado a Ecuador)
+        // 2) Visitas (También corregido)
         const visitsSql = `
             SELECT 
                 (SELECT COUNT(*)::integer FROM page_visits) AS total_visits,
                 (SELECT COUNT(*)::integer FROM page_visits 
-                 WHERE DATE(created_at AT TIME ZONE 'America/Guayaquil') = CURRENT_DATE) AS visits_today;
+                 WHERE created_at::date = CURRENT_DATE) AS visits_today;
         `;
         const { rows: [visits] } = await pg.query(visitsSql);
         summary.visits = { total_visits: visits.total_visits || 0 };
