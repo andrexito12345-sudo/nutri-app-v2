@@ -133,6 +133,7 @@ export function useDashboardLogic() {
                 api.get("/appointments"),
                 api.get("/visits/stats"),
                 api.get("/appointments/stats"),
+                api.get("/dashboard/summary"),
                 api.get("/leads"), // Trae los interesados de WhatsApp
             ]);
 

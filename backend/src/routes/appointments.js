@@ -15,6 +15,7 @@ const router = express.Router();
 // ============================================
 router.get('/stats', requireAuth, async (req, res) => {
     try {
+        // 🆕 Usar zona horaria de Ecuador (UTC-5)
         const todaySql = `
       SELECT
         COUNT(*)::int AS total,
@@ -22,7 +23,7 @@ router.get('/stats', requireAuth, async (req, res) => {
         SUM(CASE WHEN status = 'realizada' THEN 1 ELSE 0 END)::int AS done,
         SUM(CASE WHEN status = 'cancelada' THEN 1 ELSE 0 END)::int AS cancelled
       FROM appointments
-      WHERE appointment_datetime::date = CURRENT_DATE
+      WHERE (appointment_datetime AT TIME ZONE 'America/Guayaquil')::date = CURRENT_DATE
     `;
 
         const last30Sql = `
@@ -32,7 +33,7 @@ router.get('/stats', requireAuth, async (req, res) => {
         SUM(CASE WHEN status = 'realizada' THEN 1 ELSE 0 END)::int AS done,
         SUM(CASE WHEN status = 'cancelada' THEN 1 ELSE 0 END)::int AS cancelled
       FROM appointments
-      WHERE appointment_datetime::date >= (CURRENT_DATE - INTERVAL '30 days')
+      WHERE (appointment_datetime AT TIME ZONE 'America/Guayaquil')::date >= (CURRENT_DATE - INTERVAL '30 days')
     `;
 
         const normalize = (row) => ({

@@ -119,7 +119,7 @@ function DashboardKPIsModern({ metrics, visitStats, appointmentStats, onOpenMenu
 
             {/* --- GRID COMPACTO --- */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-                <AnimatePresence mode="wait">
+                <AnimatePresence mode="popLayout">
                     {kpis.map((kpi, index) => (
                         <motion.div
                             key={kpi.id + filter}
