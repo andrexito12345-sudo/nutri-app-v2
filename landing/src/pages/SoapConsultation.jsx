@@ -96,6 +96,55 @@ const SoapConsultation = () => {
         fetchPatientData();
     }, [patientId]);
 
+    // 🆕 NUEVO: Cargar datos biométricos de la cita y pre-llenar el formulario
+    useEffect(() => {
+        const fetchAppointmentData = async () => {
+            if (appointmentId && !isEditing) {
+                try {
+                    const response = await api.get(`/appointments/${appointmentId}`);
+                    const appointment = response.data.appointment;
+
+                    // Si la cita tiene datos biométricos, pre-llenar el formulario SOAP
+                    if (appointment) {
+                        const biometricData = {};
+
+                        // Pre-llenar peso y altura si existen
+                        if (appointment.patient_weight) {
+                            biometricData.weight = appointment.patient_weight;
+                        }
+                        if (appointment.patient_height) {
+                            biometricData.height = appointment.patient_height;
+                        }
+                        // El IMC se calculará automáticamente por el useEffect existente
+
+                        // Actualizar el formulario con los datos biométricos
+                        if (Object.keys(biometricData).length > 0) {
+                            setFormData(prev => ({
+                                ...prev,
+                                ...biometricData
+                            }));
+
+                            console.log('✅ Datos biométricos cargados desde la cita:', {
+                                peso: appointment.patient_weight,
+                                altura: appointment.patient_height,
+                                imc: appointment.patient_bmi,
+                                categoria: appointment.patient_bmi_category
+                            });
+
+                            toast.success('📊 Datos de la calculadora IMC cargados automáticamente', {
+                                duration: 3000,
+                                position: 'top-right'
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error al cargar datos de la cita:", error);
+                    // No mostramos error al usuario si falla esto, solo en consola
+                }
+            }
+        };
+        fetchAppointmentData();
+    }, [appointmentId, isEditing]);
     // Cálculo automático de IMC
     useEffect(() => {
         const { weight, height } = formData;

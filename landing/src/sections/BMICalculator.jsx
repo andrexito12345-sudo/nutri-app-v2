@@ -73,7 +73,7 @@ export default function BMICalculator() {
   const handleLeadSubmit = async (e) => {
     e.preventDefault();
 
-    const { name, email, phone } = formData;
+    const { name, email, phone, weight, height, age, gender } = formData;
     if (!name || !phone) {
       toast.error('Por favor completa nombre y teléfono');
       return;
@@ -93,19 +93,26 @@ export default function BMICalculator() {
 ━━━━━━━━━━━━━━━━━━━━━━━
 📊 IMC: ${result.bmi}
 📈 Categoría: ${result.category}
-⚖️ Peso: ${formData.weight} kg
-📏 Altura: ${formData.height} cm
-${formData.age ? `🎂 Edad: ${formData.age} años` : ''}
-${formData.gender ? `👤 Género: ${formData.gender === 'female' ? 'Femenino' : 'Masculino'}` : ''}
+⚖️ Peso: ${weight} kg
+📏 Altura: ${height} cm
+${age ? `🎂 Edad: ${age} años` : ''}
+${gender ? `👤 Género: ${gender === 'female' ? 'Femenino' : 'Masculino'}` : ''}
       `.trim();
 
-      // ENVIAR DATOS AL BACKEND
+      // 🆕 ENVIAR DATOS ESTRUCTURADOS AL BACKEND
       const response = await api.post('/appointments', {
         patient_name: name,
         patient_email: email || null,
         patient_phone: phone,
-        reason: detailedReason,
-        appointment_datetime: appointmentDate.toISOString()
+        reason: detailedReason, // Mantenemos el reason para referencia
+        appointment_datetime: appointmentDate.toISOString(),
+        // 🆕 Datos biométricos estructurados para pre-llenar el SOAP
+        patient_weight: weight ? parseFloat(weight) : null,
+        patient_height: height ? parseFloat(height) : null,
+        patient_age: age ? parseInt(age) : null,
+        patient_gender: gender === 'female' ? 'Femenino' : gender === 'male' ? 'Masculino' : null,
+        patient_bmi: result.bmi ? parseFloat(result.bmi) : null,
+        patient_bmi_category: result.category || null
       });
 
       if (response.data.ok) {
@@ -574,4 +581,3 @@ ${formData.gender ? `👤 Género: ${formData.gender === 'female' ? 'Femenino' :
       </>
   );
 }
-

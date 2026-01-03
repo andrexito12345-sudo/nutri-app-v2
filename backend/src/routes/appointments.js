@@ -69,6 +69,13 @@ router.post('/', async (req, res) => {
         patient_phone,
         reason,
         appointment_datetime,
+        // 🆕 NUEVOS CAMPOS BIOMÉTRICOS
+        patient_weight,
+        patient_height,
+        patient_age,
+        patient_gender,
+        patient_bmi,
+        patient_bmi_category
     } = req.body;
 
     if (!patient_name || !appointment_datetime) {
@@ -80,10 +87,24 @@ router.post('/', async (req, res) => {
     }
 
     try {
+        // 🆕 INSERT actualizado con columnas biométricas
         const insertSql = `
       INSERT INTO appointments
-        (patient_name, patient_email, patient_phone, reason, appointment_datetime, status)
-      VALUES ($1, $2, $3, $4, $5, 'pendiente')
+        (
+          patient_name, 
+          patient_email, 
+          patient_phone, 
+          reason, 
+          appointment_datetime, 
+          status,
+          patient_weight,
+          patient_height,
+          patient_age,
+          patient_gender,
+          patient_bmi,
+          patient_bmi_category
+        )
+      VALUES ($1, $2, $3, $4, $5, 'pendiente', $6, $7, $8, $9, $10, $11)
       RETURNING id;
     `;
 
@@ -93,9 +114,24 @@ router.post('/', async (req, res) => {
             patient_phone || null,
             reason || null,
             appointment_datetime,
+            // 🆕 Valores biométricos (pueden ser null)
+            patient_weight || null,
+            patient_height || null,
+            patient_age || null,
+            patient_gender || null,
+            patient_bmi || null,
+            patient_bmi_category || null
         ]);
 
         const newId = result.rows[0]?.id;
+
+        console.log('✅ Cita creada con datos biométricos:', {
+            id: newId,
+            peso: patient_weight,
+            altura: patient_height,
+            imc: patient_bmi,
+            categoria: patient_bmi_category
+        });
 
         return res.status(201).json({
             ok: true,
@@ -118,8 +154,11 @@ router.post('/', async (req, res) => {
 router.get('/', requireAuth, async (req, res) => {
     const { status, q, date_from, date_to } = req.query;
 
+    // 🆕 Incluir columnas biométricas en el SELECT
     let sql = `
-    SELECT a.*, p.id AS linked_patient_id 
+    SELECT 
+      a.*,
+      p.id AS linked_patient_id 
     FROM appointments a
     LEFT JOIN patients p ON (
       (a.patient_email IS NOT NULL AND a.patient_email <> '' AND a.patient_email = p.email)
@@ -171,6 +210,48 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 // ============================================
+// 🆕 3.1. OBTENER UNA CITA POR ID (PRIVADO - DOCTORA)
+//    GET /api/appointments/:id
+// ============================================
+router.get('/:id', requireAuth, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const sql = `
+            SELECT 
+              a.*,
+              p.id AS linked_patient_id 
+            FROM appointments a
+            LEFT JOIN patients p ON (
+              (a.patient_email IS NOT NULL AND a.patient_email <> '' AND a.patient_email = p.email)
+              OR
+              (a.patient_phone IS NOT NULL AND a.patient_phone <> '' AND a.patient_phone = p.phone)
+            )
+            WHERE a.id = $1
+        `;
+
+        const { rows } = await pgPool.query(sql, [id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                ok: false,
+                message: 'Cita no encontrada'
+            });
+        }
+
+        return res.json({
+            ok: true,
+            appointment: rows[0]
+        });
+    } catch (err) {
+        console.error('❌ Error al obtener cita por ID (Postgres):', err);
+        return res
+            .status(500)
+            .json({ ok: false, message: 'Error al obtener la cita' });
+    }
+});
+
+// ============================================
 // 4. ACTUALIZAR ESTADO DE CITA (PRIVADO - DOCTORA)
 //    PATCH /api/appointments/:id/status
 // ============================================
@@ -188,7 +269,6 @@ router.patch('/:id/status', requireAuth, async (req, res) => {
     }
 
     try {
-        // CORRECCIÓN: Quitamos la línea de updated_at para evitar conflictos de tipo
         const updateSql = `
       UPDATE appointments
       SET status = $1
@@ -213,7 +293,10 @@ router.patch('/:id/status', requireAuth, async (req, res) => {
     }
 });
 
-// 👇 5. AGREGAR ESTA RUTA NUEVA AL FINAL (ANTES DEL MODULE.EXPORTS)
+// ============================================
+// 5. ELIMINAR CITA (PRIVADO - DOCTORA)
+//    DELETE /api/appointments/:id
+// ============================================
 router.delete('/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
 
