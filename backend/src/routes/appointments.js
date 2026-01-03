@@ -15,7 +15,7 @@ const router = express.Router();
 // ============================================
 router.get('/stats', requireAuth, async (req, res) => {
     try {
-        // 🆕 Usar zona horaria de Ecuador (UTC-5)
+        // Stats de HOY (zona horaria Ecuador)
         const todaySql = `
       SELECT
         COUNT(*)::int AS total,
@@ -26,6 +26,7 @@ router.get('/stats', requireAuth, async (req, res) => {
       WHERE (appointment_datetime AT TIME ZONE 'America/Guayaquil')::date = CURRENT_DATE
     `;
 
+        // Stats de últimos 30 días
         const last30Sql = `
       SELECT
         COUNT(*)::int AS total,
