@@ -1,0 +1,122 @@
+/* --- LAYOUT GENERAL (PC) --- */
+.dg-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #f8fafc;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Header */
+.dg-header {
+    background: #1e293b;
+    color: white;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px -2px rgba(0,0,0,0.15);
+    z-index: 10;
+}
+
+/* Barra de Días */
+.dg-days-bar {
+    background: white;
+    padding: 12px 24px;
+    border-bottom: 1px solid #e2e8f0;
+    overflow-x: auto;
+    display: flex;
+    gap: 8px;
+    /* Scroll suave */
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Área de Trabajo (Donde está el Sidebar y las Columnas) */
+.dg-workspace {
+    display: flex;
+    flex: 1;
+    overflow: hidden; /* En PC ocultamos el scroll general */
+    padding: 24px;
+    gap: 24px;
+    background: #f1f5f9;
+}
+
+/* Sidebar (Buscador) */
+.dg-sidebar {
+    width: 340px;
+    background: white;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+/* Tablero de Comidas (Columnas) */
+.dg-board {
+    flex: 1;
+    display: flex;
+    gap: 16px;
+    overflow-x: auto; /* Scroll horizontal en PC */
+    padding-bottom: 5px;
+}
+
+.dg-meal-column {
+    flex: 1;
+    min-width: 240px;
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+}
+
+/* =========================================
+   📱 MEDIA QUERIES (MÓVIL)
+   ========================================= */
+@media (max-width: 900px) {
+    .dg-container {
+        /* En móvil permitimos que la página crezca hacia abajo */
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+    }
+
+    .dg-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+        position: sticky;
+        top: 0;
+    }
+
+    .dg-header > div {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .dg-workspace {
+        flex-direction: column; /* Apilar Sidebar arriba y Comidas abajo */
+        overflow: visible; /* Permitir scroll de la página completa */
+        padding: 15px;
+        gap: 20px;
+    }
+
+    .dg-sidebar {
+        width: 100%; /* Sidebar ocupa todo el ancho */
+        height: 400px; /* Altura fija para el buscador en móvil */
+        min-height: 400px;
+    }
+
+    .dg-board {
+        flex-direction: column; /* Apilar las columnas de comida verticalmente */
+        overflow-x: visible;
+    }
+
+    .dg-meal-column {
+        min-width: auto;
+        width: 100%;
+    }
+}

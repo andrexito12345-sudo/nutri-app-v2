@@ -3,7 +3,7 @@ import { foodDatabase } from "../data/foodDatabase";
 import { toast } from "react-toastify";
 import "./DietGenerator.css";
 
-// --- ICONOS SVG PROFESIONALES ---
+// --- ICONOS SVG ---
 const Icons = {
     Search: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>,
     Save: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>,
@@ -26,14 +26,7 @@ const MEAL_TIMES = {
 const DAYS = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
 
 const DietGeneratorWeekly = ({ onClose, onSave, initialData = {}, aiGeneratedMenu = {} }) => {
-    // RECIBIMOS LOS NUEVOS DATOS DE MACROS
-    const {
-        targetKcal = 0,
-        targetProtein = 0,
-        targetCarbs = 0,
-        targetFats = 0,
-        patientName = "Paciente"
-    } = initialData;
+    const { targetKcal = 0, targetProtein = 0, targetCarbs = 0, targetFats = 0, patientName = "Paciente" } = initialData;
 
     const [currentDay, setCurrentDay] = useState("lunes");
     const [searchTerm, setSearchTerm] = useState("");
@@ -47,9 +40,7 @@ const DietGeneratorWeekly = ({ onClose, onSave, initialData = {}, aiGeneratedMen
 
     const [weeklyDiet, setWeeklyDiet] = useState(() => {
         const initialWeek = {};
-        DAYS.forEach(day => {
-            initialWeek[day] = { BREAKFAST: [], MID_MORNING: [], LUNCH: [], SNACK: [], DINNER: [] };
-        });
+        DAYS.forEach(day => initialWeek[day] = { BREAKFAST: [], MID_MORNING: [], LUNCH: [], SNACK: [], DINNER: [] });
         return initialWeek;
     });
 
@@ -59,7 +50,6 @@ const DietGeneratorWeekly = ({ onClose, onSave, initialData = {}, aiGeneratedMen
         return () => window.removeEventListener('click', handleClickOutside);
     }, []);
 
-    // --- PROCESADOR DE IA ---
     useEffect(() => {
         if (aiGeneratedMenu && Object.keys(aiGeneratedMenu).length > 0) {
             const newDiet = { ...weeklyDiet };
@@ -113,61 +103,28 @@ const DietGeneratorWeekly = ({ onClose, onSave, initialData = {}, aiGeneratedMen
 
     const handlePrint = () => {
         const printWindow = window.open('', '_blank');
-        let htmlContent = `
-        <html><head><title>Plan Nutricional - ${patientName}</title>
-        <style>
-            body { font-family: sans-serif; padding: 30px; color: #333; }
-            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #3b82f6; padding-bottom: 15px; }
-            .header h1 { margin: 0; color: #1e3a8a; }
-            .meta { margin-top: 10px; font-size: 0.9rem; }
-            .day-box { break-inside: avoid; margin-bottom: 25px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
-            .day-title { background: #f8fafc; padding: 8px 15px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; color: #475569; }
-            .meal-row { display: flex; padding: 10px 15px; border-bottom: 1px solid #f1f5f9; }
-            .meal-row:last-child { border-bottom: none; }
-            .meal-name { width: 130px; font-weight: 600; color: #64748b; font-size: 0.85rem; }
-            .meal-items { flex: 1; font-size: 0.9rem; }
-        </style></head><body>
-        <div class="header">
-            <h1>Plan Nutricional Semanal</h1>
-            <div class="meta">Paciente: <strong>${patientName}</strong> | Meta: <strong>${targetKcal} kcal</strong> (P:${targetProtein}g, C:${targetCarbs}g, G:${targetFats}g)</div>
-        </div>`;
-        DAYS.forEach(day => {
-            const dayData = weeklyDiet[day];
-            if (Object.values(dayData).some(arr => arr.length > 0)) {
-                htmlContent += `<div class="day-box"><div class="day-title">${day}</div>`;
-                Object.entries(MEAL_TIMES).forEach(([key, meal]) => {
-                    if (dayData[key].length > 0) {
-                        htmlContent += `<div class="meal-row"><div class="meal-name">${meal.label}</div><div class="meal-items">${dayData[key].map(i => typeof i.alimento === 'string' ? i.alimento : 'Opción').join(', ')}</div></div>`;
-                    }
-                });
-                htmlContent += `</div>`;
-            }
-        });
-        htmlContent += `<script>window.print();</script></body></html>`;
+        let htmlContent = `<html><head><title>Plan Nutricional</title></head><body><h1>Plan para ${patientName}</h1><script>window.print();</script></body></html>`;
         printWindow.document.write(htmlContent);
         printWindow.document.close();
     };
 
-    // --- COMPONENTE DE PÍLDORA DE MACRO (ELEGANTE) ---
     const MacroPill = ({ label, value, color, icon }) => (
         <div style={{display:'flex', alignItems:'center', gap:'6px', background:'rgba(255,255,255,0.1)', padding:'4px 10px', borderRadius:'20px', fontSize:'0.8rem', fontWeight:'500', border:`1px solid ${color}40`}}>
-            <span style={{color: color}}>{icon}</span>
-            <span style={{opacity:0.8}}>{label}:</span>
-            <strong style={{color:'white'}}>{value}</strong>
+            <span style={{color: color}}>{icon}</span><span style={{opacity:0.8}}>{label}:</span><strong style={{color:'white'}}>{value}</strong>
         </div>
     );
 
     return (
-        <div className="diet-generator weekly-mode" style={{display:'flex', flexDirection:'column', height:'100%', background:'#f8fafc', fontFamily:'Inter, sans-serif'}}>
+        /* USAMOS CLASES CSS EN LUGAR DE ESTILOS EN LÍNEA PARA EL LAYOUT */
+        <div className="dg-container">
 
-            {/* HEADER SUPERIOR ELEGANTE */}
-            <div style={{background:'#1e293b', color:'white', padding:'16px 24px', display:'flex', justifyContent:'space-between', alignItems:'center', boxShadow:'0 4px 12px -2px rgba(0,0,0,0.15)', position:'relative', zIndex:10}}>
+            {/* HEADER */}
+            <div className="dg-header">
                 <div style={{display:'flex', flexDirection:'column', gap:'8px'}}>
                     <div style={{display:'flex', alignItems:'center', gap:'12px'}}>
                         <Icons.Calendar/>
                         <h2 style={{margin:0, fontSize:'1.25rem', fontWeight:'700', letterSpacing:'0.3px'}}>Plan Semanal: {patientName}</h2>
                     </div>
-                    {/* NUEVA BARRA DE METAS (MACROS) */}
                     <div style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
                         <MacroPill label="Calorías" value={`${targetKcal} kcal`} color="#fb923c" icon={<Icons.MacroFire/>}/>
                         <MacroPill label="Proteína" value={`${targetProtein}g`} color="#f87171" icon="🥩"/>
@@ -177,46 +134,40 @@ const DietGeneratorWeekly = ({ onClose, onSave, initialData = {}, aiGeneratedMen
                 </div>
 
                 <div style={{display:'flex', gap:'12px'}}>
-                    <button onClick={handlePrint} style={{background:'white', border:'none', color:'#1e293b', padding:'8px 16px', borderRadius:'8px', cursor:'pointer', fontWeight:'600', display:'flex', alignItems:'center', gap:'8px', fontSize:'0.9rem', transition:'all 0.2s'}}>
+                    <button onClick={handlePrint} style={{background:'white', border:'none', color:'#1e293b', padding:'8px 16px', borderRadius:'8px', cursor:'pointer', fontWeight:'600', display:'flex', alignItems:'center', gap:'8px', fontSize:'0.9rem'}}>
                         <Icons.Print/> Imprimir
                     </button>
-                    <button onClick={onClose} style={{background:'transparent', border:'1px solid rgba(255,255,255,0.3)', color:'white', padding:'8px 16px', borderRadius:'8px', cursor:'pointer', fontSize:'0.9rem', transition:'all 0.2s'}}>Cancelar</button>
-                    <button onClick={() => onSave({ weeklyDiet, targetKcal })} style={{background:'#3b82f6', border:'none', color:'white', padding:'8px 24px', borderRadius:'8px', cursor:'pointer', fontWeight:'700', display:'flex', alignItems:'center', gap:'8px', fontSize:'0.95rem', boxShadow:'0 4px 6px -1px rgba(59, 130, 246, 0.5)', transition:'all 0.2s'}}>
+                    <button onClick={onClose} style={{background:'transparent', border:'1px solid rgba(255,255,255,0.3)', color:'white', padding:'8px 16px', borderRadius:'8px', cursor:'pointer', fontSize:'0.9rem'}}>Cancelar</button>
+                    <button onClick={() => onSave({ weeklyDiet, targetKcal })} style={{background:'#3b82f6', border:'none', color:'white', padding:'8px 24px', borderRadius:'8px', cursor:'pointer', fontWeight:'700', display:'flex', alignItems:'center', gap:'8px', fontSize:'0.95rem'}}>
                         <Icons.Save/> Guardar Plan
                     </button>
                 </div>
             </div>
 
-            {/* BARRA DE DÍAS (MEJORADA) */}
-            <div style={{background:'white', padding:'12px 24px', borderBottom:'1px solid #e2e8f0', overflowX:'auto', display:'flex', gap:'8px', boxShadow:'inset 0 -2px 4px rgba(0,0,0,0.02)'}}>
+            {/* BARRA DE DÍAS */}
+            <div className="dg-days-bar">
                 {DAYS.map(day => {
                     const isActive = currentDay === day;
                     return (
-                        <button
-                            key={day}
-                            onClick={() => setCurrentDay(day)}
-                            style={{
-                                padding: '8px 20px', border: 'none', borderRadius: '8px',
-                                background: isActive ? '#3b82f6' : 'transparent',
-                                color: isActive ? 'white' : '#64748b',
-                                cursor: 'pointer', textTransform: 'capitalize', fontWeight: isActive ? '700' : '600',
-                                fontSize: '0.9rem', transition: 'all 0.2s',
-                                borderBottom: isActive ? 'none' : '2px solid transparent',
-                                boxShadow: isActive ? '0 2px 4px rgba(59,130,246,0.3)' : 'none'
-                            }}
-                            onMouseEnter={(e) => !isActive && (e.target.style.background = '#f1f5f9')}
-                            onMouseLeave={(e) => !isActive && (e.target.style.background = 'transparent')}
-                        >
+                        <button key={day} onClick={() => setCurrentDay(day)}
+                                style={{
+                                    padding: '8px 20px', border: 'none', borderRadius: '8px',
+                                    background: isActive ? '#3b82f6' : 'transparent',
+                                    color: isActive ? 'white' : '#64748b',
+                                    cursor: 'pointer', textTransform: 'capitalize', fontWeight: isActive ? '700' : '600',
+                                    fontSize: '0.9rem', whiteSpace: 'nowrap',
+                                    boxShadow: isActive ? '0 2px 4px rgba(59,130,246,0.3)' : 'none'
+                                }}>
                             {day}
                         </button>
                     )})}
             </div>
 
-            {/* WORKSPACE */}
-            <div style={{display:'flex', flex:1, overflow:'hidden', padding:'24px', gap:'24px', background:'#f1f5f9'}}>
+            {/* AREA DE TRABAJO */}
+            <div className="dg-workspace">
 
                 {/* SIDEBAR */}
-                <div style={{width:'340px', background:'white', borderRadius:'16px', display:'flex', flexDirection:'column', border:'1px solid #e2e8f0', boxShadow:'0 4px 6px -1px rgba(0,0,0,0.05)', overflow:'hidden'}}>
+                <div className="dg-sidebar">
                     <div style={{padding:'20px', borderBottom:'1px solid #f1f5f9', display:'flex', flexDirection:'column', gap:'12px'}}>
                         <div style={{position:'relative'}}>
                             <input type="text" placeholder="Buscar alimento..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{padding:'12px 12px 12px 40px', borderRadius:'10px', border:'1px solid #cbd5e1', width:'100%', fontSize:'0.95rem', outline:'none'}} />
@@ -257,13 +208,13 @@ const DietGeneratorWeekly = ({ onClose, onSave, initialData = {}, aiGeneratedMen
                     </div>
                 </div>
 
-                {/* COLUMNAS DEL DÍA */}
-                <div style={{flex:1, display:'flex', gap:'16px', overflowX:'auto', paddingBottom:'5px'}}>
+                {/* TABLERO */}
+                <div className="dg-board">
                     {Object.entries(MEAL_TIMES).map(([key, meal]) => {
                         const items = weeklyDiet[currentDay][key];
                         const totalMealKcal = items.reduce((sum, item) => sum + (Number(item.kcal) || 0), 0);
                         return (
-                            <div key={key} style={{flex:1, minWidth:'240px', background:'white', borderRadius:'16px', border:'1px solid #e2e8f0', display:'flex', flexDirection:'column', boxShadow:'0 4px 6px -1px rgba(0,0,0,0.02)'}}>
+                            <div key={key} className="dg-meal-column">
                                 <div style={{padding:'16px', borderBottom:`3px solid ${meal.color}`, background:'#f8fafc', borderTopLeftRadius:'16px', borderTopRightRadius:'16px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                                     <span style={{fontWeight:'700', color:'#334155', fontSize:'0.95rem'}}>{meal.label}</span>
                                     <span style={{fontSize:'0.75rem', background:'white', padding:'4px 8px', borderRadius:'6px', border:'1px solid #e2e8f0', color:'#64748b', fontWeight:'600'}}>{totalMealKcal} kcal</span>
