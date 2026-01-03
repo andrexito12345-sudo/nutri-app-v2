@@ -126,38 +126,23 @@ export function useDashboardLogic() {
     const loadDashboardData = async (isBackgroundUpdate = false) => {
         try {
             if (!isBackgroundUpdate) setLoading(true);
-            setError("");
 
-            // 👇 NUEVO: Agregamos api.get("/leads") al Promise.all
-            const [appointmentsRes, visitsRes, statsRes, leadsRes] = await Promise.all([
+            // Ejecutamos las peticiones al backend
+            const [appRes, summRes, leadsRes] = await Promise.all([
                 api.get("/appointments"),
-                api.get("/visits/stats"),
-                api.get("/appointments/stats"),
                 api.get("/dashboard/summary"),
-                api.get("/leads"), // Trae los interesados de WhatsApp
+                api.get("/leads") // 👈 Esta es la clave para la bandeja
             ]);
 
-            setAppointments(Array.isArray(appointmentsRes.data?.appointments) ? appointmentsRes.data.appointments : []);
-
-            const visitsData = visitsRes.data || {};
-            setVisitStats({
-                total: visitsData.total ?? 0,
-                today: visitsData.today ?? 0,
-            });
-
-            setAppointmentStats(statsRes.data || null);
-
-            // 👇 NUEVO: Guardamos los leads en el estado
-            setLeads(leadsRes.data?.leads || []);
+            // Guardamos los leads en el estado
+            setLeads(leadsRes.data.leads || []);
+            setAppointments(appRes.data.appointments || []);
+            setAppointmentStats(summRes.data.summary.appointments || null);
 
         } catch (err) {
-            console.error("Error cargando dashboard:", err);
-            // No mostramos error global si falla solo leads, para no bloquear la app
-            if (!isBackgroundUpdate) {
-                // setError("No se pudieron cargar algunos datos."); // Opcional
-            }
+            console.error("Error al cargar leads en el dashboard");
         } finally {
-            if (!isBackgroundUpdate) setLoading(false);
+            setLoading(false);
         }
     };
 
