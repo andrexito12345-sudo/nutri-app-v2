@@ -1,6 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import './NutritionalTools.css';
 
+// --- ICONOS SVG PROFESIONALES ---
+const Icons = {
+    Protein: () => (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><path d="M10 13a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /><path d="M10 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /></svg>
+    ),
+    Carbs: () => (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg>
+    ),
+    Fats: () => (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" /></svg>
+    ),
+    Save: () => (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2-2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>
+    ),
+    Close: () => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    )
+};
+
 const NutritionalTools = ({ patientData, onCancel, onSave, actionLabel = "Guardar Cálculo" }) => {
     const [config, setConfig] = useState({
         formula: 'mifflin',
@@ -94,7 +113,6 @@ const NutritionalTools = ({ patientData, onCancel, onSave, actionLabel = "Guarda
             macros,
             date: new Date().toISOString(),
             config: { ...config },
-            // Metadata para el historial
             patientWeight: patientData.weight,
             patientHeight: patientData.height,
             patientAge: calculateAge(patientData.birth_date)
@@ -107,7 +125,6 @@ const NutritionalTools = ({ patientData, onCancel, onSave, actionLabel = "Guarda
         }
     }, [config, patientData]);
 
-    // Función para guardar el cálculo
     const handleSaveCalculation = () => {
         if (results && onSave) {
             onSave(results);
@@ -117,7 +134,7 @@ const NutritionalTools = ({ patientData, onCancel, onSave, actionLabel = "Guarda
     return (
         <div className="tools-compact-container">
 
-            {/* HEADER COMPACTO */}
+            {/* HEADER COMPACTO CON BOTÓN DE CERRAR */}
             <div className="tools-compact-header">
                 <div className="header-left">
                     <h3 className="tools-compact-title">Calculadora Metabólica</h3>
@@ -129,9 +146,13 @@ const NutritionalTools = ({ patientData, onCancel, onSave, actionLabel = "Guarda
                         <span className="metric-highlight">{patientData.height} cm</span>
                     </div>
                 </div>
+                {/* BOTÓN X PARA CERRAR */}
+                <button onClick={onCancel} className="btn-header-close" title="Cerrar">
+                    <Icons.Close />
+                </button>
             </div>
 
-            {/* CONTENIDO PRINCIPAL EN GRID HORIZONTAL */}
+            {/* CONTENIDO PRINCIPAL EN GRID */}
             <div className="tools-compact-grid">
 
                 {/* COLUMNA 1: PARÁMETROS */}
@@ -206,7 +227,7 @@ const NutritionalTools = ({ patientData, onCancel, onSave, actionLabel = "Guarda
                     )}
                 </div>
 
-                {/* COLUMNA 3: MACROS */}
+                {/* COLUMNA 3: MACROS CON SVGS */}
                 <div className="compact-section">
                     <h4 className="compact-section-title">
                         3. DISTRIBUCIÓN MACROS
@@ -216,7 +237,7 @@ const NutritionalTools = ({ patientData, onCancel, onSave, actionLabel = "Guarda
                         <div className="compact-macros-list">
                             <div className="compact-macro-row protein">
                                 <div className="compact-macro-header">
-                                    <span className="compact-macro-icon">🍗</span>
+                                    <span className="compact-macro-icon" style={{color: '#f87171'}}><Icons.Protein /></span>
                                     <span className="compact-macro-name">Proteína</span>
                                     <span className="compact-macro-value">{results.macros.protein.grams}g</span>
                                     <span className="compact-macro-percent">{results.macros.protein.percent}%</span>
@@ -229,7 +250,7 @@ const NutritionalTools = ({ patientData, onCancel, onSave, actionLabel = "Guarda
 
                             <div className="compact-macro-row carbs">
                                 <div className="compact-macro-header">
-                                    <span className="compact-macro-icon">🍚</span>
+                                    <span className="compact-macro-icon" style={{color: '#fbbf24'}}><Icons.Carbs /></span>
                                     <span className="compact-macro-name">Carbos</span>
                                     <span className="compact-macro-value">{results.macros.carbs.grams}g</span>
                                     <span className="compact-macro-percent">{results.macros.carbs.percent}%</span>
@@ -242,7 +263,7 @@ const NutritionalTools = ({ patientData, onCancel, onSave, actionLabel = "Guarda
 
                             <div className="compact-macro-row fats">
                                 <div className="compact-macro-header">
-                                    <span className="compact-macro-icon">🥑</span>
+                                    <span className="compact-macro-icon" style={{color: '#a3e635'}}><Icons.Fats /></span>
                                     <span className="compact-macro-name">Grasas</span>
                                     <span className="compact-macro-value">{results.macros.fats.grams}g</span>
                                     <span className="compact-macro-percent">{results.macros.fats.percent}%</span>
@@ -253,13 +274,14 @@ const NutritionalTools = ({ patientData, onCancel, onSave, actionLabel = "Guarda
                                 <div className="compact-macro-kcal">{results.macros.fats.calories.toLocaleString('es-EC')} kcal</div>
                             </div>
 
-                            {/* BOTÓN DE GUARDAR FLEXIBLE */}
+                            {/* BOTONES DE ACCIÓN (GUARDAR Y CANCELAR) */}
                             {results && (
                                 <div className="tools-compact-actions">
+                                    <button className="btn-compact-cancel" onClick={onCancel}>
+                                        Cancelar
+                                    </button>
                                     <button className="btn-compact-save" onClick={handleSaveCalculation}>
-                                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
-                                        </svg>
+                                        <Icons.Save />
                                         {actionLabel}
                                     </button>
                                 </div>
@@ -268,8 +290,6 @@ const NutritionalTools = ({ patientData, onCancel, onSave, actionLabel = "Guarda
                     )}
                 </div>
             </div>
-
-
         </div>
     );
 };

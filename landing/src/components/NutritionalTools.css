@@ -1,408 +1,212 @@
-/* ============================================
-   NUTRITIONAL TOOLS - VERSIÓN ULTRA-COMPACTA
-   Diseño optimizado para caber en modal sin scroll
-   ============================================ */
-
+/* --- CONTENEDOR PRINCIPAL --- */
 .tools-compact-container {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    font-family: 'Inter', sans-serif;
+    box-sizing: border-box;
 
-    /* Altura disponible menos header y tabs */
+    /* Configuración para PC */
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
-/* --- HEADER COMPACTO --- */
+/* --- HEADER --- */
 .tools-compact-header {
-    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-    color: white;
-    padding: 10px 16px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(2, 132, 199, 0.15);
-}
+    margin-bottom: 20px;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 15px;
+    position: sticky;
+    top: -20px;
+    background: white;
+    z-index: 10;
 
-.header-left {
+    /* Flex para poner título a la izquierda y X a la derecha */
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    justify-content: space-between;
+    align-items: flex-start;
 }
 
 .tools-compact-title {
-    color: white;
     margin: 0;
-    font-size: 1.4rem;
+    color: #1e293b;
+    font-size: 1.25rem;
     font-weight: 700;
-    letter-spacing: -0.015em;
+}
+
+/* Botón de Cerrar (X) */
+.btn-header-close {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+.btn-header-close:hover {
+    background: #f1f5f9;
+    color: #ef4444;
 }
 
 .patient-metrics-compact {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: #64748b;
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    opacity: 0.95;
-}
-
-.metric-dot {
-    opacity: 0.5;
 }
 
 .metric-highlight {
-    font-weight: 700;
-    background: rgba(255, 255, 255, 0.2);
+    background: #e0f2fe;
+    color: #0284c7;
     padding: 2px 8px;
-    border-radius: 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
 }
 
-/* --- GRID PRINCIPAL: 3 COLUMNAS HORIZONTALES --- */
+/* --- GRID PRINCIPAL --- */
 .tools-compact-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    flex: 1;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 25px;
+    align-items: start;
 }
 
-/* --- SECCIONES COMPACTAS --- */
+/* --- SECCIONES --- */
 .compact-section {
-    background: white;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 15px;
     border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
 }
 
 .compact-section-title {
-    margin: 0 0 8px 0;
-    font-size: 0.75rem;
-    font-weight: 700;
+    margin: 0 0 15px 0;
+    font-size: 0.85rem;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #64748b;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #f1f5f9;
+    color: #94a3b8;
+    letter-spacing: 0.5px;
+    font-weight: 700;
     display: flex;
-    align-items: center;
     justify-content: space-between;
 }
 
-.total-compact-badge {
-    background: #f0fdf4;
-    color: #15803d;
-    font-size: 0.65rem;
-    padding: 2px 6px;
-    border-radius: 8px;
-    font-weight: 700;
-    border: 1px solid #bbf7d0;
-}
+/* --- CAMPOS --- */
+.compact-field { margin-bottom: 15px; }
+.compact-field label { display: block; font-size: 0.85rem; color: #475569; margin-bottom: 6px; font-weight: 500; }
+.compact-field select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; background: white; color: #334155; font-size: 0.95rem; outline: none; cursor: pointer; }
 
-/* --- CAMPOS COMPACTOS --- */
-.compact-field {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
+/* Botones Objetivo */
+.goal-compact-buttons { display: flex; gap: 5px; }
+.goal-compact-btn { flex: 1; padding: 8px 0; border: 1px solid #cbd5e1; background: white; border-radius: 6px; cursor: pointer; font-size: 0.85rem; color: #64748b; transition: all 0.2s; }
+.goal-compact-btn.active { border-color: transparent; color: white; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.goal-compact-btn.active.cut { background: #ef4444; }
+.goal-compact-btn.active.maint { background: #3b82f6; }
+.goal-compact-btn.active.bulk { background: #10b981; }
 
-.compact-field label {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-}
+/* --- RESULTADOS --- */
+.compact-results-grid { display: flex; flex-direction: column; gap: 12px; }
+.compact-result-card { background: white; padding: 12px; border-radius: 8px; border-left: 4px solid #cbd5e1; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.compact-result-card.bmr { border-color: #94a3b8; }
+.compact-result-card.tdee { border-color: #3b82f6; }
+.compact-result-card.target { border-color: #8b5cf6; background: #f5f3ff; }
+.compact-result-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: bold; }
+.compact-result-value { font-size: 1.4rem; font-weight: 800; color: #1e293b; margin: 4px 0; }
+.compact-result-unit { font-size: 0.8rem; color: #94a3b8; }
+.compact-no-results { text-align: center; padding: 30px; color: #cbd5e1; font-style: italic; }
 
-.compact-field select {
-    padding: 6px 8px;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    color: #334155;
-    background: white;
-    cursor: pointer;
-    transition: all 0.15s;
-    font-weight: 500;
-}
+/* --- MACROS --- */
+.compact-macros-list { display: flex; flex-direction: column; gap: 15px; }
+.compact-macro-row { background: white; padding: 10px; border-radius: 8px; border: 1px solid #f1f5f9; }
+.compact-macro-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 0.9rem; }
+.compact-macro-bar { height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; margin-bottom: 4px; }
+.compact-macro-fill { height: 100%; border-radius: 3px; }
+.compact-macro-fill.protein-fill { background: #f87171; }
+.compact-macro-fill.carbs-fill { background: #fbbf24; }
+.compact-macro-fill.fats-fill { background: #a3e635; }
+.compact-macro-kcal { font-size: 0.75rem; color: #94a3b8; text-align: right; }
 
-.compact-field select:focus {
-    outline: none;
-    border-color: #0284c7;
-    box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.1);
-}
-
-/* --- BOTONES DE OBJETIVO COMPACTOS --- */
-.goal-compact-buttons {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 4px;
-}
-
-.goal-compact-btn {
-    padding: 6px 4px;
-    border: 1.5px solid #e2e8f0;
-    background: white;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-    color: #64748b;
-}
-
-.goal-compact-btn:hover {
-    border-color: #cbd5e1;
-    background: #f8fafc;
-}
-
-.goal-compact-btn.active {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transform: translateY(-1px);
-}
-
-.goal-compact-btn.active.cut {
-    background: #fee2e2;
-    border-color: #ef4444;
-    color: #dc2626;
-}
-
-.goal-compact-btn.active.maint {
-    background: #dbeafe;
-    border-color: #3b82f6;
-    color: #2563eb;
-}
-
-.goal-compact-btn.active.bulk {
-    background: #dcfce7;
-    border-color: #22c55e;
-    color: #16a34a;
-}
-
-/* --- RESULTADOS COMPACTOS --- */
-.compact-results-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    flex: 1;
-}
-
-.compact-result-card {
-    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-    border: 1.5px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 8px 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    transition: all 0.15s;
-}
-
-.compact-result-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
-}
-
-.compact-result-card.bmr {
-    border-color: #bae6fd;
-    background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%);
-}
-
-.compact-result-card.tdee {
-    border-color: #c7d2fe;
-    background: linear-gradient(135deg, #e0e7ff 0%, #ffffff 100%);
-}
-
-.compact-result-card.target {
-    border-color: #fecaca;
-    background: linear-gradient(135deg, #fee2e2 0%, #ffffff 100%);
-}
-
-.compact-result-label {
-    font-size: 0.65rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #94a3b8;
-    margin-bottom: 4px;
-}
-
-.compact-result-value {
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: #0f172a;
-    line-height: 1;
-    margin-bottom: 2px;
-}
-
-.compact-result-unit {
-    font-size: 0.7rem;
-    color: #94a3b8;
-    font-weight: 600;
-}
-
-.compact-no-results {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.85rem;
-    color: #cbd5e1;
-    font-weight: 500;
-    padding: 20px;
-    text-align: center;
-}
-
-/* --- MACROS COMPACTOS --- */
-.compact-macros-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    flex: 1;
-}
-
-.compact-macro-row {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.compact-macro-header {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.compact-macro-icon {
-    font-size: 1.1rem;
-    flex-shrink: 0;
-}
-
-.compact-macro-name {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #334155;
-    flex: 1;
-}
-
-.compact-macro-value {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #0f172a;
-}
-
-.compact-macro-percent {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #64748b;
-    background: #f1f5f9;
-    padding: 2px 6px;
-    border-radius: 8px;
-}
-
-/* --- BARRAS DE MACROS COMPACTAS --- */
-.compact-macro-bar {
-    height: 6px;
-    background: #f1f5f9;
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.compact-macro-fill {
-    height: 100%;
-    border-radius: 10px;
-    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.protein-fill {
-    background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
-}
-
-.carbs-fill {
-    background: linear-gradient(90deg, #f97316 0%, #ea580c 100%);
-}
-
-.fats-fill {
-    background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
-}
-
-.compact-macro-kcal {
-    font-size: 0.7rem;
-    color: #94a3b8;
-    font-weight: 600;
-    text-align: right;
-}
-
-/* --- BOTÓN DE GUARDAR COMPACTO --- */
+/* --- BOTONES DE ACCIÓN (FOOTER) --- */
 .tools-compact-actions {
-    display: flex;
-    justify-content: center;
-    padding-top: 4px;
+    margin-top: 20px;
+    display: flex; /* Ponemos los botones uno al lado del otro */
+    gap: 10px;
 }
 
-/* --- BOTÓN DE GUARDAR INTEGRADO --- */
 .btn-compact-save {
-    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    flex: 2; /* El botón de guardar ocupa el doble de espacio */
+    padding: 12px;
+    background: #1e293b;
     color: white;
     border: none;
-    padding: 10px 16px;
     border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 600;
     cursor: pointer;
+    font-weight: 600;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    width: 100%;
-    margin-top: 12px;
-    box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
-    transition: all 0.15s;
+    gap: 8px;
+    transition: background 0.2s;
+}
+.btn-compact-save:hover { background: #0f172a; }
+
+.btn-compact-cancel {
+    flex: 1; /* El botón de cancelar es más pequeño */
+    padding: 12px;
+    background: white;
+    color: #64748b;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.btn-compact-cancel:hover { background: #f1f5f9; color: #334155; }
+
+/* =========================================
+   📱 MEDIA QUERIES (MÓVIL)
+   ========================================= */
+
+@media (max-width: 900px) {
+    .tools-compact-grid {
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
-.btn-compact-save:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3);
-}
+@media (max-width: 600px) {
+    .tools-compact-container {
+        padding: 15px;
+        border-radius: 0;
 
-.btn-compact-save:active {
-    transform: translateY(0);
-}
+        /* SCROLL EN MÓVIL */
+        height: 100vh;
+        max-height: 100%;
+        overflow-y: scroll;
 
-/* --- RESPONSIVE --- */
-@media (max-width: 1200px) {
+        padding-bottom: 100px;
+    }
+
     .tools-compact-grid {
         grid-template-columns: 1fr;
-        gap: 10px;
+        gap: 15px;
     }
 
-    .compact-result-card {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        text-align: left;
+    .compact-section {
+        padding: 12px;
     }
 
-    .compact-result-value {
-        font-size: 1.4rem;
+    .tools-compact-header {
+        position: static;
+        border-bottom: 1px solid #e2e8f0;
     }
 }
-
-/* --- ANIMACIONES SUTILES --- */
-@keyframes fadeInCompact {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.compact-section {
-    animation: fadeInCompact 0.3s ease-out;
-}
-
-.compact-section:nth-child(1) { animation-delay: 0.05s; }
-.compact-section:nth-child(2) { animation-delay: 0.1s; }
-.compact-section:nth-child(3) { animation-delay: 0.15s; }
