@@ -1,23 +1,22 @@
 // backend/src/controllers/aiDietController.js
 // ============================================
-// VERSIÓN STREAMING (SOLUCIÓN PARA RENDER)
-// Usa streamGenerateContent para evitar timeouts
+// VERSIÓN OPTIMIZADA: ALIMENTOS ECUATORIANOS
 // ============================================
 
 const fetch = require("node-fetch");
-const crypto = require("crypto");
 
 const API_KEY = process.env.GEMINI_API_KEY;
-// Usamos el modelo 2.5 que es más rápido y eficiente en V1
-const GEMINI_MODEL = "gemini-2.5-flash";
+const GEMINI_MODEL = "gemini-2.0-flash-exp"; // Modelo más reciente y estable
 
-// Helper para limpiar el JSON sucio que a veces llega
 function extractJsonFromText(text) {
     if (!text) return null;
     let t = text.trim();
-    // Quitar bloques de markdown
-    t = t.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/i, "");
 
+    // Remover markdown
+    t = t.replace(/```json\n?/gi, "").replace(/```\n?/g, "").trim();
+    t = t.replace(/^`+|`+$/g, "");
+
+    // Buscar el JSON completo
     const firstBrace = t.indexOf("{");
     const lastBrace = t.lastIndexOf("}");
 
@@ -26,39 +25,6 @@ function extractJsonFromText(text) {
     return t.substring(firstBrace, lastBrace + 1);
 }
 
-// Expansor de claves (n -> recetaNombre)
-function expandirMenuBackend(menuMinificado) {
-    const menuCompleto = {};
-    try {
-        const primerDia = Object.values(menuMinificado)[0];
-        // Si ya tiene el formato largo, no hacer nada
-        if (primerDia && Object.values(primerDia)[0]?.[0]?.recetaNombre) return menuMinificado;
-    } catch (e) {}
-
-    Object.keys(menuMinificado).forEach(dia => {
-        menuCompleto[dia] = {};
-        Object.keys(menuMinificado[dia]).forEach(tipoComida => {
-            const comidas = Array.isArray(menuMinificado[dia][tipoComida]) ? menuMinificado[dia][tipoComida] : [];
-            menuCompleto[dia][tipoComida] = comidas.map(receta => ({
-                recetaNombre: receta.n || "Receta sin nombre",
-                tiempoPrep: receta.t || "15 min",
-                ingredientes: (receta.i || []).map(ing => ({
-                    alimento: ing.a || "Ingrediente",
-                    grams: Number(ing.g) || 0,
-                    kcal: Number(ing.k) || 0,
-                    proteina: Number(ing.p) || 0,
-                    carbohidratos: Number(ing.c) || 0,
-                    grasas: Number(ing.f) || 0
-                })),
-                instrucciones: receta.ins || [],
-                tips: receta.tip || ""
-            }));
-        });
-    });
-    return menuCompleto;
-}
-
-// Re-escalado de calorías
 function autoScalePortions(menu, targetCalories) {
     const scaledMenu = JSON.parse(JSON.stringify(menu));
     const totals = {};
@@ -100,156 +66,213 @@ function autoScalePortions(menu, targetCalories) {
         totals[day].carbohidratos = Number(totals[day].carbohidratos.toFixed(1));
         totals[day].grasas = Number(totals[day].grasas.toFixed(1));
     }
+
     return { scaledMenu, scaledTotals: totals };
 }
 
-// 🔥 NUEVA FUNCIÓN: STREAMING
-// Esto evita que Render corte la conexión porque recibe datos byte a byte
-async function callGeminiStream(prompt) {
-    const url = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:streamGenerateContent?key=${API_KEY}`;
+async function callGemini(prompt) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${API_KEY}`;
 
-    console.log(`📡 Iniciando stream con ${GEMINI_MODEL}...`);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 120000); // 2 minutos
 
-    const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 8192,
-            }
-        })
-    });
-
-    if (!response.ok) {
-        const txt = await response.text();
-        throw new Error(`Gemini API Error ${response.status}: ${txt}`);
-    }
-
-    // Leemos el stream y ensamblamos el texto completo
-    const reader = response.body; // Node-fetch stream
-    let fullText = "";
-
-    // Node-fetch devuelve un stream que podemos iterar
-    for await (const chunk of reader) {
-        const chunkString = chunk.toString();
-        // El stream de Gemini viene en formato JSON array [...]
-        // Tenemos que parsear cada chunk, pero como es texto crudo,
-        // simplemente lo acumulamos y limpiaremos al final.
-        // OJO: El stream de Google manda objetos JSON parciales.
-
-        // Estrategia simple: Acumular todo el texto crudo y luego buscar el texto real
-        // Es un poco sucio pero funciona para ensamblar.
-        fullText += chunkString;
-    }
-
-    // Ahora `fullText` contiene un montón de objetos JSON pegados tipo:
-    // [{ "text": "Hola" }, { "text": " mun" }, { "text": "do" }]
-    // Necesitamos extraer solo el campo "text" de cada candidato.
-
-    // Parseo manual del stream de Google (que es un array de objetos)
-    // El stream de Google devuelve algo como:
-    // [
-    //   { "candidates": [ { "content": { "parts": [ { "text": "..." } ] } } ] },
-    //   ...
-    // ]
-
-    let finalText = "";
     try {
-        // Truco: El stream es básicamente un array JSON válido si lo juntamos todo
-        const jsonObjects = JSON.parse(fullText);
-
-        if (Array.isArray(jsonObjects)) {
-            jsonObjects.forEach(chunk => {
-                if (chunk.candidates && chunk.candidates[0].content && chunk.candidates[0].content.parts) {
-                    finalText += chunk.candidates[0].content.parts[0].text;
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            signal: controller.signal,
+            body: JSON.stringify({
+                contents: [{
+                    role: "user",
+                    parts: [{ text: prompt }]
+                }],
+                generationConfig: {
+                    temperature: 0.7,
+                    topP: 0.95,
+                    topK: 40,
+                    maxOutputTokens: 16384, // Aumentado para respuestas largas
+                    responseMimeType: "application/json" // Forzar JSON nativo
                 }
-            });
-        }
-    } catch (e) {
-        console.error("Error parseando stream, intentando regex fallback...");
-        // Fallback: Buscar con Regex si el JSON parse falla
-        const regex = /"text":\s*"((?:[^"\\]|\\.)*)"/g;
-        let match;
-        while ((match = regex.exec(fullText)) !== null) {
-            // Descapar saltos de línea codificados
-            finalText += match[1].replace(/\\n/g, "\n").replace(/\\"/g, '"');
-        }
-    }
+            })
+        });
 
-    return finalText;
+        clearTimeout(timeout);
+
+        if (!response.ok) {
+            const txt = await response.text();
+            throw new Error(`Gemini API Error ${response.status}: ${txt}`);
+        }
+
+        const data = await response.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+        if (!text && data.candidates?.[0]?.finishReason) {
+            throw new Error(`Gemini terminó con razón: ${data.candidates[0].finishReason}`);
+        }
+
+        return text;
+
+    } catch (error) {
+        clearTimeout(timeout);
+        if (error.name === 'AbortError') {
+            throw new Error("Timeout: La IA tardó demasiado en responder.");
+        }
+        throw error;
+    }
 }
 
 exports.generateWeeklyDiet = async (req, res) => {
-    const { patientName, targetCalories, restrictions, proteinGoal, carbsGoal, fatGoal } = req.body || {};
+    const {
+        patientName,
+        targetCalories,
+        restrictions,
+        proteinGoal,
+        carbsGoal,
+        fatGoal
+    } = req.body || {};
 
-    if (!patientName || !targetCalories) return res.status(400).json({ message: "Faltan datos" });
+    if (!patientName || !targetCalories) {
+        return res.status(400).json({ message: "Faltan datos requeridos" });
+    }
 
-    const prompt = `Genera un menú semanal JSON para ${patientName}. Meta: ${targetCalories} kcal.
-Macros: P ${proteinGoal}g, C ${carbsGoal}g, G ${fatGoal}g.
-Restricciones: ${restrictions || "Ninguna"}.
+    // PROMPT OPTIMIZADO PARA ALIMENTOS ECUATORIANOS
+    const prompt = `Eres un nutricionista especializado en gastronomía ecuatoriana. 
 
-FORMATO OBLIGATORIO:
-Responde ÚNICAMENTE con un JSON válido minificado.
-NO uses bloques de código. Empieza con '{'.
+TAREA: Generar plan alimenticio semanal completo (7 días) usando EXCLUSIVAMENTE alimentos típicos de Ecuador.
 
-CLAVES (Minificadas):
-n=nombre, t=tiempo, i=ingredientes, a=alimento, g=gramos, k=kcal, p=prot, c=carb, f=grasa, ins=instrucciones, tip=tip.
+DATOS DEL PACIENTE:
+- Nombre: ${patientName}
+- Calorías diarias: ${targetCalories} kcal
+- Proteína objetivo: ${proteinGoal}g
+- Carbohidratos objetivo: ${carbsGoal}g
+- Grasas objetivo: ${fatGoal}g
+- Restricciones: ${restrictions || "Ninguna"}
 
-REGLAS:
-1. Llena Lunes a Domingo.
-2. Llena 5 comidas diarias.
-3. Instrucciones: MAXIMO 2 PASOS CORTOS.
+ALIMENTOS ECUATORIANOS PERMITIDOS:
+Proteínas: pollo, pescado (corvina, tilapia, atún), carne de res, huevos, queso fresco
+Carbohidratos: arroz, verde (plátano verde), maduro, yuca, papa, choclo, quinoa, avena
+Vegetales: tomate, cebolla, pimiento, lechuga, col, zanahoria, brócoli
+Frutas: naranja, papaya, sandía, piña, guineo, manzana, melón
+Legumbres: lenteja, frijol, garbanzo
+Grasas: aguacate, aceite de oliva, maní
+Lácteos: leche, yogur natural, queso fresco
+Otros: café, pan integral, agua de panela (moderado)
 
-Ejemplo:
-{"lunes":{"desayuno":[{"n":"A","t":"5m","i":[{"a":"B","g":1,"k":1,"p":1,"c":1,"f":1}],"ins":["C"],"tip":"D"}],"media_manana":[],"almuerzo":[],"snack":[],"cena":[]},"martes":{}}
-`;
+ESTRUCTURA REQUERIDA JSON:
+{
+  "lunes": {
+    "desayuno": [
+      {
+        "recetaNombre": "Nombre de la receta",
+        "tiempoPrep": "15 min",
+        "ingredientes": [
+          {
+            "alimento": "Huevo",
+            "grams": 120,
+            "kcal": 150,
+            "proteina": 12,
+            "carbohidratos": 2,
+            "grasas": 10
+          }
+        ],
+        "instrucciones": [
+          "Paso 1",
+          "Paso 2",
+          "Paso 3"
+        ],
+        "tips": "Consejo nutricional"
+      }
+    ],
+    "media_manana": [...],
+    "almuerzo": [...],
+    "snack": [...],
+    "cena": [...]
+  },
+  "martes": { ... },
+  ...
+  "domingo": { ... }
+}
+
+REGLAS ESTRICTAS:
+1. Responde SOLO con JSON válido, sin texto adicional
+2. Cada día debe tener las 5 comidas: desayuno, media_manana, almuerzo, snack, cena
+3. Cada comida debe tener 1-2 recetas
+4. Instrucciones: máximo 4 pasos por receta
+5. Tips: 1 frase corta y práctica
+6. Macronutrientes deben ser EXACTOS y calculados correctamente
+7. Variedad: no repetir recetas exactas en la semana
+8. Porciones realistas y saludables
+9. SOLO alimentos ecuatorianos
+
+Genera el plan completo de 7 días ahora:`;
 
     try {
-        console.log(`🔵 [Render] Generando dieta (STREAM) para ${patientName}...`);
+        console.log(`🔵 [Render] Generando dieta ecuatoriana para ${patientName}...`);
+        console.log(`📊 Target: ${targetCalories} kcal | P:${proteinGoal}g C:${carbsGoal}g F:${fatGoal}g`);
 
-        // USAMOS LA NUEVA FUNCIÓN DE STREAM
-        const text = await callGeminiStream(prompt);
+        const text = await callGemini(prompt);
 
-        console.log(`📡 Texto final ensamblado (${text.length} chars).`);
+        console.log(`📡 Respuesta recibida. Longitud: ${text.length} caracteres.`);
 
         if (text.length < 500) {
-            console.error("❌ Respuesta demasiado corta:", text);
-            throw new Error("La IA respondió muy poco texto. Posible bloqueo de seguridad.");
+            console.error("⚠️ Respuesta sospechosamente corta:", text);
+            throw new Error("Respuesta incompleta de la IA");
         }
 
         const jsonText = extractJsonFromText(text);
-        if (!jsonText) throw new Error("No se encontró JSON válido en la respuesta.");
 
-        let minifiedMenu;
-        try {
-            minifiedMenu = JSON.parse(jsonText);
-        } catch (e) {
-            console.error(`🔴 JSON Roto:`, e.message);
-            // Intento de auto-reparación simple (cerrar llaves)
-            try {
-                minifiedMenu = JSON.parse(jsonText + "}}}");
-                console.log("✅ JSON reparado automáticamente.");
-            } catch (e2) {
-                throw new Error("El JSON se cortó y no se pudo reparar.");
-            }
+        if (!jsonText) {
+            console.error("❌ No se encontró JSON en la respuesta:", text.substring(0, 200));
+            throw new Error("La respuesta no contiene JSON válido.");
         }
 
-        const fullMenu = expandirMenuBackend(minifiedMenu);
-        const { scaledMenu, scaledTotals } = autoScalePortions(fullMenu, targetCalories);
+        let menuData;
+        try {
+            menuData = JSON.parse(jsonText);
+        } catch (e) {
+            console.error(`🔴 Error parsing JSON:`, e.message);
+            console.error("JSON problemático:", jsonText.substring(0, 500));
+            throw new Error("JSON inválido generado por la IA");
+        }
 
-        res.json({ ok: true, menu: scaledMenu, totals: scaledTotals });
+        // Validar estructura
+        const requiredDays = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
+        const missingDays = requiredDays.filter(day => !menuData[day]);
+
+        if (missingDays.length > 0) {
+            console.warn(`⚠️ Días faltantes: ${missingDays.join(", ")}`);
+        }
+
+        const { scaledMenu, scaledTotals } = autoScalePortions(menuData, targetCalories);
+
+        console.log("✅ Dieta generada exitosamente");
+
+        res.json({
+            ok: true,
+            menu: scaledMenu,
+            totals: scaledTotals,
+            metadata: {
+                generatedAt: new Date().toISOString(),
+                patient: patientName,
+                targetCalories
+            }
+        });
 
     } catch (error) {
         console.error("🔴 Error FINAL:", error.message);
         res.status(500).json({
             ok: false,
-            message: "Error al generar el menú. " + error.message
+            message: "Error al generar el menú: " + error.message,
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 };
 
 exports.validateGeminiConfig = async (req, res) => {
-    res.json({ ok: true, message: "Endpoint activo" });
+    res.json({
+        ok: true,
+        message: "Endpoint activo",
+        model: GEMINI_MODEL,
+        configured: !!API_KEY
+    });
 };
