@@ -1,0 +1,320 @@
+/* --- VARIABLES & THEME --- */
+:root {
+    /* Paleta Clínica Premium */
+    --dg-bg-main: #F1F5F9; /* Slate 100 - Fondo de trabajo */
+    --dg-bg-white: #FFFFFF;
+    --dg-text-primary: #0F172A; /* Slate 900 */
+    --dg-text-secondary: #475569; /* Slate 600 */
+    --dg-text-tertiary: #94A3B8; /* Slate 400 */
+
+    /* Colores de Marca */
+    --dg-primary: #2563EB; /* Blue 600 */
+    --dg-primary-hover: #1D4ED8;
+    --dg-danger: #DC2626;
+
+    /* Macros - Colores Vibrantes pero Profesionales */
+    --dg-macro-kcal: #F59E0B;
+    --dg-macro-protein: #EF4444;
+    --dg-macro-carbs: #EAB308;
+    --dg-macro-fats: #22C55E;
+
+    /* Sombras */
+    --dg-shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    --dg-shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --dg-shadow-header: 0 4px 20px -5px rgb(0 0 0 / 0.1);
+
+    --dg-radius: 12px;
+}
+
+/* --- CONTENEDOR FULL PAGE (IMPORTANTE) --- */
+.dg-container {
+    position: fixed; /* Fija a la pantalla */
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999; /* Por encima de todo */
+    background-color: var(--dg-bg-main);
+    display: flex;
+    flex-direction: column;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--dg-text-primary);
+    overflow: hidden; /* Evita doble scroll */
+}
+
+/* --- HEADER --- */
+.dg-header {
+    background: var(--dg-bg-white);
+    padding: 16px 40px;
+    border-bottom: 1px solid #E2E8F0;
+    box-shadow: var(--dg-shadow-header);
+    z-index: 50;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 80px; /* Altura fija elegante */
+}
+
+.dg-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.dg-patient-avatar {
+    width: 48px;
+    height: 48px;
+    background: #EFF6FF;
+    color: var(--dg-primary);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.dg-titles h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #1E293B;
+}
+
+.dg-titles span {
+    font-size: 0.85rem;
+    color: var(--dg-text-secondary);
+    font-weight: 500;
+}
+
+.dg-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.dg-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.dg-btn-outline {
+    background: white;
+    border: 1px solid #CBD5E1;
+    color: var(--dg-text-secondary);
+}
+.dg-btn-outline:hover { background: #F8FAFC; border-color: #94A3B8; }
+
+.dg-btn-primary {
+    background: var(--dg-primary);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+}
+.dg-btn-primary:hover { background: var(--dg-primary-hover); transform: translateY(-1px); }
+
+
+/* --- BARRA DE MACROS (Debajo del header) --- */
+.dg-macro-strip {
+    background: var(--dg-bg-white);
+    padding: 10px 40px;
+    border-bottom: 1px solid #E2E8F0;
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+}
+
+.dg-macro-stat {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.dg-macro-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+.dg-macro-info { display: flex; flex-direction: column; }
+.dg-macro-label { font-size: 0.7rem; text-transform: uppercase; color: #64748B; font-weight: 700; letter-spacing: 0.5px; }
+.dg-macro-value { font-size: 1.1rem; font-weight: 800; color: #0F172A; }
+
+
+/* --- LAYOUT PRINCIPAL (Split View) --- */
+.dg-workspace {
+    display: flex;
+    flex: 1;
+    overflow: hidden; /* Contenedor interno */
+}
+
+/* SIDEBAR DE DÍAS (Izquierda) */
+.dg-sidebar {
+    width: 260px;
+    background: var(--dg-bg-white);
+    border-right: 1px solid #E2E8F0;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 0;
+    overflow-y: auto;
+}
+
+.dg-sidebar-title {
+    padding: 0 24px 16px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #94A3B8;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.dg-day-btn {
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    border-left: 4px solid transparent;
+    transition: all 0.2s;
+    color: var(--dg-text-secondary);
+}
+
+.dg-day-btn:hover { background: #F8FAFC; color: var(--dg-primary); }
+
+.dg-day-btn.active {
+    background: #EFF6FF;
+    border-left-color: var(--dg-primary);
+    color: var(--dg-primary);
+}
+
+.dg-day-name { font-weight: 600; font-size: 1rem; text-transform: capitalize; }
+.dg-day-calories { font-size: 0.8rem; font-weight: 500; opacity: 0.8; }
+
+
+/* MAIN CONTENT AREA (Derecha) */
+.dg-main-area {
+    flex: 1;
+    padding: 40px;
+    overflow-y: auto;
+    background: var(--dg-bg-main);
+}
+
+.dg-content-width {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* TARJETAS DE COMIDA */
+.dg-meal-card {
+    background: white;
+    border-radius: var(--dg-radius);
+    box-shadow: var(--dg-shadow-card);
+    margin-bottom: 24px;
+    overflow: hidden;
+    border: 1px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.dg-meal-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+.dg-meal-card.expanded { border-color: #E2E8F0; }
+
+.dg-meal-header-row {
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    background: white;
+}
+
+.dg-meal-left { display: flex; align-items: center; gap: 16px; }
+.dg-icon-box {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    background: #F1F5F9;
+    color: #64748B;
+    display: flex; align-items: center; justify-content: center;
+}
+.dg-meal-title { font-size: 1.1rem; font-weight: 700; color: #1E293B; }
+
+.dg-meal-right { display: flex; align-items: center; gap: 20px; }
+
+/* Pills de macros en la cabecera de la comida */
+.dg-pill-group { display: flex; gap: 8px; }
+.dg-pill {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: #F8FAFC;
+    color: #64748B;
+    border: 1px solid #E2E8F0;
+}
+.dg-pill.kcal { color: var(--dg-macro-kcal); background: #FFFBEB; border-color: #FEF3C7; }
+
+/* RECETAS INTERNAS */
+.dg-meal-body-content {
+    padding: 0 24px 24px;
+    border-top: 1px solid #F1F5F9;
+}
+
+.dg-recipe-item {
+    background: #FAFAFA;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    margin-top: 16px;
+    overflow: hidden;
+}
+
+.dg-recipe-head {
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 600;
+}
+.dg-recipe-head:hover { background: #F3F4F6; }
+
+.dg-recipe-content {
+    padding: 20px;
+    background: white;
+    border-top: 1px solid #E5E7EB;
+    animation: fadeIn 0.3s ease;
+}
+
+.dg-grid-recipe {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.dg-ingredients ul, .dg-prep ol { margin: 0; padding-left: 20px; color: #475569; font-size: 0.95rem; line-height: 1.6; }
+
+.dg-tip-box {
+    margin-top: 20px;
+    background: #FFFBEB;
+    border-left: 4px solid #F59E0B;
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+.dg-tip-text { color: #92400E; font-size: 0.9rem; margin: 0; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Scrollbars bonitos */
+.dg-sidebar::-webkit-scrollbar, .dg-main-area::-webkit-scrollbar { width: 6px; }
+.dg-sidebar::-webkit-scrollbar-thumb, .dg-main-area::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }

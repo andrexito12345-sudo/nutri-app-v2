@@ -777,23 +777,18 @@ const SoapConsultation = () => {
 
             {/* 👇 CORRECCIÓN FINAL: AQUÍ CARGAMOS EL GENERADOR SEMANAL, NO EL PRO */}
             {showDietGenerator && (
-                <div className="modal-overlay" style={{ zIndex: 3000 }}>
-                    <div className="modal-content" style={{ padding: 0, width: '98%', maxWidth: '1600px', height: '95vh', background:'transparent', boxShadow:'none' }}>
-                        <DietGeneratorWeekly
-                            initialData={{
-                                // 👇 AGREGAMOS ESTOS 4 DATOS NUEVOS
-                                targetKcal: parseFloat(formData.calories_prescribed) || 0,
-                                targetProtein: parseFloat(formData.protein_prescribed) || 0,
-                                targetCarbs: parseFloat(formData.carbs_prescribed) || 0,
-                                targetFats: parseFloat(formData.fats_prescribed) || 0,
-                                patientName: patient?.full_name || "Paciente",
-                            }}
-                            aiGeneratedMenu={aiMenuData}
-                            onClose={() => setShowDietGenerator(false)}
-                            onSave={handleSaveDietFromGenerator}
-                        />
-                    </div>
-                </div>
+                <DietGeneratorWeekly
+                    initialData={{
+                        targetKcal: parseFloat(formData.calories_prescribed) || 0,
+                        targetProtein: parseFloat(formData.protein_prescribed) || 0,
+                        targetCarbs: parseFloat(formData.carbs_prescribed) || 0,
+                        targetFats: parseFloat(formData.fats_prescribed) || 0,
+                        patientName: patient?.full_name || "Paciente",
+                    }}
+                    aiGeneratedMenu={aiMenuData}
+                    onClose={() => setShowDietGenerator(false)}
+                    onSave={handleSaveDietFromGenerator}
+                />
             )}
         </div>
     );
