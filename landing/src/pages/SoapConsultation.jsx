@@ -28,6 +28,9 @@ const SoapConsultation = () => {
     const [generatingAI, setGeneratingAI] = useState(false);
     const [aiMenuData, setAiMenuData] = useState(null); // Aquí guardaremos lo que responda Gemini
 
+    // 👇 NUEVO ESTADO: Para guardar el JSON de la dieta y poder imprimirlo bonito después de guardar
+    const [savedWeeklyDietJSON, setSavedWeeklyDietJSON] = useState(null);
+
     // Estado del formulario completo
     const [formData, setFormData] = useState({
         // ===== SUBJETIVO =====
@@ -89,6 +92,7 @@ const SoapConsultation = () => {
         next_appointment: ''
     });
 
+    // 👇 FUNCIÓN CORREGIDA PARA IMPRIMIR
     const handlePrintSavedWeeklyDiet = () => {
         const planText = formData.education_provided || "";
 
@@ -100,18 +104,23 @@ const SoapConsultation = () => {
                 c: formData.carbs_prescribed || "",
                 f: formData.fats_prescribed || "",
             },
-            planText,
+            planText: planText,          // Opción A: Texto (si recargas la página)
+            weeklyDiet: savedWeeklyDietJSON, // Opción B: JSON rico (si acabas de guardar)
             brand: "NutriVida Pro",
             doctorLabel: "Plan Nutricional Semanal",
         });
     };
 
 
-    // 👇 CORRECCIÓN: FUNCIÓN ACTUALIZADA PARA LEER LA SEMANA COMPLETA
+    // 👇 FUNCIÓN CORREGIDA PARA GUARDAR
     const handleSaveDietFromGenerator = (data) => {
         // data trae: { weeklyDiet, targetCalories, averageKcal }
         console.log("💾 Guardando semana completa:", data);
 
+        // 1. Guardamos el JSON en el estado temporal para imprimirlo HD
+        setSavedWeeklyDietJSON(data.weeklyDiet);
+
+        // 2. Generamos el resumen de texto para la base de datos
         let planSummary = `PLAN NUTRICIONAL SEMANAL (${data.targetCalories} kcal/día aprox):\n`;
 
         const days = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
@@ -130,7 +139,7 @@ const SoapConsultation = () => {
                     if (items.length > 0) {
                         planSummary += `  * ${mealLabels[mealKey] || mealKey}:\n`;
                         items.forEach(item => {
-                            planSummary += `    - ${item.alimento} (${item.cantidad}g)\n`;
+                            planSummary += `    - ${item.alimento} (${item.grams}g)\n`;
                         });
                     }
                 });
@@ -150,14 +159,11 @@ const SoapConsultation = () => {
     };
 
 
-    // --- IMPRIMIR DIETA SEMANAL (desde Educación Nutricional Brindada) ---
+    // --- IMPRIMIR DIETA SEMANAL (Versión Legacy - Texto plano) ---
     const handlePrintDietFromEducation = () => {
         const fullText = formData.education_provided || "";
-
-        // Imprime SOLO la dieta semanal completa (desde el marcador hacia abajo)
         const marker = "PLAN NUTRICIONAL SEMANAL";
         const idx = fullText.indexOf(marker);
-
         const printableText = (idx >= 0 ? fullText.slice(idx) : fullText).trim();
 
         if (!printableText) {
@@ -165,79 +171,20 @@ const SoapConsultation = () => {
             return;
         }
 
-        const printWindow = window.open("", "_blank");
-        if (!printWindow) {
-            toast.error("No se pudo abrir la ventana de impresión (popup bloqueado).");
-            return;
-        }
-
         const patientNameSafe = patient?.full_name || "Paciente";
-        const kcal = formData.calories_prescribed || "";
-        const p = formData.protein_prescribed || "";
-        const c = formData.carbs_prescribed || "";
-        const g = formData.fats_prescribed || "";
         const today = new Date().toLocaleDateString();
 
-        const html = `
-  <html>
-    <head>
-      <title>Dieta Semanal - ${patientNameSafe}</title>
-      <style>
-        body { font-family: Arial, sans-serif; padding: 28px; color: #111827; }
-        .header { border-bottom: 2px solid #6366f1; padding-bottom: 10px; margin-bottom: 16px; }
-        .title { font-size: 18px; font-weight: 800; margin: 0; }
-        .meta { margin-top: 6px; font-size: 12px; color: #475569; }
-        pre {
-          white-space: pre-wrap;
-          word-wrap: break-word;
-          font-size: 13px;
-          line-height: 1.55;
-          background: #f8fafc;
-          border: 1px solid #e2e8f0;
-          padding: 14px;
-          border-radius: 10px;
+        const html = `<html><head><title>Imprimir</title></head><body><pre>${printableText}</pre><script>window.print()</script></body></html>`;
+        const printWindow = window.open("", "_blank");
+        if(printWindow) {
+            printWindow.document.write(html);
+            printWindow.document.close();
         }
-        @media print {
-          body { padding: 0; }
-          pre { border: none; background: white; }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <p class="title">Dieta Semanal</p>
-        <div class="meta">
-          Paciente: <strong>${escapeHtml(patientNameSafe)}</strong> • Fecha: <strong>${today}</strong>
-          ${kcal ? ` • Kcal/día: <strong>${escapeHtml(kcal)}</strong>` : ""}
-          ${(p || c || g) ? ` • Macros: <strong>P:${escapeHtml(p)} C:${escapeHtml(c)} G:${escapeHtml(g)}</strong>` : ""}
-        </div>
-      </div>
-
-      <pre>${escapeHtml(printableText)}</pre>
-
-      <script>
-        window.focus();
-        window.print();
-      </script>
-    </body>
-  </html>`;
-
-        printWindow.document.open();
-        printWindow.document.write(html);
-        printWindow.document.close();
-    };
-
-    const escapeHtml = (str) => {
-        return String(str)
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;");
     };
 
 
-    // 👇 LA FUNCIÓN QUE LLAMA AL CEREBRO (IA) - MEJORADA
+    // 👇 LA FUNCIÓN QUE LLAMA AL CEREBRO (IA)
     const handleGenerateAIDiet = async () => {
-        // Validaciones básicas
         const kcal = Number(formData.calories_prescribed);
 
         if (!kcal || kcal <= 0) {
@@ -245,82 +192,47 @@ const SoapConsultation = () => {
         }
 
         setGeneratingAI(true);
-
-        // (opcional) limpia el menú previo para que no se abra con data vieja
         setAiMenuData(null);
 
         try {
-            // Preparamos el paquete para el backend (con nombres que tu backend ya usa)
             const payload = {
                 patientName: patient?.full_name || "Paciente",
                 targetCalories: kcal,
-
-                // ✅ IMPORTANTE: tu backend usa estos nombres (no "macros: {p,c,f}")
                 proteinGoal: Number(formData.protein_prescribed) || 0,
                 carbsGoal: Number(formData.carbs_prescribed) || 0,
                 fatGoal: Number(formData.fats_prescribed) || 0,
-
                 restrictions: `${formData.pes_problem || ""}. ${patient?.allergies || ""}`.trim(),
                 preferences: formData.diet_type || "Comida ecuatoriana variada y saludable",
             };
 
-            console.log("Enviando a la IA:", payload);
-
             const response = await api.post("/diets/generate-ai", payload);
-            console.log("✅ MENU IA (raw):", response.data.menu);
-
-
-            // ✅ Manejo robusto del backend
             const data = response?.data;
 
             if (data?.ok === true && data?.menu) {
                 setAiMenuData(data.menu);
                 setShowDietGenerator(true);
-
-                const rid = data?.requestId ? ` (ID: ${data.requestId})` : "";
-                toast.success(`✨ ¡Menú Semanal generado con IA!${rid}`);
-                return;
+                toast.success(`✨ ¡Menú Semanal generado con IA!`);
+            } else {
+                toast.error(`❌ ${data?.message || "Error al generar menú"}`);
             }
 
-            // Si el backend respondió pero ok=false o sin menu
-            const rid = data?.requestId ? ` (ID: ${data.requestId})` : "";
-            const msg = data?.message || "El servidor respondió, pero no devolvió un menú válido.";
-            toast.error(`❌ ${msg}${rid}`);
-            console.warn("Respuesta backend (no ok):", data);
-
         } catch (error) {
-            // Si fue error HTTP, intenta mostrar el mensaje del backend
-            const backendMsg = error?.response?.data?.message;
-            const backendErr = error?.response?.data?.error;
-            const requestId = error?.response?.data?.requestId;
-
-            const rid = requestId ? ` (ID: ${requestId})` : "";
-
-            console.error("Error IA (completo):", error);
-
-            toast.error(
-                backendMsg
-                    ? `❌ ${backendMsg}${rid}`
-                    : backendErr
-                        ? `❌ ${backendErr}${rid}`
-                        : `❌ Error al generar la dieta. Intenta de nuevo.${rid}`
-            );
+            console.error("Error IA:", error);
+            toast.error("Error al conectar con el servidor de IA.");
         } finally {
             setGeneratingAI(false);
         }
     };
 
 
-    // --- CARGAS DE DATOS (NO TOCAR) ---
+    // --- CARGAS DE DATOS ---
     useEffect(() => {
         const fetchPatientData = async () => {
             if (patientId) {
                 try {
                     const response = await api.get(`/patients/${patientId}`);
                     setPatient(response.data);
-                } catch (error) {
-                    console.error("Error al cargar datos del paciente:", error);
-                }
+                } catch (error) { console.error(error); }
             }
         };
         fetchPatientData();
@@ -341,9 +253,7 @@ const SoapConsultation = () => {
                             toast.success('📊 Datos biométricos cargados automáticamente');
                         }
                     }
-                } catch (error) {
-                    console.error("Error al cargar datos de la cita:", error);
-                }
+                } catch (error) { console.error(error); }
             }
         };
         fetchAppointmentData();
@@ -379,9 +289,7 @@ const SoapConsultation = () => {
                     const data = response.data;
                     if (data.next_appointment) data.next_appointment = data.next_appointment.split('T')[0];
                     setFormData(prev => ({ ...prev, ...data }));
-                } catch (error) {
-                    console.error("Error al cargar:", error);
-                }
+                } catch (error) { console.error(error); }
             };
             fetchConsultation();
         }
@@ -706,7 +614,8 @@ const SoapConsultation = () => {
                             <button
                                 type="button"
                                 onClick={handlePrintSavedWeeklyDiet}
-                                disabled={!formData.education_provided || !formData.education_provided.toUpperCase().includes("PLAN NUTRICIONAL SEMANAL")}
+                                // Si acabamos de generar/guardar (savedWeeklyDietJSON) O si viene de la BD (formData.education...), el botón se activa.
+                                disabled={!savedWeeklyDietJSON && (!formData.education_provided || !formData.education_provided.toUpperCase().includes("PLAN NUTRICIONAL SEMANAL"))}
                                 style={{
                                     background: 'white',
                                     border: '1px solid #e2e8f0',
@@ -722,7 +631,6 @@ const SoapConsultation = () => {
                                 }}
                                 title="Imprimir dieta"
                             >
-                                {/* Icono (similar al del generador) */}
                                 <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                     <path strokeLinecap="round" strokeLinejoin="round"
                                           d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -775,7 +683,7 @@ const SoapConsultation = () => {
                 </div>
             )}
 
-            {/* 👇 CORRECCIÓN FINAL: AQUÍ CARGAMOS EL GENERADOR SEMANAL, NO EL PRO */}
+            {/* GENERADOR DE DIETA (FULL PAGE) */}
             {showDietGenerator && (
                 <DietGeneratorWeekly
                     initialData={{
