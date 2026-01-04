@@ -9,6 +9,9 @@ import NutritionalTools from '../components/NutritionalTools';
 // IMPORTAMOS EL NUEVO GENERADOR SEMANAL
 import DietGeneratorWeekly from '../components/DietGeneratorWeekly';
 
+import { printWeeklyDietPlan } from "../utils/printWeeklyDietPlan";
+
+
 const SoapConsultation = () => {
     const { appointmentId, patientId, consultationId } = useParams();
     const isEditing = !!consultationId; // Variable mágica: true si editamos, false si creamos
@@ -86,6 +89,24 @@ const SoapConsultation = () => {
         next_appointment: ''
     });
 
+    const handlePrintSavedWeeklyDiet = () => {
+        const planText = formData.education_provided || "";
+
+        printWeeklyDietPlan({
+            patientName: patient?.full_name || "Paciente",
+            kcal: formData.calories_prescribed || "",
+            macros: {
+                p: formData.protein_prescribed || "",
+                c: formData.carbs_prescribed || "",
+                f: formData.fats_prescribed || "",
+            },
+            planText,
+            brand: "NutriVida Pro",
+            doctorLabel: "Plan Nutricional Semanal",
+        });
+    };
+
+
     // 👇 CORRECCIÓN: FUNCIÓN ACTUALIZADA PARA LEER LA SEMANA COMPLETA
     const handleSaveDietFromGenerator = (data) => {
         // data trae: { weeklyDiet, targetCalories, averageKcal }
@@ -128,6 +149,92 @@ const SoapConsultation = () => {
         toast.success("✅ Plan Semanal importado a la consulta");
     };
 
+
+    // --- IMPRIMIR DIETA SEMANAL (desde Educación Nutricional Brindada) ---
+    const handlePrintDietFromEducation = () => {
+        const fullText = formData.education_provided || "";
+
+        // Imprime SOLO la dieta semanal completa (desde el marcador hacia abajo)
+        const marker = "PLAN NUTRICIONAL SEMANAL";
+        const idx = fullText.indexOf(marker);
+
+        const printableText = (idx >= 0 ? fullText.slice(idx) : fullText).trim();
+
+        if (!printableText) {
+            toast.info("No hay dieta semanal para imprimir todavía.");
+            return;
+        }
+
+        const printWindow = window.open("", "_blank");
+        if (!printWindow) {
+            toast.error("No se pudo abrir la ventana de impresión (popup bloqueado).");
+            return;
+        }
+
+        const patientNameSafe = patient?.full_name || "Paciente";
+        const kcal = formData.calories_prescribed || "";
+        const p = formData.protein_prescribed || "";
+        const c = formData.carbs_prescribed || "";
+        const g = formData.fats_prescribed || "";
+        const today = new Date().toLocaleDateString();
+
+        const html = `
+  <html>
+    <head>
+      <title>Dieta Semanal - ${patientNameSafe}</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 28px; color: #111827; }
+        .header { border-bottom: 2px solid #6366f1; padding-bottom: 10px; margin-bottom: 16px; }
+        .title { font-size: 18px; font-weight: 800; margin: 0; }
+        .meta { margin-top: 6px; font-size: 12px; color: #475569; }
+        pre {
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          font-size: 13px;
+          line-height: 1.55;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          padding: 14px;
+          border-radius: 10px;
+        }
+        @media print {
+          body { padding: 0; }
+          pre { border: none; background: white; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <p class="title">Dieta Semanal</p>
+        <div class="meta">
+          Paciente: <strong>${escapeHtml(patientNameSafe)}</strong> • Fecha: <strong>${today}</strong>
+          ${kcal ? ` • Kcal/día: <strong>${escapeHtml(kcal)}</strong>` : ""}
+          ${(p || c || g) ? ` • Macros: <strong>P:${escapeHtml(p)} C:${escapeHtml(c)} G:${escapeHtml(g)}</strong>` : ""}
+        </div>
+      </div>
+
+      <pre>${escapeHtml(printableText)}</pre>
+
+      <script>
+        window.focus();
+        window.print();
+      </script>
+    </body>
+  </html>`;
+
+        printWindow.document.open();
+        printWindow.document.write(html);
+        printWindow.document.close();
+    };
+
+    const escapeHtml = (str) => {
+        return String(str)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;");
+    };
+
+
     // 👇 LA FUNCIÓN QUE LLAMA AL CEREBRO (IA) - MEJORADA
     const handleGenerateAIDiet = async () => {
         // Validaciones básicas
@@ -160,6 +267,8 @@ const SoapConsultation = () => {
             console.log("Enviando a la IA:", payload);
 
             const response = await api.post("/diets/generate-ai", payload);
+            console.log("✅ MENU IA (raw):", response.data.menu);
+
 
             // ✅ Manejo robusto del backend
             const data = response?.data;
@@ -306,6 +415,7 @@ const SoapConsultation = () => {
                     ...formData
                 };
                 await api.post('/consultations', payload);
+
                 alert('¡Consulta creada correctamente!');
             }
             navigate('/doctora/dashboard');
@@ -590,9 +700,46 @@ const SoapConsultation = () => {
                         <textarea name="supplements_recommended" placeholder="Suplementos..." value={formData.supplements_recommended} onChange={handleChange} rows="2" />
                     </div>
                     <div className="form-group">
-                        <label>📚 Educación Nutricional Brindada</label>
-                        <textarea name="education_provided" placeholder="Temas cubiertos..." value={formData.education_provided} onChange={handleChange} rows="2" />
+                        <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', gap:'12px'}}>
+                            <label style={{margin:0}}>📚 Educación Nutricional Brindada</label>
+
+                            <button
+                                type="button"
+                                onClick={handlePrintSavedWeeklyDiet}
+                                disabled={!formData.education_provided || !formData.education_provided.toUpperCase().includes("PLAN NUTRICIONAL SEMANAL")}
+                                style={{
+                                    background: 'white',
+                                    border: '1px solid #e2e8f0',
+                                    color: '#0f172a',
+                                    padding: '8px 12px',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    fontWeight: 700,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    fontSize: '0.85rem',
+                                }}
+                                title="Imprimir dieta"
+                            >
+                                {/* Icono (similar al del generador) */}
+                                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round"
+                                          d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                </svg>
+                                Imprimir
+                            </button>
+                        </div>
+
+                        <textarea
+                            name="education_provided"
+                            placeholder="Temas cubiertos..."
+                            value={formData.education_provided}
+                            onChange={handleChange}
+                            rows="8"
+                        />
                     </div>
+
                     <div className="form-group">
                         <label>↗️ Referencias</label>
                         <input type="text" name="referrals" placeholder="Derivaciones..." value={formData.referrals} onChange={handleChange} />

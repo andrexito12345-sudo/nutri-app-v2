@@ -155,7 +155,7 @@ export function useDashboardLogic() {
         const intervalId = setInterval(() => {
             console.log("🔄 Radar: Buscando nuevas citas y leads...");
             loadDashboardData(true);
-        }, 30000); // Actualiza cada 30 segundos
+        }, 15000); // Actualiza cada 30 segundos
         return () => clearInterval(intervalId);
     }, []);
 
