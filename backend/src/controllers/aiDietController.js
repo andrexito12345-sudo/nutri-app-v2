@@ -1,32 +1,37 @@
 // backend/src/controllers/aiDietController.js
 // ============================================
-// VERSIÓN STREAMING: EVITA TIMEOUTS EN RENDER
+// VERSIÓN STREAMING (SOLUCIÓN PARA RENDER)
+// Usa streamGenerateContent para evitar timeouts
 // ============================================
 
 const fetch = require("node-fetch");
 const crypto = require("crypto");
 
 const API_KEY = process.env.GEMINI_API_KEY;
-// Usamos gemini-1.5-flash por velocidad y estabilidad
+// Usamos el modelo 2.5 que es más rápido y eficiente en V1
 const GEMINI_MODEL = "gemini-2.5-flash";
 
+// Helper para limpiar el JSON sucio que a veces llega
 function extractJsonFromText(text) {
     if (!text) return null;
-    let t = text.trim().replace(/```json/gi, "").replace(/```/g, "").trim();
-    // Limpieza extra por si quedan comillas sueltas al inicio/final
-    t = t.replace(/^`+|`+$/g, "");
+    let t = text.trim();
+    // Quitar bloques de markdown
+    t = t.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/i, "");
 
     const firstBrace = t.indexOf("{");
     const lastBrace = t.lastIndexOf("}");
+
     if (firstBrace === -1 || lastBrace === -1) return null;
+
     return t.substring(firstBrace, lastBrace + 1);
 }
 
-// Función para expandir claves cortas
+// Expansor de claves (n -> recetaNombre)
 function expandirMenuBackend(menuMinificado) {
     const menuCompleto = {};
     try {
         const primerDia = Object.values(menuMinificado)[0];
+        // Si ya tiene el formato largo, no hacer nada
         if (primerDia && Object.values(primerDia)[0]?.[0]?.recetaNombre) return menuMinificado;
     } catch (e) {}
 
@@ -35,8 +40,8 @@ function expandirMenuBackend(menuMinificado) {
         Object.keys(menuMinificado[dia]).forEach(tipoComida => {
             const comidas = Array.isArray(menuMinificado[dia][tipoComida]) ? menuMinificado[dia][tipoComida] : [];
             menuCompleto[dia][tipoComida] = comidas.map(receta => ({
-                recetaNombre: receta.n || "Receta",
-                tiempoPrep: receta.t || "15m",
+                recetaNombre: receta.n || "Receta sin nombre",
+                tiempoPrep: receta.t || "15 min",
                 ingredientes: (receta.i || []).map(ing => ({
                     alimento: ing.a || "Ingrediente",
                     grams: Number(ing.g) || 0,
@@ -53,6 +58,7 @@ function expandirMenuBackend(menuMinificado) {
     return menuCompleto;
 }
 
+// Re-escalado de calorías
 function autoScalePortions(menu, targetCalories) {
     const scaledMenu = JSON.parse(JSON.stringify(menu));
     const totals = {};
@@ -88,6 +94,7 @@ function autoScalePortions(menu, targetCalories) {
                 totals[day].grasas += i.grasas;
             }));
         });
+
         totals[day].kcal = Math.round(totals[day].kcal);
         totals[day].proteina = Number(totals[day].proteina.toFixed(1));
         totals[day].carbohidratos = Number(totals[day].carbohidratos.toFixed(1));
@@ -96,54 +103,82 @@ function autoScalePortions(menu, targetCalories) {
     return { scaledMenu, scaledTotals: totals };
 }
 
-async function callGemini(prompt) {
-    // Usamos el endpoint normal pero aumentamos el timeout del fetch
-    // Y pedimos JSON nativo si el modelo lo soporta (1.5 flash lo soporta)
-    const url = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${API_KEY}`;
+// 🔥 NUEVA FUNCIÓN: STREAMING
+// Esto evita que Render corte la conexión porque recibe datos byte a byte
+async function callGeminiStream(prompt) {
+    const url = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:streamGenerateContent?key=${API_KEY}`;
 
-    // Configuración de controlador de aborto con tiempo extendido (3 minutos)
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 180000);
+    console.log(`📡 Iniciando stream con ${GEMINI_MODEL}...`);
 
-    try {
-        const response = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            signal: controller.signal,
-            body: JSON.stringify({
-                contents: [{ role: "user", parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.5, // Más bajo = más estable y rápido
-                    maxOutputTokens: 8192,
-                    // response_mime_type: "application/json" // Ojo: V1 a veces falla con esto, mejor lo quitamos y confiamos en el prompt
-                }
-            })
-        });
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 8192,
+            }
+        })
+    });
 
-        clearTimeout(timeout); // Limpiamos el timeout si responde antes
-
-        if (!response.ok) {
-            const txt = await response.text();
-            throw new Error(`Gemini API Error ${response.status}: ${txt}`);
-        }
-
-        const data = await response.json();
-        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-        // Verificación de seguridad
-        if (!text && data.candidates?.[0]?.finishReason) {
-            throw new Error(`Gemini terminó con razón: ${data.candidates[0].finishReason}`);
-        }
-
-        return text;
-
-    } catch (error) {
-        clearTimeout(timeout);
-        if (error.name === 'AbortError') {
-            throw new Error("Timeout: La IA tardó demasiado en responder (más de 3 min).");
-        }
-        throw error;
+    if (!response.ok) {
+        const txt = await response.text();
+        throw new Error(`Gemini API Error ${response.status}: ${txt}`);
     }
+
+    // Leemos el stream y ensamblamos el texto completo
+    const reader = response.body; // Node-fetch stream
+    let fullText = "";
+
+    // Node-fetch devuelve un stream que podemos iterar
+    for await (const chunk of reader) {
+        const chunkString = chunk.toString();
+        // El stream de Gemini viene en formato JSON array [...]
+        // Tenemos que parsear cada chunk, pero como es texto crudo,
+        // simplemente lo acumulamos y limpiaremos al final.
+        // OJO: El stream de Google manda objetos JSON parciales.
+
+        // Estrategia simple: Acumular todo el texto crudo y luego buscar el texto real
+        // Es un poco sucio pero funciona para ensamblar.
+        fullText += chunkString;
+    }
+
+    // Ahora `fullText` contiene un montón de objetos JSON pegados tipo:
+    // [{ "text": "Hola" }, { "text": " mun" }, { "text": "do" }]
+    // Necesitamos extraer solo el campo "text" de cada candidato.
+
+    // Parseo manual del stream de Google (que es un array de objetos)
+    // El stream de Google devuelve algo como:
+    // [
+    //   { "candidates": [ { "content": { "parts": [ { "text": "..." } ] } } ] },
+    //   ...
+    // ]
+
+    let finalText = "";
+    try {
+        // Truco: El stream es básicamente un array JSON válido si lo juntamos todo
+        const jsonObjects = JSON.parse(fullText);
+
+        if (Array.isArray(jsonObjects)) {
+            jsonObjects.forEach(chunk => {
+                if (chunk.candidates && chunk.candidates[0].content && chunk.candidates[0].content.parts) {
+                    finalText += chunk.candidates[0].content.parts[0].text;
+                }
+            });
+        }
+    } catch (e) {
+        console.error("Error parseando stream, intentando regex fallback...");
+        // Fallback: Buscar con Regex si el JSON parse falla
+        const regex = /"text":\s*"((?:[^"\\]|\\.)*)"/g;
+        let match;
+        while ((match = regex.exec(fullText)) !== null) {
+            // Descapar saltos de línea codificados
+            finalText += match[1].replace(/\\n/g, "\n").replace(/\\"/g, '"');
+        }
+    }
+
+    return finalText;
 }
 
 exports.generateWeeklyDiet = async (req, res) => {
@@ -151,53 +186,53 @@ exports.generateWeeklyDiet = async (req, res) => {
 
     if (!patientName || !targetCalories) return res.status(400).json({ message: "Faltan datos" });
 
-    // PROMPT OPTIMIZADO: Pedimos JSON explícito desde el inicio
-    const prompt = `
-    Eres un API generador de dietas. Tu única salida es JSON.
-    Genera dieta semanal para ${patientName}. Meta: ${targetCalories} kcal.
-    Macros: P ${proteinGoal}g, C ${carbsGoal}g, G ${fatGoal}g.
-    Restricciones: ${restrictions || "Ninguna"}.
+    const prompt = `Genera un menú semanal JSON para ${patientName}. Meta: ${targetCalories} kcal.
+Macros: P ${proteinGoal}g, C ${carbsGoal}g, G ${fatGoal}g.
+Restricciones: ${restrictions || "Ninguna"}.
 
-    REGLAS:
-    1. Responde SOLO JSON válido minificado. Sin markdown.
-    2. Usa claves de 1 letra para reducir tamaño: n=nombre, t=tiempo, i=ingredientes, a=alimento, g=gramos, k=kcal, p=prot, c=carb, f=grasa, ins=instrucciones, tip=tip.
-    3. Llena las 5 comidas (desayuno, media_manana, almuerzo, snack, cena) de Lunes a Domingo.
-    4. Instrucciones: MAXIMO 3 PASOS.
+FORMATO OBLIGATORIO:
+Responde ÚNICAMENTE con un JSON válido minificado.
+NO uses bloques de código. Empieza con '{'.
 
-    Ejemplo salida:
-    {"lunes":{"desayuno":[{"n":"A","t":"5m","i":[{"a":"B","g":1,"k":1,"p":1,"c":1,"f":1}],"ins":["C"],"tip":"D"}],"media_manana":[],"almuerzo":[],"snack":[],"cena":[]},"martes":{}}
-    `;
+CLAVES (Minificadas):
+n=nombre, t=tiempo, i=ingredientes, a=alimento, g=gramos, k=kcal, p=prot, c=carb, f=grasa, ins=instrucciones, tip=tip.
+
+REGLAS:
+1. Llena Lunes a Domingo.
+2. Llena 5 comidas diarias.
+3. Instrucciones: MAXIMO 2 PASOS CORTOS.
+
+Ejemplo:
+{"lunes":{"desayuno":[{"n":"A","t":"5m","i":[{"a":"B","g":1,"k":1,"p":1,"c":1,"f":1}],"ins":["C"],"tip":"D"}],"media_manana":[],"almuerzo":[],"snack":[],"cena":[]},"martes":{}}
+`;
 
     try {
-        console.log(`🔵 [Render] Generando dieta para ${patientName}...`);
+        console.log(`🔵 [Render] Generando dieta (STREAM) para ${patientName}...`);
 
-        const text = await callGemini(prompt);
+        // USAMOS LA NUEVA FUNCIÓN DE STREAM
+        const text = await callGeminiStream(prompt);
 
-        // Logs de depuración mejorados
-        console.log(`📡 Respuesta recibida. Longitud: ${text.length} caracteres.`);
-        if (text.length < 100) {
-            console.error("❌ Respuesta sospechosamente corta:", text);
+        console.log(`📡 Texto final ensamblado (${text.length} chars).`);
+
+        if (text.length < 500) {
+            console.error("❌ Respuesta demasiado corta:", text);
+            throw new Error("La IA respondió muy poco texto. Posible bloqueo de seguridad.");
         }
 
         const jsonText = extractJsonFromText(text);
-
-        if (!jsonText) {
-            throw new Error("La respuesta no contiene JSON válido.");
-        }
+        if (!jsonText) throw new Error("No se encontró JSON válido en la respuesta.");
 
         let minifiedMenu;
         try {
             minifiedMenu = JSON.parse(jsonText);
         } catch (e) {
-            // Intento desesperado de arreglar JSON cortado (si faltan llaves al final)
-            console.warn("⚠️ JSON inválido, intentando reparar cierre...");
+            console.error(`🔴 JSON Roto:`, e.message);
+            // Intento de auto-reparación simple (cerrar llaves)
             try {
-                // Si se cortó, probablemente falten llaves de cierre
-                const repairedText = jsonText + "}}}";
-                minifiedMenu = JSON.parse(repairedText);
+                minifiedMenu = JSON.parse(jsonText + "}}}");
+                console.log("✅ JSON reparado automáticamente.");
             } catch (e2) {
-                console.error(`🔴 Fallo total parsing JSON:`, e.message);
-                throw new Error("JSON cortado o inválido incluso tras intento de reparación.");
+                throw new Error("El JSON se cortó y no se pudo reparar.");
             }
         }
 
