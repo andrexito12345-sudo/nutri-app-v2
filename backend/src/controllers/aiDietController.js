@@ -8,7 +8,7 @@ const crypto = require("crypto");
 
 const API_KEY = process.env.GEMINI_API_KEY;
 // Usamos gemini-1.5-flash por ser el más estable para respuestas largas en V1
-const GEMINI_MODEL = "gemini-1.5-flash";
+const GEMINI_MODEL = "gemini-2.5-pro";
 const GEMINI_TIMEOUT_MS = 120000; // 2 minutos
 
 function extractJsonFromText(text) {
