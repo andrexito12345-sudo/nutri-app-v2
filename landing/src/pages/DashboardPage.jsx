@@ -89,7 +89,7 @@ function DashboardPage() {
             </div>
 
             {/* 👇 3. AQUÍ PONEMOS LA BANDEJA DE LEADS (Lo Nuevo) */}
-            <LeadsSection leads={logic.leads} onDelete={logic.deleteLead} />
+            {/* <LeadsSection leads={logic.leads} onDelete={logic.deleteLead} />*/}
 
             {/* Sección de Citas */}
             <AppointmentsSection
