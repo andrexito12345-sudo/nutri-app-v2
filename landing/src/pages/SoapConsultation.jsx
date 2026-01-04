@@ -112,7 +112,7 @@ const SoapConsultation = () => {
     };
 
 
-    // 👇 FUNCIÓN CORREGIDA PARA GUARDAR
+    // 👇 FUNCIÓN CORREGIDA PARA GUARDAR (SOLUCIONA EL UNDEFINED)
     const handleSaveDietFromGenerator = (data) => {
         // data trae: { weeklyDiet, targetCalories, averageKcal }
         console.log("💾 Guardando semana completa:", data);
@@ -135,11 +135,22 @@ const SoapConsultation = () => {
             if (hasFood) {
                 planSummary += `\n=== ${day.toUpperCase()} ===\n`;
 
-                Object.entries(dayDiet).forEach(([mealKey, items]) => {
-                    if (items.length > 0) {
+                Object.entries(dayDiet).forEach(([mealKey, recetas]) => {
+                    if (recetas.length > 0) {
                         planSummary += `  * ${mealLabels[mealKey] || mealKey}:\n`;
-                        items.forEach(item => {
-                            planSummary += `    - ${item.alimento} (${item.grams}g)\n`;
+
+                        // AQUÍ ESTABA EL ERROR: Ahora recorremos RECETAS, no ingredientes directos
+                        recetas.forEach(receta => {
+                            // 1. Nombre de la receta
+                            planSummary += `    - ${receta.recetaNombre}\n`;
+
+                            // 2. (Opcional) Listamos los ingredientes principales entre paréntesis para referencia rápida
+                            if (receta.ingredientes && receta.ingredientes.length > 0) {
+                                const ingredientesTexto = receta.ingredientes
+                                    .map(ing => `${ing.alimento} (${ing.grams}g)`)
+                                    .join(", ");
+                                planSummary += `      [${ingredientesTexto}]\n`;
+                            }
                         });
                     }
                 });

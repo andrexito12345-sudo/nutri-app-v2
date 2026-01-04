@@ -1,14 +1,20 @@
 // backend/src/controllers/aiDietController.js
+// ============================================
+// VERSIÓN FINAL: API V1 + GEMINI 2.5 FLASH + SIN ERRORES 400
+// ============================================
+
 const fetch = require("node-fetch");
 const crypto = require("crypto");
 
 const API_KEY = process.env.GEMINI_API_KEY;
-// Usamos gemini-1.5-flash por defecto porque soporta 8k tokens de salida de forma nativa
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-1.5-flash";
-const GEMINI_TIMEOUT_MS = 120000; // 2 minutos (las dietas largas tardan)
+
+// ✅ USAMOS EL MODELO QUE CONFIRMASTE QUE TIENES EN V1
+const GEMINI_MODEL = "gemini-2.5-flash";
+const GEMINI_TIMEOUT_MS = 120000; // 2 minutos
 
 function extractJsonFromText(text) {
     if (!text) return null;
+    // Limpieza agresiva para encontrar el JSON entre el texto
     let t = text.trim().replace(/```json/gi, "").replace(/```/g, "").trim();
     const firstBrace = t.indexOf("{");
     const lastBrace = t.lastIndexOf("}");
@@ -16,11 +22,10 @@ function extractJsonFromText(text) {
     return t.substring(firstBrace, lastBrace + 1);
 }
 
-// Función auxiliar para expandir claves cortas a largas
+// Función para asegurar que las claves cortas (n, i, t) se conviertan en largas (recetaNombre...)
 function expandirMenuBackend(menuMinificado) {
     const menuCompleto = {};
     try {
-        // Si ya viene largo, devolver tal cual
         const primerDia = Object.values(menuMinificado)[0];
         if (primerDia && Object.values(primerDia)[0]?.[0]?.recetaNombre) return menuMinificado;
     } catch (e) {}
@@ -48,21 +53,19 @@ function expandirMenuBackend(menuMinificado) {
     return menuCompleto;
 }
 
-// Lógica de re-escalado de calorías
+// Ajuste automático de porciones si la IA no le atina a las calorías exactas
 function autoScalePortions(menu, targetCalories) {
     const scaledMenu = JSON.parse(JSON.stringify(menu));
     const totals = {};
 
     for (const day of Object.keys(menu)) {
         let dayKcal = 0;
-        // Calcular total actual del día
         Object.values(menu[day]).forEach(comidas => {
             comidas.forEach(r => r.ingredientes.forEach(i => dayKcal += Number(i.kcal) || 0));
         });
 
         const scaleFactor = dayKcal > 0 ? targetCalories / dayKcal : 1.0;
 
-        // Aplicar factor si la diferencia es mayor al 10%
         if (dayKcal > 0 && Math.abs(scaleFactor - 1.0) > 0.1) {
             Object.values(scaledMenu[day]).forEach(comidas => {
                 comidas.forEach(r => {
@@ -77,7 +80,6 @@ function autoScalePortions(menu, targetCalories) {
             });
         }
 
-        // Calcular nuevos totales
         totals[day] = { kcal: 0, proteina: 0, carbohidratos: 0, grasas: 0 };
         Object.values(scaledMenu[day]).forEach(comidas => {
             comidas.forEach(r => r.ingredientes.forEach(i => {
@@ -87,7 +89,7 @@ function autoScalePortions(menu, targetCalories) {
                 totals[day].grasas += i.grasas;
             }));
         });
-        // Redondear totales
+
         totals[day].kcal = Math.round(totals[day].kcal);
         totals[day].proteina = Number(totals[day].proteina.toFixed(1));
         totals[day].carbohidratos = Number(totals[day].carbohidratos.toFixed(1));
@@ -97,6 +99,7 @@ function autoScalePortions(menu, targetCalories) {
 }
 
 async function callGemini(prompt) {
+    // ✅ URL CORREGIDA A V1 (NO BETA)
     const url = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${API_KEY}`;
 
     const response = await fetch(url, {
@@ -106,8 +109,8 @@ async function callGemini(prompt) {
             contents: [{ role: "user", parts: [{ text: prompt }] }],
             generationConfig: {
                 temperature: 0.7,
-                maxOutputTokens: 8192, // 🔥 ESTO EVITA QUE SE CORTE EL JSON
-                responseMimeType: "application/json" // Forzamos modo JSON nativo si el modelo lo soporta
+                maxOutputTokens: 8192, // Mantenemos tokens altos para que no se corte
+                // ❌ ELIMINADO responseMimeType PORQUE V1 NO LO SOPORTA
             }
         })
     });
@@ -126,14 +129,16 @@ exports.generateWeeklyDiet = async (req, res) => {
 
     if (!patientName || !targetCalories) return res.status(400).json({ message: "Faltan datos" });
 
-    // PROMPT OPTIMIZADO PARA NO GASTAR TOKENS INNECESARIOS
+    // Prompt estricto para asegurar que la IA devuelva JSON aunque no usemos responseMimeType
     const prompt = `Genera un menú semanal JSON para ${patientName}. Meta: ${targetCalories} kcal.
 Macros: P ${proteinGoal}g, C ${carbsGoal}g, G ${fatGoal}g.
 Restricciones: ${restrictions || "Ninguna"}.
 
-REGLAS CRÍTICAS DE FORMATO (JSON MINIFICADO):
+IMPORTANTE: Responde ÚNICAMENTE con un objeto JSON válido. No uses Markdown. No pongas texto antes ni después.
+
+REGLAS DE FORMATO (JSON MINIFICADO):
 1. Usa claves de una letra: n=nombre, t=tiempo, i=ingredientes, a=alimento, g=gramos, k=kcal, p=prot, c=carb, f=grasa, ins=instrucciones, tip=tip.
-2. Instrucciones: MAXIMO 2 PASOS CORTOS. Ej: "Mezclar todo. Cocinar.". NO textos largos.
+2. Instrucciones: MAXIMO 2 PASOS CORTOS. Ej: "Mezclar. Cocinar".
 3. Tips: MAXIMO 4 palabras.
 4. OBLIGATORIO: Llena las 5 comidas (desayuno, media_manana, almuerzo, snack, cena) para los 7 días.
 
@@ -148,12 +153,12 @@ Ejemplo estructura:
 `;
 
     try {
-        console.log(`🔵 Generando dieta para ${patientName} con ${GEMINI_MODEL}...`);
+        console.log(`🔵 Generando dieta para ${patientName} con ${GEMINI_MODEL} (API v1)...`);
 
         const text = await callGemini(prompt);
         const jsonText = extractJsonFromText(text);
 
-        if (!jsonText) throw new Error("No se pudo extraer JSON de la respuesta");
+        if (!jsonText) throw new Error("La IA no devolvió un JSON válido. Intenta de nuevo.");
 
         const minifiedMenu = JSON.parse(jsonText);
         const fullMenu = expandirMenuBackend(minifiedMenu);
