@@ -14,7 +14,8 @@ const pgPool = require('./pgClient');
 // 👇 1. IMPORTAR EL BOT (Al importarlo, ya se ejecuta la lógica segura de whatsappBot.js)
 const whatsappClient = require('../whatsappBot');
 
-// OPENAI
+// IA DIETA
+
 const dietRoutes = require('./routes/dietRoutes');
 
 // Rutas
@@ -118,7 +119,9 @@ app.use('/api/visits', visitsRoutes);
 app.use('/api/patients', patientsRoutes);
 app.use('/api/consultations', consultationsRoutes);
 app.use('/api/leads', leadsRoutes);
-app.use('/api/diets', dietRoutes);
+//app.use('/api/diets', dietRoutes);
+app.use('/api/diet', dietRoutes);
+
 
 // ===== MANEJO DE ERRORES ===================================================
 

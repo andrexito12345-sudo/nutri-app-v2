@@ -23,19 +23,22 @@ function formatDate(date = new Date()) {
 
 // --- PARSERS ---
 
-// 1. Parser Texto Plano (Antiguo)
+// 1) Parser Texto Plano (Legacy)
 function parseWeeklyPlanText(planText = "") {
     const lines = String(planText).split(/\r?\n/);
     const days = [];
     let currentDay = null;
     let currentMeal = null;
 
-    const startIndex = lines.findIndex((l) => l.toUpperCase().includes("PLAN NUTRICIONAL SEMANAL"));
+    const startIndex = lines.findIndex((l) =>
+        String(l).toUpperCase().includes("PLAN NUTRICIONAL SEMANAL")
+    );
     const relevant = startIndex >= 0 ? lines.slice(startIndex) : lines;
 
     for (const raw of relevant) {
-        const line = raw.trim();
+        const line = String(raw || "").trim();
         if (!line) continue;
+
         const dayMatch = line.match(/^===\s*(.+?)\s*===$/i);
         if (dayMatch) {
             currentDay = { name: dayMatch[1].toLowerCase(), meals: [] };
@@ -43,78 +46,155 @@ function parseWeeklyPlanText(planText = "") {
             currentMeal = null;
             continue;
         }
+
         const mealMatch = line.match(/^\*\s*(.+?)\s*:\s*$/);
         if (mealMatch && currentDay) {
-            currentMeal = { name: mealMatch[1], items: [] };
+            currentMeal = { name: mealMatch[1], items: [], isHtml: false };
             currentDay.meals.push(currentMeal);
             continue;
         }
+
         if (currentMeal) {
             const itemMatch = line.match(/^-+\s*(.+)$/);
             currentMeal.items.push(itemMatch ? itemMatch[1] : line);
         }
     }
+
     return days;
 }
 
-// 2. Parser JSON (Nuevo - IA) - AHORA CON PREPARACIÓN
+// 2) Parser JSON (IA) - con preparación
 function parseWeeklyDietJSON(weeklyDiet) {
     const daysOrder = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
-    const mealLabels = {
-        desayuno: "Desayuno",
-        media_manana: "Media Mañana",
-        almuerzo: "Almuerzo",
-        snack: "Media Tarde",
-        cena: "Cena"
+
+    const mealDefs = [
+        { label: "Desayuno", keys: ["desayuno", "BREAKFAST", "DESAYUNO"] },
+        { label: "Colación 1", keys: ["media_manana", "MID_MORNING", "MEDIA_MAÑANA", "MEDIA_MANANA"] },
+        { label: "Almuerzo", keys: ["almuerzo", "LUNCH", "ALMUERZO"] },
+        { label: "Colación 2", keys: ["snack", "SNACK", "MEDIA_TARDE", "MEDIA TARDE"] },
+        { label: "Merienda/Cena", keys: ["cena", "DINNER", "CENA"] },
+    ];
+
+    const normIngredient = (i) => {
+        if (!i) return "";
+
+        // formato viejo: { grams, alimento }
+        if (i.grams != null && i.alimento) {
+            return `<b>${escapeHtml(i.grams)}g</b> ${escapeHtml(i.alimento)}`;
+        }
+
+        // formato nuevo: { cantidad, unidad, alimento }
+        const cantidad = i.cantidad ?? "";
+        const unidad = i.unidad ?? "";
+        const alimento = i.alimento ?? i.nombre ?? "";
+        const parts = [cantidad, unidad, "de", alimento].filter(Boolean).join(" ");
+        return escapeHtml(parts);
     };
 
-    return daysOrder.map(dayKey => {
-        const dayMeals = weeklyDiet[dayKey] || {};
-        const meals = [];
+    const normRecipe = (r) => {
+        // a veces viene como { receta: {...} }
+        const obj = r?.receta ? r.receta : r;
 
-        Object.entries(mealLabels).forEach(([key, label]) => {
-            const recipes = dayMeals[key] || [];
-            if (recipes.length > 0) {
-                const items = recipes.map(r => {
-                    // Nombre del plato
-                    const name = `<div class="recipe-name">${escapeHtml(r.recetaNombre)}</div>`;
-                    let details = "";
+        const nombre = obj?.recetaNombre ?? obj?.nombre ?? obj?.name ?? "Receta";
 
-                    // Ingredientes
-                    if(r.ingredientes && r.ingredientes.length > 0) {
-                        // Ponemos los gramos en negrita para resaltar
-                        const ingList = r.ingredientes.map(i => `<b>${i.grams}g</b> ${i.alimento}`).join(" • ");
-                        details += `<div class="recipe-ing">${ingList}</div>`;
-                    }
+        const ingredientes = Array.isArray(obj?.ingredientes) ? obj.ingredientes : [];
+        const preparacion = Array.isArray(obj?.preparacion) ? obj.preparacion : [];
+        const instrucciones = Array.isArray(obj?.instrucciones) ? obj.instrucciones : [];
 
-                    // 🔥 PREPARACIÓN (NUEVO) 🔥
-                    if (r.instrucciones && r.instrucciones.length > 0) {
-                        // Unimos los pasos (Ej: "1. Hervir. 2. Servir.") para ahorrar espacio vertical
-                        const steps = r.instrucciones.map((s, i) => `${i+1}. ${s}`).join("  ");
-                        details += `<div class="recipe-prep">👩‍🍳 ${escapeHtml(steps)}</div>`;
-                    }
+        // acepta preparacion (nuevo) o instrucciones (viejo)
+        const steps = preparacion.length ? preparacion : instrucciones;
 
-                    return name + details;
-                });
-                meals.push({ name: label, items: items, isHtml: true });
+        return { nombre, ingredientes, steps };
+    };
+
+    return daysOrder.map((dayKey) => {
+        const dayMeals = weeklyDiet?.[dayKey] || {};
+
+        const meals = mealDefs.map((md) => {
+            let recipes = [];
+            for (const k of md.keys) {
+                if (Array.isArray(dayMeals?.[k]) && dayMeals[k].length) {
+                    recipes = dayMeals[k];
+                    break;
+                }
             }
+
+            const items = (recipes || []).map((r) => {
+                const rr = normRecipe(r);
+
+                const title = `<div class="recipe-name">${escapeHtml(rr.nombre)}</div>`;
+
+                const ingList = rr.ingredientes.length
+                    ? `<div class="recipe-ing">${rr.ingredientes.map(normIngredient).join(" • ")}</div>`
+                    : "";
+
+                // compacto (2 pasos máx)
+                const prep = rr.steps.length
+                    ? `<div class="recipe-prep">${escapeHtml(
+                        rr.steps
+                            .slice(0, 2)
+                            .map((s, i) => `${i + 1}. ${String(s || "").trim()}`)
+                            .join(" ")
+                    )}</div>`
+                    : "";
+
+                return title + ingList + prep;
+            });
+
+            return { name: md.label, items, isHtml: true };
         });
+
         return { name: dayKey, meals };
-    }).filter(d => d.meals.length > 0);
+    });
 }
 
 function prettyDayName(day) {
-    const map = { lunes: "Lunes", martes: "Martes", miercoles: "Miércoles", jueves: "Jueves", viernes: "Viernes", sabado: "Sábado", domingo: "Domingo" };
+    const map = {
+        lunes: "Lunes",
+        martes: "Martes",
+        miercoles: "Miércoles",
+        jueves: "Jueves",
+        viernes: "Viernes",
+        sabado: "Sábado",
+        domingo: "Domingo",
+    };
     return map[day] || day;
 }
 
-function mealIcon(name) {
-    const n = name.toLowerCase();
-    if (n.includes("desay")) return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`;
-    if (n.includes("media") || n.includes("snack")) return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/><path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="M12 2v2"/><path d="M12 22v-2"/><path d="m17 20.66-1-1.73"/><path d="M11 10.27 7 3.34"/></svg>`;
-    if (n.includes("almuer")) return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>`;
-    if (n.includes("cena")) return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
-    return "•";
+function normKey(s) {
+    return String(s || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
+}
+
+function findMealByLabel(day, mealLabel) {
+    const meals = day?.meals || [];
+    const label = normKey(mealLabel);
+
+    const aliases = {
+        desayuno: ["desayuno"],
+        "colacion 1": ["colacion 1", "media manana", "media man", "colacion1"],
+        almuerzo: ["almuerzo"],
+        "colacion 2": ["colacion 2", "media tarde", "snack", "colacion2", "merienda"],
+        "merienda cena": ["merienda cena", "cena", "merienda"],
+    };
+
+    let wanted = [];
+    if (label === "desayuno") wanted = aliases.desayuno;
+    else if (label === "colacion 1") wanted = aliases["colacion 1"];
+    else if (label === "almuerzo") wanted = aliases.almuerzo;
+    else if (label === "colacion 2") wanted = aliases["colacion 2"];
+    else if (label === "merienda cena" || label === "merienda/cena") wanted = aliases["merienda cena"];
+    else wanted = [label];
+
+    for (const m of meals) {
+        const mn = normKey(m?.name);
+        if (wanted.some((w) => mn === w || mn.startsWith(w) || mn.includes(w))) return m;
+    }
+    return null;
 }
 
 // --- FUNCIÓN PRINCIPAL ---
@@ -127,181 +207,270 @@ export function printWeeklyDietPlan({
                                         brand = "NutriVida Pro",
                                         doctorLabel = "Nutrición Clínica & Dietética",
                                     } = {}) {
+    const daysData =
+        weeklyDiet && typeof weeklyDiet === "object"
+            ? parseWeeklyDietJSON(weeklyDiet)
+            : parseWeeklyPlanText(planText);
 
-    let days = [];
-    if (weeklyDiet && typeof weeklyDiet === 'object') {
-        days = parseWeeklyDietJSON(weeklyDiet);
-    } else {
-        days = parseWeeklyPlanText(planText);
-    }
-
-    if (days.length === 0) {
+    if (!Array.isArray(daysData) || daysData.length === 0) {
         alert("No hay datos para imprimir.");
         return;
     }
 
     const today = formatDate(new Date());
+    const dayKeys = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
+    const dayMap = new Map(daysData.map((d) => [d.name, d]));
 
-    const htmlDays = days.map((d) => {
-        const mealsHtml = (d.meals || []).map((m) => {
-            const items = (m.items || []).map((it) => {
-                const content = m.isHtml ? it : escapeHtml(it);
-                return `<li class="item">${content}</li>`;
-            }).join("");
+    const mealOrder = ["Desayuno", "Colación 1", "Almuerzo", "Colación 2", "Merienda/Cena"];
 
+    const htmlTable = `
+    <table class="weekly-table">
+      <thead>
+        <tr>
+          <th class="col-meal">Comida</th>
+          ${dayKeys.map((d) => `<th class="col-day">${escapeHtml(prettyDayName(d))}</th>`).join("")}
+        </tr>
+      </thead>
+      <tbody>
+        ${mealOrder
+        .map((mealLabel) => {
             return `
-            <div class="meal-row">
-                <div class="meal-label">
-                    ${mealIcon(m.name)} <span>${escapeHtml(m.name)}</span>
-                </div>
-                <ul class="meal-items">${items}</ul>
-            </div>`;
-        }).join("");
+              <tr>
+                <th class="row-meal">${escapeHtml(mealLabel)}</th>
+                ${dayKeys
+                .map((dayKey) => {
+                    const day = dayMap.get(dayKey);
+                    const meal = findMealByLabel(day, mealLabel);
+                    const isHtml = !!meal?.isHtml;
 
-        return `
-        <article class="day-card">
-            <header class="day-header">
-                <h3>${escapeHtml(prettyDayName(d.name))}</h3>
-            </header>
-            <div class="day-body">
-                ${mealsHtml}
-            </div>
-        </article>`;
-    }).join("");
+                    const cell = (meal?.items || [])
+                        .map((x) => {
+                            const content = isHtml ? String(x || "") : escapeHtml(String(x || ""));
+                            return `<div class="cell-item">${content}</div>`;
+                        })
+                        .join("");
+
+                    return `<td>${cell || `<span class="cell-empty">—</span>`}</td>`;
+                })
+                .join("")}
+              </tr>
+            `;
+        })
+        .join("")}
+      </tbody>
+    </table>
+  `;
 
     const win = window.open("", "_blank");
-    if (!win) { alert("Permite ventanas emergentes."); return; }
+    if (!win) {
+        alert("Permite ventanas emergentes.");
+        return;
+    }
 
-    const doc = `
-<!doctype html>
+    const kcalTxt = kcal ? escapeHtml(String(kcal)) : "—";
+    const pTxt = macros?.p ? `${escapeHtml(String(macros.p))}g` : "—";
+    const cTxt = macros?.c ? `${escapeHtml(String(macros.c))}g` : "—";
+    const fTxt = macros?.f ? `${escapeHtml(String(macros.f))}g` : "—";
+
+    const doc = `<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
   <title>Plan Nutricional - ${escapeHtml(patientName)}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    @page { size: A4 landscape; margin: 10mm; }
 
-    :root {
-        --primary: #2563EB;
-        --primary-dark: #1e3a8a;
-        --secondary: #64748b;
-        --accent: #eff6ff;
-        --border: #e2e8f0;
-        --text: #0f172a;
+    :root{
+      --primary:#2563EB;
+      --primary-dark:#1e3a8a;
+      --secondary:#64748b;
+      --accent:#eff6ff;
+      --border:#e2e8f0;
+      --text:#0f172a;
+      --head:#f8fafc;
     }
 
-    body {
-        font-family: 'Inter', sans-serif;
-        color: var(--text);
-        margin: 0;
-        background: #fff;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+    body{
+      font-family:'Inter',sans-serif;
+      color:var(--text);
+      margin:0;
+      background:#fff;
+      -webkit-print-color-adjust:exact;
+      print-color-adjust:exact;
     }
 
-    .page-container { max-width: 210mm; margin: 0 auto; padding: 30px 40px; }
+    .page-container{ max-width: 297mm; margin:0 auto; padding:10mm; }
 
     /* HEADER */
-    .header {
-        display: flex; justify-content: space-between; align-items: flex-end;
-        border-bottom: 3px solid var(--primary); padding-bottom: 15px; margin-bottom: 25px;
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      border-bottom:3px solid var(--primary);
+      padding-bottom:15px;
+      margin-bottom:18px;
     }
-    .brand-area h1 { margin: 0; color: var(--primary); font-size: 24px; font-weight: 800; }
-    .brand-area p { margin: 4px 0 0; color: var(--secondary); font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
-    .patient-area { text-align: right; }
-    .patient-name { font-size: 18px; font-weight: 700; color: var(--text); margin: 0; }
-    .report-date { font-size: 13px; color: var(--secondary); margin-top: 4px; }
+    .brand-area h1{ margin:0; color:var(--primary); font-size:24px; font-weight:800; }
+    .brand-area p{ margin:4px 0 0; color:var(--secondary); font-size:13px; font-weight:500; text-transform:uppercase; letter-spacing:1px; }
+    .patient-area{ text-align:right; }
+    .patient-name{ font-size:18px; font-weight:700; color:var(--text); margin:0; }
+    .report-date{ font-size:13px; color:var(--secondary); margin-top:4px; }
 
     /* MACROS */
-    .macros-grid {
-        display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 30px;
+    .macros-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+      margin: 14px 0 16px;
     }
-    .macro-card {
-        background: var(--accent); border: 1px solid #dbeafe; padding: 12px;
-        border-radius: 10px; text-align: center;
+    .macro-card{
+      background:var(--accent);
+      border:1px solid #dbeafe;
+      padding:12px;
+      border-radius:10px;
+      text-align:center;
     }
-    .macro-value { display: block; font-size: 18px; font-weight: 800; color: var(--primary-dark); }
-    .macro-label { font-size: 10px; text-transform: uppercase; color: var(--secondary); letter-spacing: 0.5px; font-weight: 600; margin-top: 4px; display: block; }
+    .macro-value{ display:block; font-size:18px; font-weight:800; color:var(--primary-dark); }
+    .macro-label{
+      font-size:10px;
+      text-transform:uppercase;
+      color:var(--secondary);
+      letter-spacing:.5px;
+      font-weight:600;
+      margin-top:4px;
+      display:block;
+    }
 
-    /* GRID */
-    .week-grid {
-        display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+    /* TABLE */
+    .weekly-table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      table-layout:fixed;
+      border:1px solid var(--border);
+      border-radius:12px;
+      overflow:hidden;
+      font-size:11px;
     }
 
-    /* DAY CARD */
-    .day-card {
-        border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
-        break-inside: avoid; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03);
+    .weekly-table thead th{
+      background:var(--head);
+      color:#0f172a;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.4px;
+      font-size:10px;
+      border-bottom:1px solid var(--border);
+      padding:10px 8px;
     }
-    .day-header {
-        background: #f8fafc; border-bottom: 1px solid var(--border); padding: 8px 12px;
+
+    .weekly-table th, .weekly-table td{
+      border-right:1px solid var(--border);
+      vertical-align:top;
     }
-    .day-header h3 { margin: 0; font-size: 13px; text-transform: uppercase; font-weight: 800; color: var(--primary); }
-    .day-body { padding: 4px 0; }
+    .weekly-table th:last-child, .weekly-table td:last-child{ border-right:none; }
 
-    /* MEAL */
-    .meal-row { padding: 8px 12px; border-bottom: 1px dashed var(--border); }
-    .meal-row:last-child { border-bottom: none; }
-    .meal-label { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #334155; text-transform: uppercase; margin-bottom: 4px; }
-    .meal-label svg { color: var(--primary); }
-    .meal-items { list-style: none; padding: 0; margin: 0; }
+    .col-meal{ width: 12%; text-align:left; }
+    .col-day{ width: calc(88% / 7); text-align:center; }
 
-    /* ITEMS */
-    .item { margin-bottom: 8px; }
-    .recipe-name { font-size: 12.5px; font-weight: 700; color: #0f172a; }
-    .recipe-ing { font-size: 11px; color: #64748b; margin-top: 2px; }
-    
-    /* ESTILO DE LA PREPARACIÓN */
-    .recipe-prep {
-        font-size: 10.5px; 
-        color: #475569; 
-        margin-top: 4px; 
-        background: #f1f5f9; 
-        padding: 4px 6px; 
-        border-radius: 4px; 
-        line-height: 1.3;
-        font-style: italic;
+    .row-meal{
+      background:#ffffff;
+      font-weight:800;
+      color:#334155;
+      padding:10px 8px;
+      border-bottom:1px solid var(--border);
+      text-transform:uppercase;
+      font-size:10px;
+      letter-spacing:.3px;
+    }
+
+    .weekly-table tbody td{
+      padding:8px 8px;
+      border-bottom:1px solid var(--border);
+      background:#fff;
+    }
+    .weekly-table tbody tr:last-child td,
+    .weekly-table tbody tr:last-child th{
+      border-bottom:none;
+    }
+
+    .cell-item{
+      margin:0 0 8px 0;
+      padding:8px;
+      border:1px solid #eef2ff;
+      background:#fbfdff;
+      border-radius:10px;
+      box-shadow: 0 1px 0 rgba(15,23,42,.03);
+      line-height:1.25;
+      word-wrap:break-word;
+      overflow-wrap:anywhere;
+    }
+    .cell-item:last-child{ margin-bottom:0; }
+
+    .cell-empty{ color:#94a3b8; font-weight:700; }
+
+    .recipe-name{ font-size:12px; font-weight:800; color:#0f172a; }
+    .recipe-ing{ font-size:10.5px; color:#64748b; margin-top:3px; }
+    .recipe-prep{
+      font-size:10.2px;
+      color:#475569;
+      margin-top:6px;
+      background:#f1f5f9;
+      padding:5px 7px;
+      border-radius:8px;
+      line-height:1.3;
+      font-style:italic;
     }
 
     /* FOOTER */
-    .footer { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 15px; text-align: center; font-size: 10px; color: #94a3b8; }
+    .footer{
+      margin-top:16px;
+      border-top:1px solid var(--border);
+      padding-top:10px;
+      text-align:center;
+      font-size:10px;
+      color:#94a3b8;
+    }
 
-    @media print {
-        body { background: white; }
-        .page-container { padding: 0; max-width: 100%; }
-        .week-grid { display: grid; grid-template-columns: 1fr 1fr; }
+    @media print{
+      body{ background:#fff; }
+      .page-container{ padding:0; max-width:100%; }
     }
   </style>
 </head>
 <body>
   <div class="page-container">
     <header class="header">
-        <div class="brand-area">
-            <h1>${escapeHtml(brand)}</h1>
-            <p>${escapeHtml(doctorLabel)}</p>
-        </div>
-        <div class="patient-area">
-            <h2 class="patient-name">${escapeHtml(patientName)}</h2>
-            <div class="report-date">${today}</div>
-        </div>
+      <div class="brand-area">
+        <h1>${escapeHtml(brand)}</h1>
+        <p>${escapeHtml(doctorLabel)}</p>
+      </div>
+      <div class="patient-area">
+        <h2 class="patient-name">${escapeHtml(patientName)}</h2>
+        <div class="report-date">${escapeHtml(today)}</div>
+      </div>
     </header>
 
     <section class="macros-grid">
-        <div class="macro-card"><span class="macro-value">${kcal || "—"}</span><span class="macro-label">Kcal / Día</span></div>
-        <div class="macro-card"><span class="macro-value">${macros.p || "—"}g</span><span class="macro-label">Proteína</span></div>
-        <div class="macro-card"><span class="macro-value">${macros.c || "—"}g</span><span class="macro-label">Carbos</span></div>
-        <div class="macro-card"><span class="macro-value">${macros.f || "—"}g</span><span class="macro-label">Grasas</span></div>
+      <div class="macro-card"><span class="macro-value">${kcalTxt}</span><span class="macro-label">Kcal / Día</span></div>
+      <div class="macro-card"><span class="macro-value">${pTxt}</span><span class="macro-label">Proteína</span></div>
+      <div class="macro-card"><span class="macro-value">${cTxt}</span><span class="macro-label">Carbos</span></div>
+      <div class="macro-card"><span class="macro-value">${fTxt}</span><span class="macro-label">Grasas</span></div>
     </section>
 
-    <main class="week-grid">
-        ${htmlDays}
+    <main class="print-area">
+      ${htmlTable}
     </main>
 
     <footer class="footer">
-        <p>Generado por NutriVida Pro System</p>
+      <p>Generado por NutriVida Pro System</p>
     </footer>
   </div>
-  <script>window.print();</script>
+
+  <script>
+    window.print();
+  </script>
 </body>
 </html>`;
 

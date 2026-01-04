@@ -193,47 +193,19 @@ const SoapConsultation = () => {
         }
     };
 
-
-    // 👇 LA FUNCIÓN QUE LLAMA AL CEREBRO (IA)
-    const handleGenerateAIDiet = async () => {
+    const handleGenerateAIDiet = () => {
         const kcal = Number(formData.calories_prescribed);
 
         if (!kcal || kcal <= 0) {
             return toast.warning("⚠️ Primero define las calorías en la Prescripción Dietética.");
         }
 
-        setGeneratingAI(true);
-        setAiMenuData(null);
-
-        try {
-            const payload = {
-                patientName: patient?.full_name || "Paciente",
-                targetCalories: kcal,
-                proteinGoal: Number(formData.protein_prescribed) || 0,
-                carbsGoal: Number(formData.carbs_prescribed) || 0,
-                fatGoal: Number(formData.fats_prescribed) || 0,
-                restrictions: `${formData.pes_problem || ""}. ${patient?.allergies || ""}`.trim(),
-                preferences: formData.diet_type || "Comida ecuatoriana variada y saludable",
-            };
-
-            const response = await api.post("/diets/generate-ai", payload);
-            const data = response?.data;
-
-            if (data?.ok === true && data?.menu) {
-                setAiMenuData(data.menu);
-                setShowDietGenerator(true);
-                toast.success(`✨ ¡Menú Semanal generado con IA!`);
-            } else {
-                toast.error(`❌ ${data?.message || "Error al generar menú"}`);
-            }
-
-        } catch (error) {
-            console.error("Error IA:", error);
-            toast.error("Error al conectar con el servidor de IA.");
-        } finally {
-            setGeneratingAI(false);
-        }
+        console.log("✅ CLICK: Abrir Generador IA"); // para confirmar en consola
+        setAiMenuData(null);            // opcional
+        setShowDietGenerator(true);     // ✅ ABRE EL MODAL
     };
+
+
 
 
     // --- CARGAS DE DATOS ---
@@ -594,7 +566,7 @@ const SoapConsultation = () => {
                                         ) : (
                                             <>
                                                 <Sparkles className="w-5 h-5" />
-                                                Generar Plan Semanal
+                                                Abrir Generador IA
                                             </>
                                         )}
                                     </button>
@@ -703,8 +675,17 @@ const SoapConsultation = () => {
                         targetCarbs: parseFloat(formData.carbs_prescribed) || 0,
                         targetFats: parseFloat(formData.fats_prescribed) || 0,
                         patientName: patient?.full_name || "Paciente",
+
+                        // extras (para que el generador tenga contexto real)
+                        age: patient?.age || 30,
+                        gender: patient?.gender || "Masculino",
+                        weight: Number(formData.weight) || 70,
+                        activityLevel: formData.physical_activity || "Moderada",
+                        pathologies: formData.pes_problem || "Ninguna",
+                        restrictions: `${patient?.allergies || ""}`.trim() || "Ninguna",
+                        preferences: formData.diet_type || "Comida ecuatoriana variada y saludable",
                     }}
-                    aiGeneratedMenu={aiMenuData}
+                    aiGeneratedMenu={aiMenuData} // se queda, pero ahora normalmente irá null
                     onClose={() => setShowDietGenerator(false)}
                     onSave={handleSaveDietFromGenerator}
                 />

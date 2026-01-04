@@ -1,13 +1,27 @@
-
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { requireAuth } = require('../middleware/auth');
-const aiController = require('../controllers/aiDietController');
 
-console.log("✅ dietRoutes cargado desde:", __filename);
-console.log("✅ aiDietController resuelto desde:", require.resolve("../controllers/aiDietController"));
+const {
+    generateWeeklyDiet,
+    regenerateSingleMeal,
+    startWeeklyDietJob,
+    getWeeklyDietJobStatus,
+    startDailyDietJob,
+    getDailyDietJobStatus,
+} = require("../controllers/aiDietController");
 
-// Ruta POST para generar dieta con IA
-router.post('/generate-ai', requireAuth, aiController.generateWeeklyDiet);
+// Legacy (sync semana)
+router.post("/generate-ai", generateWeeklyDiet);
+
+// Job semana (si aún lo usas)
+router.post("/generate-ai/start", startWeeklyDietJob);
+router.get("/generate-ai/job/:id", getWeeklyDietJobStatus);
+
+// NUEVO: Job por día (lo que quieres ahora)
+router.post("/generate-day/start", startDailyDietJob);
+router.get("/generate-day/job/:id", getDailyDietJobStatus);
+
+// Regenerar una comida
+router.post("/regenerate-meal", regenerateSingleMeal);
 
 module.exports = router;
