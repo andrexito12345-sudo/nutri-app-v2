@@ -325,26 +325,30 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     // =========================
     // API: Regenerar una comida (rápido + loading por comida)
     // =========================
-    const handleRegenerateMeal = async (day, mealType) => {
+    const handleRegenerateMeal = async (mealType) => {
         const backMealType = FRONT_TO_BACK_MEAL[mealType];
-        const key = `${day}_${mealType}`;
+        const key = `${currentDay}_${mealType}`;
 
         setMealLoading((prev) => ({ ...prev, [key]: true }));
 
         try {
-            // Obtener nombres de recetas ya usadas
-            const usedNames = [];
+            // Obtener receta actual para evitarla
+            const currentMealRecipes = weeklyDiet[currentDay]?.[mealType] || [];
+            const currentNames = currentMealRecipes.map(r => r?.nombre).filter(Boolean);
+
+            // Obtener todas las recetas usadas
+            const usedNames = [...currentNames];
             Object.values(weeklyDiet).forEach(dayMeals => {
                 Object.values(dayMeals).forEach(mealRecipes => {
                     mealRecipes.forEach(r => {
-                        if (r?.receta?.nombre) usedNames.push(r.receta.nombre);
+                        if (r?.nombre) usedNames.push(r.nombre);
                     });
                 });
             });
 
             const resp = await api.post("/diet/regenerate-meal", {
-                day, // "lunes"
-                mealType: backMealType, // "DESAYUNO"
+                day: currentDay,
+                mealType: backMealType,
                 targetKcal,
                 targetProtein,
                 targetCarbs,
@@ -371,8 +375,8 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
 
             setWeeklyDiet((prev) => ({
                 ...prev,
-                [day]: {
-                    ...prev[day],
+                [currentDay]: {
+                    ...prev[currentDay],
                     [mealType]: recipes,
                 },
             }));
@@ -479,18 +483,10 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                     </div>
 
                     <div className="meal-actions">
-                        {!isEmpty && (
-                            <div className="meal-totals-mini">
-                                <span>{Math.round(mealTotals.calorias)} kcal</span>
-                                <span>P:{Math.round(mealTotals.proteinas)}g</span>
-                                <span>C:{Math.round(mealTotals.carbohidratos)}g</span>
-                                <span>G:{Math.round(mealTotals.grasas)}g</span>
-                            </div>
-                        )}
 
                         <button
                             className="btn-regenerate-meal"
-                            onClick={() => handleRegenerateMeal(day, mealType)}
+                            onClick={() => handleRegenerateMeal(mealType)}
                             title="Regenerar esta comida"
                             disabled={isMealLoading}
                         >
@@ -505,7 +501,7 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                         <p>No hay recetas generadas para esta comida</p>
                         <button
                             className="btn-generate-meal"
-                            onClick={() => handleRegenerateMeal(day, mealType)}
+                            onClick={() => handleRegenerateMeal(mealType)}
                             disabled={isMealLoading}
                         >
                             {isMealLoading ? <Loader2 size={16} className="spinner" /> : <Sparkles size={16} />}
