@@ -18,7 +18,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const MODEL_CONFIG = {
     model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
     generationConfig: {
-        temperature: 0.6,
+        temperature: 0.85,
         topP: 0.9,
         topK: 40,
         maxOutputTokens: 4000,
@@ -54,38 +54,39 @@ const MEAL_NAMES = {
     CENA: "Cena",
 };
 
+// REEMPLAZA TODO EL OBJETO MEAL_CATEGORIES CON ESTE:
 const MEAL_CATEGORIES = {
     DESAYUNO: [
-        { base: "Verde (bolón, tigrillo, majado)", protein: "huevo, queso, pollo" },
-        { base: "Arroz (calentado, arroz marinero)", protein: "pescado, camarón, carne" },
-        { base: "Pan/tostadas (integral, de yuca)", protein: "atún, jamón, queso" },
-        { base: "Avena/quinoa (coladas, batidos)", protein: "leche, yogurt, frutos secos" },
-        { base: "Humitas, empanadas de verde", protein: "queso, pollo" },
+        { base: "Harinas/Masas (pan, empanadas de viento, pancakes de avena)", protein: "queso, huevo" },
+        { base: "Verde/Plátano (bolón, tigrillo, majado, patacones)", protein: "huevo, queso, chicharrón" }, // Movido a segunda opción
+        { base: "Cereales (mote pillo, granola, avena, quinoa)", protein: "huevo, leche" },
+        { base: "Yuca/Camote (muchines, tortillas de yuca, yuca cocida)", protein: "queso, huevo" },
+        { base: "Arroz (calentado, arroz con huevo)", protein: "carne, salchicha" },
     ],
     MEDIA_MAÑANA: [
-        { tipo: "Frutas tropicales (guineo, papaya, piña, sandía)" },
-        { tipo: "Yogurt con granola o avena" },
-        { tipo: "Sanduche ligero (atún, pollo, queso)" },
-        { tipo: "Jugo natural con chía" },
+        { tipo: "Fruta picada con yogurt" },
+        { tipo: "Frutos secos y una fruta entera" },
+        { tipo: "Tostadas ligeras con aguacate" },
+        { tipo: "Batido verde o de frutas" },
     ],
     ALMUERZO: [
-        { base: "Arroz con menestra", protein: "pescado frito, pollo, carne" },
-        { base: "Seco (pollo, chivo, res)", protein: "proteína guisada" },
-        { base: "Encebollado, ceviche, viche", protein: "pescado, mariscos" },
-        { base: "Guatita, menudo", protein: "vísceras" },
-        { base: "Arroz con pollo, arroz marinero", protein: "pollo, mariscos" },
+        { base: "Sopas Ecuatorianas (locro, sancocho, bola de verde, fideo)", protein: "pollo, carne, queso" },
+        { base: "Leguminosas (menestra de lenteja, fréjol, garbanzo)", protein: "carne, pollo, chuleta" },
+        { base: "Arroces compuestos (arroz relleno, marinero, con pollo)", protein: "mixta" },
+        { base: "Secos y Guisos (seco de pollo, estofado, carne jugo)", protein: "pollo, res" },
+        { base: "Platos de Mar (sudado, encocado, ceviche)", protein: "pescado, camarón" }, // Bajamos prioridad al pescado diario
     ],
     MEDIA_TARDE: [
-        { tipo: "Empanadas (queso, carne, verde)" },
-        { tipo: "Humitas o tamales" },
-        { tipo: "Corviche o bolones pequeños" },
-        { tipo: "Sanduche o wrap integral" },
+        { tipo: "Humita o Quimbolito" },
+        { tipo: "Maduro con queso" },
+        { tipo: "Canguil o Tostado" },
+        { tipo: "Tortilla de maiz o trigo" },
     ],
     CENA: [
-        { base: "Sopa (bolas de verde, sancocho)", tipo: "ligera" },
-        { base: "Ensalada completa", protein: "pollo, atún, camarón" },
-        { base: "Tortilla de verde o yuca", protein: "huevo, queso" },
-        { base: "Ceviche o encebollado ligero", protein: "pescado" },
+        { base: "Cremas de vegetales", protein: "pollo desmechado" },
+        { base: "Proteína a la plancha con ensalada", protein: "pollo, lomo" },
+        { base: "Tortilla de huevo (Omelette) con vegetales", protein: "huevo" },
+        { base: "Café con humita o bollo (ligero)", protein: "queso" },
     ],
 };
 
@@ -193,12 +194,10 @@ setInterval(() => {
 // ============================================================================
 // PROMPTS (por líneas)
 // ============================================================================
-// REEMPLAZA la función generateMealPromptLines (línea 138)
-
 function generateMealPromptLines(mealType, dayKey, targetData, patientContext, usedRecipeNames = []) {
     const { targetKcal, targetProtein, targetCarbs, targetFats } = targetData;
     const {
-        patientName, age, gender, weight, activityLevel, pathologies, restrictions, preferences,
+        patientName, age, gender, weight, restrictions
     } = patientContext;
 
     const dailyKcal = clampInt(toNumberStrict(targetKcal), 0);
@@ -215,54 +214,62 @@ function generateMealPromptLines(mealType, dayKey, targetData, patientContext, u
     const dayName = DAY_NAMES[dayKey] || String(dayKey || "Día");
     const mealName = MEAL_NAMES[mealType] || String(mealType);
 
-    const avoidList =
-        usedRecipeNames.length > 0
-            ? usedRecipeNames.slice(-25).map((n) => `- ${n}`).join("\n")
-            : "- (ninguna)";
+    // LOGICA ANTI-REPETICIÓN DE INGREDIENTES
+    // Analizamos los nombres usados para encontrar patrones repetitivos
+    const usedString = usedRecipeNames.join(" ").toLowerCase();
+    const bannedIngredients = [];
+
+    if (usedString.includes("verde") || usedString.includes("bolón") || usedString.includes("patacón")) bannedIngredients.push("PLÁTANO VERDE", "BOLÓN");
+    if (usedString.includes("pescado") || usedString.includes("atún") || usedString.includes("tilapia")) bannedIngredients.push("PESCADO", "ATÚN");
+    if (usedString.includes("lenteja") || usedString.includes("menestra")) bannedIngredients.push("LENTEJA");
+
+    // Seleccionamos solo los ultimos 5 prohibidos para no bloquear todo, pero sí lo reciente
+    const strictBanList = bannedIngredients.slice(-3).join(", ");
+
+    // LOGICA REGIONAL ALEATORIA
+    // En lugar de fijo 75% Costa, rotamos según el día para forzar variedad
+    const isSierraDay = ["martes", "jueves", "sabado"].includes(dayKey);
+    const regionPrompt = isSierraDay
+        ? "REGIÓN: Enfócate en Sierra (Mote, papas, maíz, sopas, locros, quinoa)."
+        : "REGIÓN: Enfócate en Costa (Pero VARIA: no siempre verde. Usa yuca, arroz, menestras).";
 
     const suggestedCategory = selectCategory(mealType, usedRecipeNames);
     const categoryHint = suggestedCategory
-        ? `\n\nSUGERENCIA DE VARIEDAD (úsala para inspirarte):\n${JSON.stringify(suggestedCategory, null, 2)}`
+        ? `\n\nSUGERENCIA OBLIGATORIA DE CATEGORÍA: Intenta usar ingredientes basados en: ${JSON.stringify(suggestedCategory)}`
         : "";
 
     return `
-ERES UN NUTRICIONISTA ECUATORIANO EXPERTO.
+ERES UN NUTRICIONISTA ECUATORIANO EXPERTO Y CREATIVO.
+Tu objetivo es crear un menú que NO ABURRA al paciente. La variedad es clave.
 
-INSTRUCCIÓN CRÍTICA: Responde SOLO con el formato exacto. NO añadas texto introductorio, explicaciones ni nada más.
-
-⚠️ VARIEDAD OBLIGATORIA: Si ves "bolón", "tigrillo" o "verde" en la lista de NO REPETIR, entonces DEBES usar otra base completamente diferente (arroz, pan, avena, quinoa, humita, etc).
+INSTRUCCIÓN CRÍTICA:
+1. Si ayer comió Verde, hoy NO PUEDE comer Verde.
+2. Si ayer comió Pescado, hoy debe comer Pollo o Res.
+3. Responde SOLO con el formato exacto.
 
 CONTEXTO:
-Paciente: ${patientName}, ${age} años, ${gender}, ${weight}kg
+Paciente: ${patientName}, ${age} años, ${gender}
 Comida: ${mealName} del ${dayName}
-Calorías objetivo: ${mealKcal} kcal
-Proteínas: ${mealProtein}g | Carbos: ${mealCarbs}g | Grasas: ${mealFats}g
-Restricciones: ${restrictions || "Ninguna"}
+Objetivos: ${mealKcal} kcal | P: ${mealProtein}g | C: ${mealCarbs}g | G: ${mealFats}g
+Restricciones médicas: ${restrictions || "Ninguna"}
 
-NO REPETIR (MUY IMPORTANTE):
-${avoidList}
+⛔ PROHIBIDO USAR EN ESTA RECETA (Ya se comió recientemente):
+${strictBanList ? strictBanList : "Ninguno específico, pero evita repetir lo de ayer."}
+
+${regionPrompt}
 ${categoryHint}
 
-REGIÓN: 75% Costa (pescado, verde, arroz, mariscos, carnes y todo lo demas), 25% Sierra (mote, papas, habas, y todo lo demas)
-
-FORMATO OBLIGATORIO (copia exacto, reemplaza valores):
-
-NOMBRE=Nombre del plato ecuatoriano típico
+FORMATO OBLIGATORIO (Empieza directo con NOMBRE=):
+NOMBRE=Nombre del plato (Sé creativo, ej: "Mote Pillo", "Tortilla de Yuca", "Sanduche de Pollo")
 TIEMPO=20 minutos
-ING=Plátano verde|200|gramos|200
-ING=Huevo|2|unidades|100
-ING=Queso fresco|50|gramos|50
-ING=Cebolla paiteña|30|gramos|30
-PREP=Cocinar el verde hasta ablandar y aplastar
-PREP=Mezclar con queso y formar el bolón
-PREP=Acompañar con huevo revuelto
+ING=Ingrediente Principal|cantidad|unidad|gramos
+ING=Ingrediente Secundario|cantidad|unidad|gramos
+ING=Vegetal/Fruta|cantidad|unidad|gramos
+ING=Grasa/Adicional|cantidad|unidad|gramos
+PREP=Paso 1 corto
+PREP=Paso 2 corto
+PREP=Paso 3 corto
 NUT=${mealKcal}|${mealProtein}|${mealCarbs}|${mealFats}
-
-REGLAS:
-- Mínimo 4 ING, máximo 6 ING
-- Exactamente 3 PREP (pasos cortos)
-- NO texto adicional
-- Empieza INMEDIATAMENTE con: NOMBRE=
 `.trim();
 }
 
