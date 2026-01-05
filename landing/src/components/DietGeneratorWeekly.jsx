@@ -409,8 +409,14 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     // UI: RecipeCard
     // =========================
     const RecipeCard = ({ recipe }) => {
+        const [expanded, setExpanded] = React.useState(false);
+
         return (
-            <div className="recipe-card">
+            <div
+                className="recipe-card"
+                onMouseEnter={() => setExpanded(true)}
+                onMouseLeave={() => setExpanded(false)}
+            >
                 <div className="recipe-header">
                     <h4 className="recipe-name">{recipe.nombre}</h4>
                     <span className="recipe-time">⏱️ {recipe.tiempoPreparacion}</span>
@@ -438,12 +444,12 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                 <div className="recipe-ingredients">
                     <h5>Ingredientes:</h5>
                     <ul>
-                        {recipe.ingredientes?.slice(0, 4).map((ing, idx) => (
+                        {(expanded ? recipe.ingredientes : recipe.ingredientes?.slice(0, 4))?.map((ing, idx) => (
                             <li key={idx}>
                                 {ing.cantidad} {ing.unidad} de {ing.alimento}
                             </li>
                         ))}
-                        {recipe.ingredientes?.length > 4 && (
+                        {!expanded && recipe.ingredientes?.length > 4 && (
                             <li className="more-ingredients">+ {recipe.ingredientes.length - 4} más...</li>
                         )}
                     </ul>
@@ -452,7 +458,7 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                 <div className="recipe-preparation">
                     <h5>Preparación:</h5>
                     <ol>
-                        {recipe.preparacion?.slice(0, 3).map((paso, idx) => (
+                        {(expanded ? recipe.preparacion : recipe.preparacion?.slice(0, 3))?.map((paso, idx) => (
                             <li key={idx}>{paso}</li>
                         ))}
                     </ol>
@@ -542,22 +548,50 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                     </div>
 
                     {/* CENTRO: Macros */}
+                    {/* CENTRO: Macros dinámicos */}
                     <div className="header-macros">
                         <div className="header-macro-badge">
-                            <span className="header-macro-label">Objetivo</span>
-                            <span className="header-macro-value">{targetKcal} kcal</span>
+                            <div className="macro-fill" style={{
+                                height: `${Math.min((dayTotals.calorias / targetKcal) * 100, 100)}%`,
+                                backgroundColor: '#fbbf24'
+                            }}></div>
+                            <div className="macro-content">
+                                <span className="header-macro-label">Objetivo</span>
+                                <span className="header-macro-value">{Math.round(dayTotals.calorias)}/{targetKcal}</span>
+                            </div>
                         </div>
+
                         <div className="header-macro-badge">
-                            <span className="header-macro-label">Proteína</span>
-                            <span className="header-macro-value">{targetProtein}g</span>
+                            <div className="macro-fill" style={{
+                                height: `${Math.min((dayTotals.proteinas / targetProtein) * 100, 100)}%`,
+                                backgroundColor: '#f87171'
+                            }}></div>
+                            <div className="macro-content">
+                                <span className="header-macro-label">Proteína</span>
+                                <span className="header-macro-value">{Math.round(dayTotals.proteinas)}/{targetProtein}g</span>
+                            </div>
                         </div>
+
                         <div className="header-macro-badge">
-                            <span className="header-macro-label">Carbos</span>
-                            <span className="header-macro-value">{targetCarbs}g</span>
+                            <div className="macro-fill" style={{
+                                height: `${Math.min((dayTotals.carbohidratos / targetCarbs) * 100, 100)}%`,
+                                backgroundColor: '#60a5fa'
+                            }}></div>
+                            <div className="macro-content">
+                                <span className="header-macro-label">Carbos</span>
+                                <span className="header-macro-value">{Math.round(dayTotals.carbohidratos)}/{targetCarbs}g</span>
+                            </div>
                         </div>
+
                         <div className="header-macro-badge">
-                            <span className="header-macro-label">Grasas</span>
-                            <span className="header-macro-value">{targetFats}g</span>
+                            <div className="macro-fill" style={{
+                                height: `${Math.min((dayTotals.grasas / targetFats) * 100, 100)}%`,
+                                backgroundColor: '#34d399'
+                            }}></div>
+                            <div className="macro-content">
+                                <span className="header-macro-label">Grasas</span>
+                                <span className="header-macro-value">{Math.round(dayTotals.grasas)}/{targetFats}g</span>
+                            </div>
                         </div>
                     </div>
 
@@ -644,70 +678,6 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
 
                 {/* CONTENIDO DÍA */}
                 <div className="day-content">
-                    {hasAnyRecipes && (
-                        <div className="day-summary">
-                            <h3>Totales del Día</h3>
-
-                            <div className="day-totals-grid">
-                                <div className="total-item">
-                                    <span className="total-value">{Math.round(dayTotals.calorias)}</span>
-                                    <span className="total-label">kcal</span>
-                                    <div className="total-bar">
-                                        <div
-                                            className="total-bar-fill"
-                                            style={{
-                                                width: `${Math.min((dayTotals.calorias / targetKcal) * 100, 100)}%`,
-                                                backgroundColor: "#f59e0b",
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="total-item">
-                                    <span className="total-value">{Math.round(dayTotals.proteinas)}g</span>
-                                    <span className="total-label">Proteína</span>
-                                    <div className="total-bar">
-                                        <div
-                                            className="total-bar-fill"
-                                            style={{
-                                                width: `${Math.min((dayTotals.proteinas / targetProtein) * 100, 100)}%`,
-                                                backgroundColor: "#ef4444",
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="total-item">
-                                    <span className="total-value">{Math.round(dayTotals.carbohidratos)}g</span>
-                                    <span className="total-label">Carbohidratos</span>
-                                    <div className="total-bar">
-                                        <div
-                                            className="total-bar-fill"
-                                            style={{
-                                                width: `${Math.min((dayTotals.carbohidratos / targetCarbs) * 100, 100)}%`,
-                                                backgroundColor: "#3b82f6",
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="total-item">
-                                    <span className="total-value">{Math.round(dayTotals.grasas)}g</span>
-                                    <span className="total-label">Grasas</span>
-                                    <div className="total-bar">
-                                        <div
-                                            className="total-bar-fill"
-                                            style={{
-                                                width: `${Math.min((dayTotals.grasas / targetFats) * 100, 100)}%`,
-                                                backgroundColor: "#10b981",
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
                     <div className="meals-container">
                         {Object.keys(MEAL_TYPES).map((mealType) => (
                             <MealSection

@@ -105,14 +105,35 @@
 }
 
 .header-macro-badge {
+    position: relative;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    min-height: 55px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.macro-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transition: height 0.5s ease;
+    opacity: 0.3;
+    z-index: 0;
+}
+
+.macro-content {
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     gap: 2px;
-    padding: 6px 14px;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
+    text-align: center;
 }
 
 .header-macro-label {
@@ -370,49 +391,121 @@
 .day-summary {
     background: white;
     border-radius: 10px;
-    padding: 14px;
+    padding: 16px 24px;
     margin-bottom: 16px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
     border: 1px solid #e5e7eb;
 }
 
 .day-summary h3 {
-    font-size: 14px;
+    font-size: 12px;  /* Era 14px */
     font-weight: 700;
     color: #1f2937;
-    margin: 0 0 12px 0;
+    margin: 0 0 8px 0;  /* Era 12px */
 }
 
 .day-totals-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 20px;
 }
 
 .total-item {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    align-items: center;
+    gap: 8px;
+    position: relative;
 }
 
-.total-value {
-    font-size: 18px;
-    font-weight: 700;
+.progress-ring {
+    width: 70px;
+    height: 70px;
+    position: relative;
+}
+
+.progress-ring svg {
+    transform: rotate(-90deg);
+}
+
+.progress-ring-progress {
+    fill: none;
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.5s ease;
+}
+
+.ring-kcal { stroke: #f59e0b; }
+.ring-protein { stroke: #ef4444; }
+.ring-carbs { stroke: #3b82f6; }
+.ring-fats { stroke: #10b981; }
+
+.progress-ring-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.progress-ring-value {
+    display: block;
+    font-size: 16px;
+    font-weight: 800;
     color: #1f2937;
+    line-height: 1;
 }
 
-.total-label {
-    font-size: 10px;
+
+.progress-ring-label {
+    display: block;
+    font-size: 8px;
     font-weight: 600;
     color: #6b7280;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+
+.progress-ring-circle {
+    fill: none;
+    stroke: #f3f4f6;
+    stroke-width: 6;
+}
+
+.total-item-footer {
+    text-align: center;
+}
+
+.total-value {
+    font-size: 16px;  /* Era 18px */
+    font-weight: 700;
+    color: #1f2937;
+}
+.total-item-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.total-label {
+    font-size: 9px;  /* Era 10px */
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    margin-top: 2px;
 }
 
 .total-bar {
-    height: 4px;
+    height: 3px;  /* Era 4px */
     background: #f3f4f6;
-    border-radius: 4px;
+    border-radius: 3px;
     overflow: hidden;
+    margin-top: 4px;
 }
 
 .total-bar-fill {
@@ -909,4 +1002,38 @@
     .nutrition-label {
         font-size: 7px;
     }
+}
+
+/* HOVER EXPANDIBLE EN RECIPE CARDS */
+.recipe-card {
+    max-height: 350px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.recipe-card:hover {
+    max-height: 1000px;
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    z-index: 10;
+}
+
+.recipe-ingredients ul,
+.recipe-preparation ol {
+    max-height: 120px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.recipe-card:hover .recipe-ingredients ul,
+.recipe-card:hover .recipe-preparation ol {
+    max-height: 500px;
+}
+
+.more-ingredients {
+    transition: opacity 0.2s ease;
+}
+
+.recipe-card:hover .more-ingredients {
+    display: none;
 }
