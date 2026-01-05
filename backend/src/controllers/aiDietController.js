@@ -21,7 +21,7 @@ const MODEL_CONFIG = {
         temperature: 0.6,
         topP: 0.9,
         topK: 40,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 4000,
     },
 };
 
@@ -54,6 +54,64 @@ const MEAL_NAMES = {
     CENA: "Cena",
 };
 
+const MEAL_CATEGORIES = {
+    DESAYUNO: [
+        { base: "Verde (bolón, tigrillo, majado)", protein: "huevo, queso, pollo" },
+        { base: "Arroz (calentado, arroz marinero)", protein: "pescado, camarón, carne" },
+        { base: "Pan/tostadas (integral, de yuca)", protein: "atún, jamón, queso" },
+        { base: "Avena/quinoa (coladas, batidos)", protein: "leche, yogurt, frutos secos" },
+        { base: "Humitas, empanadas de verde", protein: "queso, pollo" },
+    ],
+    MEDIA_MAÑANA: [
+        { tipo: "Frutas tropicales (guineo, papaya, piña, sandía)" },
+        { tipo: "Yogurt con granola o avena" },
+        { tipo: "Sanduche ligero (atún, pollo, queso)" },
+        { tipo: "Jugo natural con chía" },
+    ],
+    ALMUERZO: [
+        { base: "Arroz con menestra", protein: "pescado frito, pollo, carne" },
+        { base: "Seco (pollo, chivo, res)", protein: "proteína guisada" },
+        { base: "Encebollado, ceviche, viche", protein: "pescado, mariscos" },
+        { base: "Guatita, menudo", protein: "vísceras" },
+        { base: "Arroz con pollo, arroz marinero", protein: "pollo, mariscos" },
+    ],
+    MEDIA_TARDE: [
+        { tipo: "Empanadas (queso, carne, verde)" },
+        { tipo: "Humitas o tamales" },
+        { tipo: "Corviche o bolones pequeños" },
+        { tipo: "Sanduche o wrap integral" },
+    ],
+    CENA: [
+        { base: "Sopa (bolas de verde, sancocho)", tipo: "ligera" },
+        { base: "Ensalada completa", protein: "pollo, atún, camarón" },
+        { base: "Tortilla de verde o yuca", protein: "huevo, queso" },
+        { base: "Ceviche o encebollado ligero", protein: "pescado" },
+    ],
+};
+
+function selectCategory(mealType, usedRecipeNames) {
+    const categories = MEAL_CATEGORIES[mealType] || [];
+    if (!categories.length) return null;
+
+    // Detectar qué bases ya se usaron
+    const usedBases = usedRecipeNames
+        .map(n => n.toLowerCase())
+        .join(" ");
+
+    // Encontrar categoría menos usada
+    const scores = categories.map(cat => {
+        const baseText = JSON.stringify(cat).toLowerCase();
+        let count = 0;
+        ["verde", "bolón", "tigrillo", "arroz", "pan", "avena", "humita"].forEach(word => {
+            if (baseText.includes(word) && usedBases.includes(word)) count += 10;
+        });
+        return { cat, count };
+    });
+
+    scores.sort((a, b) => a.count - b.count);
+    return scores[0].cat;
+}
+
 const DAY_NAMES = {
     lunes: "Lunes",
     martes: "Martes",
@@ -63,96 +121,6 @@ const DAY_NAMES = {
     sabado: "Sábado",
     domingo: "Domingo",
 };
-
-// ============================================================================
-// FALLBACK LOCAL
-// ============================================================================
-const LOCAL_FALLBACK = {
-    DESAYUNO: [
-        {
-            nombre: "Tigrillo con queso y huevo",
-            tiempoPreparacion: "20 minutos",
-            ingredientes: [
-                { alimento: "Verde maduro", cantidad: "200", unidad: "gramos", gramos: 200 },
-                { alimento: "Queso fresco", cantidad: "50", unidad: "gramos", gramos: 50 },
-                { alimento: "Huevo", cantidad: "2", unidad: "unidades", gramos: 100 },
-                { alimento: "Cebolla paiteña", cantidad: "30", unidad: "gramos", gramos: 30 },
-            ],
-            preparacion: [
-                "Cocina el verde hasta ablandar y aplástalo.",
-                "Sofríe la cebolla y mezcla con el verde.",
-                "Agrega el queso y acompaña con huevo cocido o revuelto.",
-            ],
-        },
-        {
-            nombre: "Bolón de verde con queso",
-            tiempoPreparacion: "25 minutos",
-            ingredientes: [
-                { alimento: "Verde", cantidad: "250", unidad: "gramos", gramos: 250 },
-                { alimento: "Queso fresco", cantidad: "60", unidad: "gramos", gramos: 60 },
-                { alimento: "Aceite", cantidad: "10", unidad: "gramos", gramos: 10 },
-            ],
-            preparacion: ["Asa o cocina el verde y aplástalo.", "Mezcla con queso y forma el bolón.", "Dora ligeramente en sartén si deseas."],
-        },
-    ],
-    "MEDIA_MAÑANA": [
-        {
-            nombre: "Yogur natural con banano y avena",
-            tiempoPreparacion: "5 minutos",
-            ingredientes: [
-                { alimento: "Yogur natural", cantidad: "200", unidad: "gramos", gramos: 200 },
-                { alimento: "Banano", cantidad: "120", unidad: "gramos", gramos: 120 },
-                { alimento: "Avena", cantidad: "25", unidad: "gramos", gramos: 25 },
-            ],
-            preparacion: ["Sirve el yogur en un bowl.", "Añade el banano en rodajas.", "Agrega avena y mezcla."],
-        },
-    ],
-    ALMUERZO: [
-        {
-            nombre: "Arroz, menestra y pollo a la plancha",
-            tiempoPreparacion: "35 minutos",
-            ingredientes: [
-                { alimento: "Arroz cocido", cantidad: "200", unidad: "gramos", gramos: 200 },
-                { alimento: "Lenteja cocida (menestra)", cantidad: "180", unidad: "gramos", gramos: 180 },
-                { alimento: "Pechuga de pollo", cantidad: "160", unidad: "gramos", gramos: 160 },
-                { alimento: "Ensalada (tomate/lechuga)", cantidad: "150", unidad: "gramos", gramos: 150 },
-            ],
-            preparacion: ["Cocina la menestra con aliños al gusto.", "Cocina el pollo a la plancha con poca grasa.", "Sirve arroz, menestra, pollo y ensalada."],
-        },
-    ],
-    "MEDIA_TARDE": [
-        {
-            nombre: "Sánduche integral de atún",
-            tiempoPreparacion: "10 minutos",
-            ingredientes: [
-                { alimento: "Pan integral", cantidad: "2", unidad: "rebanadas", gramos: 80 },
-                { alimento: "Atún en agua", cantidad: "120", unidad: "gramos", gramos: 120 },
-                { alimento: "Tomate", cantidad: "60", unidad: "gramos", gramos: 60 },
-            ],
-            preparacion: ["Escurre el atún.", "Arma el sánduche con tomate.", "Consume acompañado de agua."],
-        },
-    ],
-    CENA: [
-        {
-            nombre: "Ensalada completa con pollo y aguacate",
-            tiempoPreparacion: "20 minutos",
-            ingredientes: [
-                { alimento: "Pechuga de pollo", cantidad: "150", unidad: "gramos", gramos: 150 },
-                { alimento: "Lechuga", cantidad: "120", unidad: "gramos", gramos: 120 },
-                { alimento: "Tomate", cantidad: "80", unidad: "gramos", gramos: 80 },
-                { alimento: "Aguacate", cantidad: "70", unidad: "gramos", gramos: 70 },
-            ],
-            preparacion: ["Cocina el pollo a la plancha.", "Mezcla vegetales en un bowl.", "Añade el pollo y aguacate, adereza ligero."],
-        },
-    ],
-};
-
-function pickFallbackRecipe(mealType, usedRecipeNames = []) {
-    const list = LOCAL_FALLBACK[mealType] || [];
-    if (!list.length) return null;
-    const unused = list.filter((r) => !usedRecipeNames.includes(r.nombre));
-    return (unused.length ? unused[0] : list[0]) || null;
-}
 
 // ============================================================================
 // UTILS
@@ -225,6 +193,8 @@ setInterval(() => {
 // ============================================================================
 // PROMPTS (por líneas)
 // ============================================================================
+// REEMPLAZA la función generateMealPromptLines (línea 138)
+
 function generateMealPromptLines(mealType, dayKey, targetData, patientContext, usedRecipeNames = []) {
     const { targetKcal, targetProtein, targetCarbs, targetFats } = targetData;
     const {
@@ -250,45 +220,53 @@ function generateMealPromptLines(mealType, dayKey, targetData, patientContext, u
             ? usedRecipeNames.slice(-25).map((n) => `- ${n}`).join("\n")
             : "- (ninguna)";
 
+    const suggestedCategory = selectCategory(mealType, usedRecipeNames);
+    const categoryHint = suggestedCategory
+        ? `\n\nSUGERENCIA DE VARIEDAD (úsala para inspirarte):\n${JSON.stringify(suggestedCategory, null, 2)}`
+        : "";
+
     return `
-Genera SOLO 1 receta ecuatoriana para una sola comida.
+ERES UN NUTRICIONISTA ECUATORIANO EXPERTO.
 
-DÍA: ${dayName}
-TIPO: ${mealName}
+INSTRUCCIÓN CRÍTICA: Responde SOLO con el formato exacto. NO añadas texto introductorio, explicaciones ni nada más.
 
-PACIENTE:
-Nombre: ${patientName}
-Edad: ${age}
-Género: ${gender}
-Peso: ${weight} kg
-Actividad: ${activityLevel || "Moderada"}
-Patologías: ${pathologies || "Ninguna"}
+⚠️ VARIEDAD OBLIGATORIA: Si ves "bolón", "tigrillo" o "verde" en la lista de NO REPETIR, entonces DEBES usar otra base completamente diferente (arroz, pan, avena, quinoa, humita, etc).
+
+CONTEXTO:
+Paciente: ${patientName}, ${age} años, ${gender}, ${weight}kg
+Comida: ${mealName} del ${dayName}
+Calorías objetivo: ${mealKcal} kcal
+Proteínas: ${mealProtein}g | Carbos: ${mealCarbs}g | Grasas: ${mealFats}g
 Restricciones: ${restrictions || "Ninguna"}
-Preferencias: ${preferences || "Comida ecuatoriana variada y saludable"}
 
-META COMIDA (aprox):
-KCAL=${mealKcal}
-PROT=${mealProtein}
-CARB=${mealCarbs}
-FAT=${mealFats}
-
-NO REPETIR:
+NO REPETIR (MUY IMPORTANTE):
 ${avoidList}
+${categoryHint}
 
-OBLIGATORIO:
-- NO JSON, NO markdown.
-- Devuelve EXACTAMENTE estas líneas (mínimo 3 ING y 3 PREP):
-NOMBRE=...
-TIEMPO=...
-ING=alimento|cantidad|unidad|gramos
-ING=alimento|cantidad|unidad|gramos
-ING=alimento|cantidad|unidad|gramos
-PREP=...
-PREP=...
-PREP=...
-NUT=calorias|proteinas|carbohidratos|grasas
+REGIÓN: 75% Costa (pescado, verde, arroz, mariscos, carnes y todo lo demas), 25% Sierra (mote, papas, habas, y todo lo demas)
+
+FORMATO OBLIGATORIO (copia exacto, reemplaza valores):
+
+NOMBRE=Nombre del plato ecuatoriano típico
+TIEMPO=20 minutos
+ING=Plátano verde|200|gramos|200
+ING=Huevo|2|unidades|100
+ING=Queso fresco|50|gramos|50
+ING=Cebolla paiteña|30|gramos|30
+PREP=Cocinar el verde hasta ablandar y aplastar
+PREP=Mezclar con queso y formar el bolón
+PREP=Acompañar con huevo revuelto
+NUT=${mealKcal}|${mealProtein}|${mealCarbs}|${mealFats}
+
+REGLAS:
+- Mínimo 4 ING, máximo 6 ING
+- Exactamente 3 PREP (pasos cortos)
+- NO texto adicional
+- Empieza INMEDIATAMENTE con: NOMBRE=
 `.trim();
 }
+
+// REEMPLAZA la función generateStrictPromptLines (línea 189)
 
 function generateStrictPromptLines(mealType, dayKey, targetData, patientContext, usedRecipeNames = []) {
     const ratio = MEAL_DISTRIBUTION[mealType] ?? 0.2;
@@ -306,31 +284,23 @@ function generateStrictPromptLines(mealType, dayKey, targetData, patientContext,
     const dayName = DAY_NAMES[dayKey] || String(dayKey || "Día");
     const mealName = MEAL_NAMES[mealType] || String(mealType);
 
-    const avoidList =
-        usedRecipeNames.length > 0
-            ? usedRecipeNames.slice(-25).map((n) => `- ${n}`).join("\n")
-            : "- (ninguna)";
-
     return `
-OBLIGATORIO: Responde SOLO con 9 líneas EXACTAS (sin texto extra).
-Si no cumples, tu respuesta será rechazada.
+RESPONDE EXACTAMENTE ESTE FORMATO (sin texto extra):
 
-1) NOMBRE=...
-2) TIEMPO=...
-3) ING=alimento|cantidad|unidad|gramos
-4) ING=alimento|cantidad|unidad|gramos
-5) ING=alimento|cantidad|unidad|gramos
-6) PREP=...
-7) PREP=...
-8) PREP=...
-9) NUT=${mealKcal}|${mealProtein}|${mealCarbs}|${mealFats}
+NOMBRE=Plato ecuatoriano típico
+TIEMPO=20 minutos
+ING=ingrediente|cantidad|unidad|gramos
+ING=ingrediente|cantidad|unidad|gramos
+ING=ingrediente|cantidad|unidad|gramos
+ING=ingrediente|cantidad|unidad|gramos
+PREP=paso corto de preparación
+PREP=paso corto de preparación
+PREP=paso corto de preparación
+NUT=${mealKcal}|${mealProtein}|${mealCarbs}|${mealFats}
 
-Día: ${dayName}
-Comida: ${mealName}
-No repetir:
-${avoidList}
-
-EMPIEZA EXACTO con: NOMBRE=
+Comida: ${mealName} del ${dayName}
+Región: Costa ecuatoriana preferentemente
+EMPIEZA CON: NOMBRE=
 `.trim();
 }
 
@@ -424,6 +394,12 @@ function parseMealLinesToJson(text, dayKey, mealType, targetData, usedRecipeName
     const mealName = MEAL_NAMES[mealType] || String(mealType);
 
     const cleaned = cleanText(text);
+
+    // AGREGAR ESTO PARA DEBUGGEAR:
+    console.log("=== RESPUESTA DE IA ===");
+    console.log(cleaned);
+    console.log("======================");
+
     const rawLines = cleaned.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
 
     let nombre = null;
@@ -452,35 +428,19 @@ function parseMealLinesToJson(text, dayKey, mealType, targetData, usedRecipeName
     const targets = computeMealTargets(mealType, targetData);
     if (!nutricion) nutricion = { ...targets };
 
+    // AGREGAR ESTO:
+    console.log("Ingredientes parseados:", ingredientes.length);
+    console.log("Preparación parseada:", preparacion.length);
+    console.log("Preparación:", preparacion);
+
+    // Fallback TEMPORAL si no hay preparación
     if (preparacion.length === 0) {
-        preparacion.push("Preparar los ingredientes.");
-        preparacion.push("Cocinar según el método indicado para el plato.");
-        preparacion.push("Servir y consumir inmediatamente.");
+        console.warn("⚠️ IA no envió PREP, usando fallback temporal");
+        preparacion.push("Preparar según indicaciones del plato.");
     }
 
     if (!nombre || !tiempo || ingredientes.length < 2) {
-        const fb = pickFallbackRecipe(mealType, usedRecipeNames);
-        if (!fb) {
-            throw new Error(`Formato inválido: faltan NOMBRE/TIEMPO o ING insuficientes (ING=${ingredientes.length})`);
-        }
-
-        return {
-            recetas: [
-                {
-                    dia: dayName,
-                    tipo: mealName,
-                    receta: {
-                        nombre: fb.nombre,
-                        tiempoPreparacion: fb.tiempoPreparacion,
-                        ingredientes: fb.ingredientes,
-                        preparacion: fb.preparacion,
-                        nutricion: { ...targets },
-                    },
-                },
-            ],
-            totales: { ...targets },
-            _fallback: true,
-        };
+        throw new Error(`Formato inválido de IA: faltan NOMBRE/TIEMPO o ingredientes insuficientes (ING=${ingredientes.length})`);
     }
 
     return {
@@ -519,29 +479,7 @@ async function generateSingleMeal(mealType, dayKey, targetData, patientContext, 
             }
         } catch (error) {
             if (attempt === maxRetries) {
-                const targets = computeMealTargets(mealType, targetData);
-                const fb = pickFallbackRecipe(mealType, usedRecipeNames);
-                if (!fb) throw new Error("Falló IA y no hay fallback local disponible.");
-                const dayName = DAY_NAMES[dayKey] || String(dayKey || "Día");
-                const mealName = MEAL_NAMES[mealType] || String(mealType);
-
-                return {
-                    recetas: [
-                        {
-                            dia: dayName,
-                            tipo: mealName,
-                            receta: {
-                                nombre: fb.nombre,
-                                tiempoPreparacion: fb.tiempoPreparacion,
-                                ingredientes: fb.ingredientes,
-                                preparacion: fb.preparacion,
-                                nutricion: { ...targets },
-                            },
-                        },
-                    ],
-                    totales: { ...targets },
-                    _fallback: true,
-                };
+                throw new Error(`IA falló después de ${maxRetries} intentos: ${error.message}`);
             }
             await sleep(900 * attempt);
         }
@@ -632,7 +570,8 @@ async function regenerateSingleMeal(req, res) {
             preferences: "Comida ecuatoriana variada y saludable",
         };
 
-        const mealData = await generateSingleMeal(mealType, day, targetData, ctx, [], 2);
+        const usedNames = req.body.usedRecipeNames || [];
+        const mealData = await generateSingleMeal(mealType, day, targetData, ctx, usedNames, 2);
 
         return res.json({
             success: true,

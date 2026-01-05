@@ -279,7 +279,7 @@ export function printWeeklyDietPlan({
   <title>Plan Nutricional - ${escapeHtml(patientName)}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-    @page { size: A4 landscape; margin: 10mm; }
+    @page { size: A4 landscape; margin: 8mm; }
 
     :root{
       --primary:#2563EB;
@@ -298,60 +298,65 @@ export function printWeeklyDietPlan({
       background:#fff;
       -webkit-print-color-adjust:exact;
       print-color-adjust:exact;
+      font-size:9px;
     }
 
-    .page-container{ max-width: 297mm; margin:0 auto; padding:10mm; }
+    .page-container{ max-width: 297mm; margin:0 auto; padding:6mm; }
 
-    /* HEADER */
+    /* HEADER COMPACTO */
     .header{
       display:flex;
       justify-content:space-between;
-      align-items:flex-end;
-      border-bottom:3px solid var(--primary);
-      padding-bottom:15px;
-      margin-bottom:18px;
-    }
-    .brand-area h1{ margin:0; color:var(--primary); font-size:24px; font-weight:800; }
-    .brand-area p{ margin:4px 0 0; color:var(--secondary); font-size:13px; font-weight:500; text-transform:uppercase; letter-spacing:1px; }
-    .patient-area{ text-align:right; }
-    .patient-name{ font-size:18px; font-weight:700; color:var(--text); margin:0; }
-    .report-date{ font-size:13px; color:var(--secondary); margin-top:4px; }
-
-    /* MACROS */
-    .macros-grid{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
+      align-items:center;
+      border-bottom:2px solid var(--primary);
+      padding-bottom:6px;
+      margin-bottom:8px;
       gap:12px;
-      margin: 14px 0 16px;
     }
-    .macro-card{
-      background:var(--accent);
-      border:1px solid #dbeafe;
-      padding:12px;
-      border-radius:10px;
+    .brand-area{ flex: 0 0 auto; }
+    .brand-area h1{ margin:0; color:var(--primary); font-size:18px; font-weight:800; }
+    .brand-area p{ margin:2px 0 0; color:var(--secondary); font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:0.5px; }
+    
+    .patient-area{ text-align:right; flex: 0 0 auto; }
+    .patient-name{ font-size:14px; font-weight:700; color:var(--text); margin:0; }
+    .report-date{ font-size:10px; color:var(--secondary); margin-top:2px; }
+
+    /* MACROS EN EL CENTRO DEL HEADER */
+    .header-macros{
+      display:flex;
+      gap:8px;
+      flex: 1;
+      justify-content:center;
+      align-items:center;
+    }
+    .macro-badge{
+      background:rgba(37, 99, 235, 0.08);
+      border:1px solid rgba(37, 99, 235, 0.2);
+      padding:4px 10px;
+      border-radius:6px;
       text-align:center;
     }
-    .macro-value{ display:block; font-size:18px; font-weight:800; color:var(--primary-dark); }
+    .macro-value{ display:block; font-size:13px; font-weight:800; color:var(--primary-dark); }
     .macro-label{
-      font-size:10px;
+      font-size:7.5px;
       text-transform:uppercase;
       color:var(--secondary);
-      letter-spacing:.5px;
+      letter-spacing:.3px;
       font-weight:600;
-      margin-top:4px;
+      margin-top:1px;
       display:block;
     }
 
-    /* TABLE */
+    /* TABLE COMPACTA */
     .weekly-table{
       width:100%;
       border-collapse:separate;
       border-spacing:0;
       table-layout:fixed;
       border:1px solid var(--border);
-      border-radius:12px;
+      border-radius:8px;
       overflow:hidden;
-      font-size:11px;
+      font-size:9.5px;
     }
 
     .weekly-table thead th{
@@ -359,10 +364,10 @@ export function printWeeklyDietPlan({
       color:#0f172a;
       font-weight:800;
       text-transform:uppercase;
-      letter-spacing:.4px;
-      font-size:10px;
+      letter-spacing:.3px;
+      font-size:8.5px;
       border-bottom:1px solid var(--border);
-      padding:10px 8px;
+      padding:6px 4px;
     }
 
     .weekly-table th, .weekly-table td{
@@ -371,22 +376,22 @@ export function printWeeklyDietPlan({
     }
     .weekly-table th:last-child, .weekly-table td:last-child{ border-right:none; }
 
-    .col-meal{ width: 12%; text-align:left; }
-    .col-day{ width: calc(88% / 7); text-align:center; }
+    .col-meal{ width: 11%; text-align:left; }
+    .col-day{ width: calc(89% / 7); text-align:center; }
 
     .row-meal{
       background:#ffffff;
       font-weight:800;
       color:#334155;
-      padding:10px 8px;
+      padding:6px 4px;
       border-bottom:1px solid var(--border);
       text-transform:uppercase;
-      font-size:10px;
-      letter-spacing:.3px;
+      font-size:8.5px;
+      letter-spacing:.2px;
     }
 
     .weekly-table tbody td{
-      padding:8px 8px;
+      padding:4px;
       border-bottom:1px solid var(--border);
       background:#fff;
     }
@@ -395,41 +400,41 @@ export function printWeeklyDietPlan({
       border-bottom:none;
     }
 
+    /* CELL ITEMS MUY COMPACTOS */
     .cell-item{
-      margin:0 0 8px 0;
-      padding:8px;
+      margin:0 0 4px 0;
+      padding:4px;
       border:1px solid #eef2ff;
       background:#fbfdff;
-      border-radius:10px;
-      box-shadow: 0 1px 0 rgba(15,23,42,.03);
-      line-height:1.25;
+      border-radius:4px;
+      line-height:1.2;
       word-wrap:break-word;
       overflow-wrap:anywhere;
     }
     .cell-item:last-child{ margin-bottom:0; }
 
-    .cell-empty{ color:#94a3b8; font-weight:700; }
+    .cell-empty{ color:#94a3b8; font-weight:700; font-size:9px; }
 
-    .recipe-name{ font-size:12px; font-weight:800; color:#0f172a; }
-    .recipe-ing{ font-size:10.5px; color:#64748b; margin-top:3px; }
+    .recipe-name{ font-size:10px; font-weight:800; color:#0f172a; margin-bottom:2px; }
+    .recipe-ing{ font-size:8.5px; color:#64748b; margin-top:2px; line-height:1.2; }
     .recipe-prep{
-      font-size:10.2px;
+      font-size:8.2px;
       color:#475569;
-      margin-top:6px;
+      margin-top:3px;
       background:#f1f5f9;
-      padding:5px 7px;
-      border-radius:8px;
-      line-height:1.3;
+      padding:3px 4px;
+      border-radius:4px;
+      line-height:1.2;
       font-style:italic;
     }
 
-    /* FOOTER */
+    /* FOOTER COMPACTO */
     .footer{
-      margin-top:16px;
+      margin-top:8px;
       border-top:1px solid var(--border);
-      padding-top:10px;
+      padding-top:6px;
       text-align:center;
-      font-size:10px;
+      font-size:8px;
       color:#94a3b8;
     }
 
@@ -446,18 +451,32 @@ export function printWeeklyDietPlan({
         <h1>${escapeHtml(brand)}</h1>
         <p>${escapeHtml(doctorLabel)}</p>
       </div>
+      
+      <!-- MACROS EN EL CENTRO DEL HEADER -->
+      <div class="header-macros">
+        <div class="macro-badge">
+          <span class="macro-value">${kcalTxt}</span>
+          <span class="macro-label">Kcal/Día</span>
+        </div>
+        <div class="macro-badge">
+          <span class="macro-value">${pTxt}</span>
+          <span class="macro-label">Proteína</span>
+        </div>
+        <div class="macro-badge">
+          <span class="macro-value">${cTxt}</span>
+          <span class="macro-label">Carbos</span>
+        </div>
+        <div class="macro-badge">
+          <span class="macro-value">${fTxt}</span>
+          <span class="macro-label">Grasas</span>
+        </div>
+      </div>
+      
       <div class="patient-area">
         <h2 class="patient-name">${escapeHtml(patientName)}</h2>
         <div class="report-date">${escapeHtml(today)}</div>
       </div>
     </header>
-
-    <section class="macros-grid">
-      <div class="macro-card"><span class="macro-value">${kcalTxt}</span><span class="macro-label">Kcal / Día</span></div>
-      <div class="macro-card"><span class="macro-value">${pTxt}</span><span class="macro-label">Proteína</span></div>
-      <div class="macro-card"><span class="macro-value">${cTxt}</span><span class="macro-label">Carbos</span></div>
-      <div class="macro-card"><span class="macro-value">${fTxt}</span><span class="macro-label">Grasas</span></div>
-    </section>
 
     <main class="print-area">
       ${htmlTable}

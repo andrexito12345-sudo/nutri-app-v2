@@ -332,6 +332,16 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
         setMealLoading((prev) => ({ ...prev, [key]: true }));
 
         try {
+            // Obtener nombres de recetas ya usadas
+            const usedNames = [];
+            Object.values(weeklyDiet).forEach(dayMeals => {
+                Object.values(dayMeals).forEach(mealRecipes => {
+                    mealRecipes.forEach(r => {
+                        if (r?.receta?.nombre) usedNames.push(r.receta.nombre);
+                    });
+                });
+            });
+
             const resp = await api.post("/diet/regenerate-meal", {
                 day, // "lunes"
                 mealType: backMealType, // "DESAYUNO"
@@ -349,6 +359,7 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                     restrictions: restrictions ?? "Ninguna",
                     preferences: preferences ?? "Comida ecuatoriana variada y saludable",
                 },
+                usedRecipeNames: usedNames,
             });
 
             if (!resp?.data?.success) {
