@@ -21,7 +21,6 @@ import "./DietGeneratorWeekly.css";
 
 import { printWeeklyDietPlan } from "../utils/printWeeklyDietPlan";
 
-
 const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) => {
     const {
         targetKcal,
@@ -108,7 +107,6 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     };
 
     const convertBackendDayToFrontendMeals = (backendDayObj) => {
-        // backendDayObj: { DESAYUNO:[{receta...}], ... }
         const converted = {
             BREAKFAST: [],
             MID_MORNING: [],
@@ -149,7 +147,6 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
         if (!aiGeneratedMenu) return;
 
         // [No verificado] No sé el formato exacto de aiGeneratedMenu en tu proyecto.
-        // Si ya viene como weeklyDiet del frontend, lo respetamos.
         if (typeof aiGeneratedMenu === "object" && aiGeneratedMenu.lunes) {
             setWeeklyDiet(aiGeneratedMenu);
         }
@@ -207,74 +204,87 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     // API: Generar SOLO EL DÍA actual (job + polling)
     // =========================
     const startGenerateDayJob = async (payload) => {
-        const startResp = await api.post("/diet/generate-day/start", payload);
-        if (!startResp?.data?.success) {
-            throw new Error(startResp?.data?.error || "Error iniciando generación del día");
-        }
+        try {
+            const startResp = await api.post("/diet/generate-day/start", payload);
 
-        const newJobId = startResp.data.jobId;
-        setJobId(newJobId);
-
-        stopPolling();
-        pollRef.current = setInterval(async () => {
-            try {
-                const statusResp = await api.get(`/diet/generate-day/job/${newJobId}`);
-                if (!statusResp?.data?.success) return;
-
-                const job = statusResp.data.job;
-
-                // progreso
-                const done = job?.progress?.done ?? 0;
-                const total = job?.progress?.total ?? 5;
-                const pct = Math.round((done / total) * 100);
-                setGenerationProgress(Number.isFinite(pct) ? pct : 0);
-
-                // status
-                const pDay = job?.progress?.day;
-                const pMeal = job?.progress?.mealType;
-                if (pDay && pMeal) {
-                    setGenerationStatus(`Generando: ${String(pDay).toUpperCase()} - ${pMeal} (${done}/${total})`);
-                } else {
-                    setGenerationStatus(`Generando día... (${done}/${total})`);
-                }
-
-                // pintar parcial: SOLO el día que estamos generando
-                if (job?.dayKey && job?.weeklyPlan?.[job.dayKey]) {
-                    const convertedMeals = convertBackendDayToFrontendMeals(job.weeklyPlan[job.dayKey]);
-                    setWeeklyDiet((prev) => ({
-                        ...prev,
-                        [job.dayKey]: {
-                            ...prev[job.dayKey],
-                            ...convertedMeals,
-                        },
-                    }));
-                }
-
-                // fin
-                if (job.status === "done") {
-                    stopPolling();
-                    setGenerationProgress(100);
-                    setGenerationStatus("¡Día generado!");
-                    setShowSuccess(true);
-                    setTimeout(() => setShowSuccess(false), 1500);
-                    setIsGeneratingDay(false);
-                }
-
-                if (job.status === "error") {
-                    stopPolling();
-                    setGenerationStatus(job.error || "Error al generar día.");
-                    setIsGeneratingDay(false);
-                }
-            } catch (e) {
-                console.error("Polling error:", e);
+            if (!startResp?.data?.success) {
+                throw new Error(startResp?.data?.error || "Error iniciando generación del día");
             }
-        }, 900);
+
+            const newJobId = startResp.data.jobId;
+            setJobId(newJobId);
+
+            stopPolling();
+            pollRef.current = setInterval(async () => {
+                try {
+                    const statusResp = await api.get(`/diet/generate-day/job/${newJobId}`);
+                    if (!statusResp?.data?.success) return;
+
+                    const job = statusResp.data.job;
+
+                    // progreso
+                    const done = job?.progress?.done ?? 0;
+                    const total = job?.progress?.total ?? 5;
+                    const pct = Math.round((done / total) * 100);
+                    setGenerationProgress(Number.isFinite(pct) ? pct : 0);
+
+                    // status
+                    const pDay = job?.progress?.day;
+                    const pMeal = job?.progress?.mealType;
+                    if (pDay && pMeal) {
+                        setGenerationStatus(`Generando: ${String(pDay).toUpperCase()} - ${pMeal} (${done}/${total})`);
+                    } else {
+                        setGenerationStatus(`Generando día... (${done}/${total})`);
+                    }
+
+                    // pintar parcial: SOLO el día que estamos generando
+                    if (job?.dayKey && job?.weeklyPlan?.[job.dayKey]) {
+                        const convertedMeals = convertBackendDayToFrontendMeals(job.weeklyPlan[job.dayKey]);
+                        setWeeklyDiet((prev) => ({
+                            ...prev,
+                            [job.dayKey]: {
+                                ...prev[job.dayKey],
+                                ...convertedMeals,
+                            },
+                        }));
+                    }
+
+                    // fin
+                    if (job.status === "done") {
+                        stopPolling();
+                        setGenerationProgress(100);
+                        setGenerationStatus("¡Día generado!");
+                        setShowSuccess(true);
+                        setTimeout(() => setShowSuccess(false), 1500);
+                        setIsGeneratingDay(false);
+                    }
+
+                    if (job.status === "error") {
+                        stopPolling();
+                        setGenerationStatus(job.error || "Error al generar día.");
+                        setIsGeneratingDay(false);
+                    }
+                } catch (e) {
+                    console.error("Polling error:", e);
+                }
+            }, 900);
+        } catch (err) {
+            stopPolling();
+            // ✅ Mejor mensaje para ver details si viene del backend
+            const details = err?.response?.data?.details;
+            const msg =
+                err?.response?.data?.error ||
+                err?.message ||
+                "Error iniciando generación del día";
+
+            throw new Error(details ? `${msg} | details: ${details}` : msg);
+        }
     };
 
     const handlePrintPdf = () => {
-        // Si no hay nada generado, no imprimimos
-        const hasAnyRecipes = Object.values(weeklyDiet[currentDay]).some((meals) => meals.length > 0);
-        const hasAnyWeek = Object.values(weeklyDiet).some((dayObj) => Object.values(dayObj).some((m) => m.length > 0));
+        const hasAnyWeek = Object.values(weeklyDiet).some((dayObj) =>
+            Object.values(dayObj).some((m) => m.length > 0)
+        );
 
         if (!hasAnyWeek) {
             alert("No hay datos para imprimir.");
@@ -287,10 +297,9 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
             patientName,
             kcal: targetKcal,
             macros: { p: targetProtein, c: targetCarbs, f: targetFats },
-            weeklyDiet, // OJO: aquí va tu estructura actual (BREAKFAST, etc.) :contentReference[oaicite:7]{index=7}
+            weeklyDiet,
         });
     };
-
 
     const handleGenerateCurrentDay = async () => {
         setIsGeneratingDay(true);
@@ -298,6 +307,30 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
         setGenerationStatus(`Iniciando generación del día: ${currentDay.toUpperCase()}...`);
 
         try {
+            // ✅ 1) Construir usedRecipeNames con TODO lo ya generado en la semana
+            // (excluimos el día actual para no “autoprohibir” si estás regenerando el mismo día)
+            const usedRecipeNames = [];
+            Object.entries(weeklyDiet).forEach(([dayKey, dayMeals]) => {
+                if (dayKey === currentDay) return;
+                Object.values(dayMeals).forEach((mealRecipes) => {
+                    (mealRecipes || []).forEach((r) => {
+                        if (r?.nombre) usedRecipeNames.push(String(r.nombre).trim());
+                    });
+                });
+            });
+
+            // ✅ 2) Deduplicar
+            const seen = new Set();
+            const usedRecipeNamesDeduped = [];
+            for (const n of usedRecipeNames) {
+                const key = String(n).toLowerCase().replace(/\s+/g, " ").trim();
+                if (key && !seen.has(key)) {
+                    seen.add(key);
+                    usedRecipeNamesDeduped.push(String(n).trim());
+                }
+            }
+
+            // ✅ 3) Payload + usedRecipeNames
             const payload = {
                 dayKey: currentDay,
                 targetKcal,
@@ -312,6 +345,7 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                 pathologies: pathologies ?? "Ninguna",
                 restrictions: restrictions ?? "Ninguna",
                 preferences: preferences ?? "Comida ecuatoriana variada y saludable",
+                usedRecipeNames: usedRecipeNamesDeduped,
             };
 
             await startGenerateDayJob(payload);
@@ -323,7 +357,7 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     };
 
     // =========================
-    // API: Regenerar una comida (rápido + loading por comida)
+    // API: Regenerar una comida
     // =========================
     const handleRegenerateMeal = async (mealType) => {
         const backMealType = FRONT_TO_BACK_MEAL[mealType];
@@ -332,11 +366,9 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
         setMealLoading((prev) => ({ ...prev, [key]: true }));
 
         try {
-            // Obtener receta actual para evitarla
             const currentMealRecipes = weeklyDiet[currentDay]?.[mealType] || [];
             const currentNames = currentMealRecipes.map(r => r?.nombre).filter(Boolean);
 
-            // Obtener todas las recetas usadas
             const usedNames = [...currentNames];
             Object.values(weeklyDiet).forEach(dayMeals => {
                 Object.values(dayMeals).forEach(mealRecipes => {
@@ -472,7 +504,6 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     // =========================
     const MealSection = ({ mealType, recipes, day }) => {
         const mealInfo = MEAL_TYPES[mealType];
-        const mealTotals = calculateMealTotals(recipes);
         const isEmpty = recipes.length === 0;
 
         const loadingKey = `${day}_${mealType}`;
@@ -489,7 +520,6 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                     </div>
 
                     <div className="meal-actions">
-
                         <button
                             className="btn-regenerate-meal"
                             onClick={() => handleRegenerateMeal(mealType)}
@@ -534,9 +564,8 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     return (
         <div className="diet-generator-overlay">
             <div className="diet-generator-container">
-                {/* HEADER CON TODOS LOS BOTONES */}
+                {/* HEADER */}
                 <div className="diet-generator-header">
-                    {/* IZQUIERDA: Título */}
                     <div className="header-title-group">
                         <ChefHat size={28} className="header-icon" />
                         <div>
@@ -547,14 +576,12 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                         </div>
                     </div>
 
-                    {/* CENTRO: Macros */}
-                    {/* CENTRO: Macros dinámicos */}
                     <div className="header-macros">
                         <div className="header-macro-badge">
                             <div className="macro-fill" style={{
                                 height: `${Math.min((dayTotals.calorias / targetKcal) * 100, 100)}%`,
-                                backgroundColor: '#fbbf24'
-                            }}></div>
+                                backgroundColor: "#fbbf24"
+                            }} />
                             <div className="macro-content">
                                 <span className="header-macro-label">Objetivo</span>
                                 <span className="header-macro-value">{Math.round(dayTotals.calorias)}/{targetKcal}</span>
@@ -564,8 +591,8 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                         <div className="header-macro-badge">
                             <div className="macro-fill" style={{
                                 height: `${Math.min((dayTotals.proteinas / targetProtein) * 100, 100)}%`,
-                                backgroundColor: '#f87171'
-                            }}></div>
+                                backgroundColor: "#f87171"
+                            }} />
                             <div className="macro-content">
                                 <span className="header-macro-label">Proteína</span>
                                 <span className="header-macro-value">{Math.round(dayTotals.proteinas)}/{targetProtein}g</span>
@@ -575,8 +602,8 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                         <div className="header-macro-badge">
                             <div className="macro-fill" style={{
                                 height: `${Math.min((dayTotals.carbohidratos / targetCarbs) * 100, 100)}%`,
-                                backgroundColor: '#60a5fa'
-                            }}></div>
+                                backgroundColor: "#60a5fa"
+                            }} />
                             <div className="macro-content">
                                 <span className="header-macro-label">Carbos</span>
                                 <span className="header-macro-value">{Math.round(dayTotals.carbohidratos)}/{targetCarbs}g</span>
@@ -586,8 +613,8 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                         <div className="header-macro-badge">
                             <div className="macro-fill" style={{
                                 height: `${Math.min((dayTotals.grasas / targetFats) * 100, 100)}%`,
-                                backgroundColor: '#34d399'
-                            }}></div>
+                                backgroundColor: "#34d399"
+                            }} />
                             <div className="macro-content">
                                 <span className="header-macro-label">Grasas</span>
                                 <span className="header-macro-value">{Math.round(dayTotals.grasas)}/{targetFats}g</span>
@@ -595,9 +622,7 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                         </div>
                     </div>
 
-                    {/* DERECHA: Todos los botones */}
                     <div className="header-actions">
-                        {/* Botón Generar Día (con texto) */}
                         <button
                             className="btn-generate-day-header"
                             onClick={handleGenerateCurrentDay}
@@ -617,7 +642,6 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                             )}
                         </button>
 
-                        {/* Botón Imprimir (solo icono) */}
                         <button
                             className="btn-header-icon btn-print-header"
                             onClick={handlePrintPdf}
@@ -626,7 +650,6 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                             <Printer size={18} />
                         </button>
 
-                        {/* Botón Guardar (solo icono - verde) */}
                         <button
                             className="btn-header-icon btn-save-header"
                             onClick={handleSaveDiet}
@@ -636,12 +659,12 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                             <Save size={18} />
                         </button>
 
-                        {/* Botón Cerrar (solo icono) */}
                         <button className="btn-close" onClick={onClose} title="Cerrar">
                             <X size={20} />
                         </button>
                     </div>
                 </div>
+
                 {/* PROGRESO */}
                 {isGeneratingDay && (
                     <div className="generation-progress">

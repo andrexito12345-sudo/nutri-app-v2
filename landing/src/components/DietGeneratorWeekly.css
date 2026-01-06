@@ -367,10 +367,12 @@
 
 .day-content {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: hidden; /* CAMBIAR de auto a hidden para que el scroll sea dentro de las tarjetas */
     overflow-x: hidden;
     padding: 16px 24px;
     background: #fafafa;
+    display: flex;          /* <--- AGREGAR */
+    flex-direction: column; /* <--- AGREGAR */
 }
 
 .day-content::-webkit-scrollbar {
@@ -520,6 +522,9 @@
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 12px;
+    flex: 1;         /* <--- AGREGAR: Esto hace que se estire hasta abajo */
+    height: 100%;    /* <--- AGREGAR */
+    min-height: 0;   /* <--- AGREGAR: Importante para evitar desbordamientos en grid */
 }
 
 /* ===== SECCIÓN DE COMIDA - COMPACTA ===== */
@@ -533,7 +538,9 @@
     transition: all 0.15s ease;
     display: flex;
     flex-direction: column;
-    min-height: 300px;
+    height: 100%;      /* <--- AGREGAR: Para que llene la celda de la grid */
+    min-height: 0;     /* <--- CAMBIAR: Quita los 300px fijos si quieres que se ajuste exacto */
+    overflow: hidden;  /* <--- AGREGAR: Para contener el scroll interno */
 }
 
 .meal-section:hover {
@@ -625,7 +632,7 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    overflow-y: auto;
+    overflow-y: auto; /* Esto mantiene el scroll dentro de la tarjeta */
 }
 
 .meal-content::-webkit-scrollbar {
@@ -717,17 +724,26 @@
     gap: 10px;
 }
 
+/* TARJETA MAESTRA: Sin restricciones de altura y sin transiciones de tamaño */
 .recipe-card {
     background: #fafafa;
     border: 1px solid #f3f4f6;
     border-radius: 8px;
     padding: 10px;
-    transition: all 0.15s ease;
+    /* CORRECCIÓN IMPORTANTE: Solo animamos color, NUNCA el tamaño ni transformaciones */
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+
+    /* Forzamos que la altura sea automática y siempre visible */
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
 }
 
 .recipe-card:hover {
     background: white;
     border-color: #e5e7eb;
+    /* Sin sombras grandes ni escalas */
 }
 
 .recipe-header {
@@ -803,10 +819,16 @@
     letter-spacing: 0.3px;
 }
 
-.recipe-ingredients ul {
+/* LISTAS SIEMPRE EXPANDIDAS */
+.recipe-ingredients ul,
+.recipe-preparation ol {
     list-style: none;
     padding: 0;
     margin: 0;
+    /* Forzamos altura automática siempre */
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
 }
 
 .recipe-ingredients li {
@@ -821,10 +843,9 @@
     border-bottom: none;
 }
 
+/* OCULTAR EL TEXTO "...MÁS" */
 .more-ingredients {
-    color: #6366f1 !important;
-    font-weight: 600;
-    font-style: italic;
+    display: none !important;
 }
 
 .recipe-preparation ol {
@@ -1004,36 +1025,42 @@
     }
 }
 
-/* HOVER EXPANDIBLE EN RECIPE CARDS */
+/* ============================================================================
+   ESTILOS DE TARJETAS DE RECETA (SIN EFECTO DE EXPANSIÓN/HOVER)
+   Reemplaza toda la sección final del CSS original con esto.
+   ============================================================================ */
+
 .recipe-card {
-    max-height: 350px;
-    overflow: hidden;
-    transition: all 0.3s ease;
+    /* Se eliminan las restricciones de altura y el overflow */
+    height: auto;
+    overflow: visible;
+    /* Mantenemos solo la transición suave del color de fondo, quitamos la de 'all' */
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+
+    /* Aseguramos que no haya transformación ni sombra extra al pasar el mouse */
+    transform: none !important;
+    box-shadow: none !important;
+    z-index: auto !important;
 }
 
+/* Aseguramos que el hover solo cambie el color de fondo (el comportamiento original definido arriba)
+   y no aplique efectos de escala o sombra. */
 .recipe-card:hover {
-    max-height: 1000px;
-    transform: scale(1.02);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-    z-index: 10;
+    background: white;
+    border-color: #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Sombra sutil estándar, no la grande */
 }
 
+/* Estilos para las listas de ingredientes y preparación: SIN restricciones de altura */
 .recipe-ingredients ul,
 .recipe-preparation ol {
-    max-height: 120px;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    transition: none !important; /* Se elimina la animación */
 }
 
-.recipe-card:hover .recipe-ingredients ul,
-.recipe-card:hover .recipe-preparation ol {
-    max-height: 500px;
-}
-
+/* Como ahora siempre se muestra todo el contenido, ocultamos el texto que dice "...más" */
 .more-ingredients {
-    transition: opacity 0.2s ease;
-}
-
-.recipe-card:hover .more-ingredients {
-    display: none;
+    display: none !important;
 }

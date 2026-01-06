@@ -31,6 +31,14 @@ const { seedDoctor } = require('./seedDoctor');
 
 const app = express();
 
+
+// Middleware para timeouts (agrega esto aquí)
+app.use((req, res, next) => {
+    req.setTimeout(300000); // 5 minutos para la request
+    res.setTimeout(300000); // 5 minutos para la response
+    next();
+});
+
 const PORT = process.env.PORT || 4000;
 
 // ===== ENTORNO =============================================================
