@@ -1,1066 +1,572 @@
 /**
  * ============================================================================
- * ESTILOS DEL GENERADOR DE DIETAS SEMANALES - VERSIÓN CLÍNICA v4
- * ============================================================================
- * Todos los botones en el header, footer eliminado
+ * DIET GENERATOR WEEKLY - MODO INFORME CLÍNICO v6 (UI refinada)
+ * SOLO VISUAL – NO TOCA LÓGICA
  * ============================================================================
  */
 
-/* ===== OVERLAY Y CONTENEDOR PRINCIPAL - FULLSCREEN ===== */
+/* ================= OVERLAY ================= */
+
+* {
+    transition-timing-function: ease !important;
+}
 
 .diet-generator-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(99, 102, 241, 0.08);
-    backdrop-filter: blur(2px);
+    inset: 0;
+    background: rgba(15, 23, 42, 0.04);
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: stretch;
+    justify-content: stretch;
     z-index: 9999;
-    animation: fadeIn 0.2s ease-out;
 }
+
+/* ================= CONTENEDOR ================= */
 
 .diet-generator-container {
     background: #ffffff;
     width: 100vw;
     height: 100vh;
-    max-width: 100vw;
-    max-height: 100vh;
     display: flex;
     flex-direction: column;
-    animation: slideUp 0.2s ease-out;
     overflow: hidden;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: scale(0.99);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-/* ===== HEADER - CON TODOS LOS BOTONES ===== */
+/* ============================================================================
+   HEADER – BARRA CLÍNICA “CARITA”
+   ========================================================================== */
 
 .diet-generator-header {
-    display: flex;
+    display: grid;
+    grid-template-areas: "title metrics actions";
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.4fr) auto;
     align-items: center;
-    justify-content: space-between;
-    padding: 14px 24px;
-    background: #6366f1;
-    color: white;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 1px 3px rgba(99, 102, 241, 0.1);
-    flex-shrink: 0;
-    gap: 16px;
+    column-gap: 16px;
+    padding: 12px 24px 10px;
+    background: linear-gradient(90deg, #f9fafb 0%, #eef2ff 45%, #f9fafb 100%);
+    color: #0f172a;
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
 }
+
+/* --- bloque izquierda: título/paciente --- */
 
 .header-title-group {
+    grid-area: title;
     display: flex;
     align-items: center;
-    gap: 12px;
-    flex: 0 0 auto;
+    gap: 10px;
 }
 
-.header-icon {
-    color: white;
+.header-title-group > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .header-title {
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 650;
     margin: 0;
-    letter-spacing: -0.3px;
-    white-space: nowrap;
+    letter-spacing: -0.02em;
 }
 
 .header-subtitle {
     font-size: 12px;
-    opacity: 0.9;
-    margin: 2px 0 0 0;
-    font-weight: 400;
-    white-space: nowrap;
+    color: #64748b;
 }
 
-/* ===== MACROS EN EL CENTRO DEL HEADER ===== */
+/* --- macros en el centro, estilo chips --- */
 
 .header-macros {
+    grid-area: metrics;
     display: flex;
-    gap: 12px;
-    flex: 1;
     justify-content: center;
     align-items: center;
+    gap: 10px;
     flex-wrap: wrap;
 }
 
 .header-macro-badge {
     position: relative;
-    padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    overflow: hidden;
-    min-height: 55px;
+    padding: 6px 12px;
+    background: #ffffff;
+    border-radius: 999px;
+    border: 1px solid #e2e8f0;
+    min-height: unset;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.macro-fill {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    transition: height 0.5s ease;
-    opacity: 0.3;
-    z-index: 0;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
 }
 
 .macro-content {
-    position: relative;
-    z-index: 1;
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    text-align: center;
+    gap: 1px;
+    text-align: left;
 }
 
 .header-macro-label {
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.85);
+    color: #94a3b8;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.04em;
 }
 
 .header-macro-value {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
-    color: white;
+    color: #111827;
 }
 
-/* ===== BOTONES DEL HEADER (DERECHA) - TODOS CON MISMO ALTO ===== */
+/* --- acciones a la derecha --- */
 
 .header-actions {
+    grid-area: actions;
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 8px;
-    flex: 0 0 auto;
 }
 
-/* Botón "Generar Día" - con texto */
 .btn-generate-day-header {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    padding: 8px 16px;
-    border-radius: 8px;
+    background: #4f46e5;
+    border: none;
+    color: #ffffff;
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 999px;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    transition: all 0.2s ease;
-    backdrop-filter: blur(10px);
+    gap: 6px;
+    box-shadow: 0 8px 18px rgba(79, 70, 229, 0.25);
     white-space: nowrap;
-    height: 36px;
 }
 
 .btn-generate-day-header:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: rgba(255, 255, 255, 0.4);
+    background: #4338ca;
 }
 
 .btn-generate-day-header:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    opacity: 0.7;
+    cursor: default;
+    box-shadow: none;
 }
 
-/* Botones de Acción - SOLO ICONOS */
-.btn-header-icon {
-    background: rgba(255, 255, 255, 0.15);
-    border: none;
-    border-radius: 8px;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: white;
-    flex-shrink: 0;
-}
-
-.btn-header-icon:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.25);
-}
-
-.btn-header-icon:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Botón Imprimir */
-.btn-print-header {
-    background: rgba(255, 255, 255, 0.15);
-}
-
-.btn-print-header:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.25);
-}
-
-/* Botón Guardar - Verde */
-.btn-save-header {
-    background: rgba(16, 185, 129, 0.3);
-    border: 1px solid rgba(16, 185, 129, 0.5);
-}
-
-.btn-save-header:hover:not(:disabled) {
-    background: rgba(16, 185, 129, 0.4);
-    border-color: rgba(16, 185, 129, 0.6);
-}
-
-/* Botón Cerrar */
+.btn-header-icon,
 .btn-close {
-    background: rgba(255, 255, 255, 0.15);
-    border: none;
-    border-radius: 8px;
-    width: 36px;
-    height: 36px;
-    display: flex;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    color: #0f172a;
+    height: 32px;
+    width: 32px;
+    border-radius: 999px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s ease;
-    color: white;
-    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
 }
 
+.btn-header-icon:hover:not(:disabled),
 .btn-close:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: rotate(90deg);
+    background: #f9fafb;
 }
 
-.spinner {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-/* ===== BARRA DE ACCIONES - OCULTA ===== */
-
-.action-bar {
-    display: none;
-}
-
-/* ===== PROGRESO DE GENERACIÓN ===== */
+/* ============================================================================
+   PROGRESO
+   ========================================================================== */
 
 .generation-progress {
-    padding: 12px 24px;
-    background: #fef3c7;
-    border-bottom: 1px solid #fbbf24;
-    flex-shrink: 0;
+    padding: 8px 24px 10px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .progress-bar {
     width: 100%;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.6);
-    border-radius: 6px;
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 999px;
     overflow: hidden;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .progress-fill {
     height: 100%;
-    background: #f59e0b;
-    transition: width 0.3s ease;
-    border-radius: 6px;
+    background: #4f46e5;
+    transition: width 0.25s ease;
+    border-radius: 999px;
 }
 
 .progress-status {
     font-size: 12px;
-    font-weight: 600;
-    color: #92400e;
+    color: #334155;
     text-align: center;
     margin: 0;
 }
 
-/* ===== TABS DE DÍAS - COMPACTOS ===== */
+/* ============================================================================
+   TABS DÍAS – AGENDA EN PÍLDORAS
+   ========================================================================== */
 
 .days-tabs {
     display: flex;
-    gap: 6px;
-    padding: 10px 24px;
-    background: white;
+    gap: 8px;
+    padding: 8px 24px 6px;
     border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
     overflow-x: auto;
-    flex-shrink: 0;
 }
 
 .days-tabs::-webkit-scrollbar {
     height: 4px;
 }
-
 .days-tabs::-webkit-scrollbar-thumb {
-    background: #d1d5db;
-    border-radius: 4px;
+    background: #cbd5f5;
+    border-radius: 999px;
 }
 
 .day-tab {
-    flex: 1;
-    min-width: 100px;
-    padding: 8px 12px;
-    background: #fafafa;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
+    flex: 0 0 auto;
+    padding: 6px 14px;
+    background: transparent;
+    border-radius: 999px;
+    border: 1px solid transparent;
     cursor: pointer;
-    transition: all 0.15s ease;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    font-weight: 600;
-    font-size: 12px;
-    color: #6b7280;
-    position: relative;
+    font-weight: 500;
+    font-size: 13px;
+    color: #64748b;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .day-tab:hover {
-    background: #f3f4f6;
-    border-color: #d1d5db;
+    background: #e5e7eb;
 }
 
 .day-tab.active {
-    background: #6366f1;
-    border-color: #6366f1;
-    color: white;
+    background: #ffffff;
+    border-color: #4f46e5;
+    color: #111827;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
 }
 
 .day-check {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    background: #10b981;
-    color: white;
-    border-radius: 50%;
-    padding: 2px;
+    display: none;
 }
 
-/* ===== CONTENIDO DEL DÍA ===== */
+/* ============================================================================
+   CONTENIDO
+   ========================================================================== */
 
 .day-content {
     flex: 1;
-    overflow-y: hidden; /* CAMBIAR de auto a hidden para que el scroll sea dentro de las tarjetas */
-    overflow-x: hidden;
-    padding: 16px 24px;
-    background: #fafafa;
-    display: flex;          /* <--- AGREGAR */
-    flex-direction: column; /* <--- AGREGAR */
+    padding: 18px 24px;
+    overflow-y: auto;
+    background: #ffffff;
 }
 
-.day-content::-webkit-scrollbar {
-    width: 6px;
-}
-
-.day-content::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.day-content::-webkit-scrollbar-thumb {
-    background: #d1d5db;
-    border-radius: 6px;
-}
-
-/* ===== RESUMEN DEL DÍA - COMPACTO ===== */
-
-.day-summary {
-    background: white;
-    border-radius: 10px;
-    padding: 16px 24px;
-    margin-bottom: 16px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-    border: 1px solid #e5e7eb;
-}
-
-.day-summary h3 {
-    font-size: 12px;  /* Era 14px */
-    font-weight: 700;
-    color: #1f2937;
-    margin: 0 0 8px 0;  /* Era 12px */
-}
-
-.day-totals-grid {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    gap: 20px;
-}
-
-.total-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    position: relative;
-}
-
-.progress-ring {
-    width: 70px;
-    height: 70px;
-    position: relative;
-}
-
-.progress-ring svg {
-    transform: rotate(-90deg);
-}
-
-.progress-ring-progress {
-    fill: none;
-    stroke-width: 6;
-    stroke-linecap: round;
-    transition: stroke-dashoffset 0.5s ease;
-}
-
-.ring-kcal { stroke: #f59e0b; }
-.ring-protein { stroke: #ef4444; }
-.ring-carbs { stroke: #3b82f6; }
-.ring-fats { stroke: #10b981; }
-
-.progress-ring-text {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-}
-
-.progress-ring-value {
-    display: block;
-    font-size: 16px;
-    font-weight: 800;
-    color: #1f2937;
-    line-height: 1;
-}
-
-
-.progress-ring-label {
-    display: block;
-    font-size: 8px;
-    font-weight: 600;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-top: 2px;
-}
-
-
-.progress-ring-circle {
-    fill: none;
-    stroke: #f3f4f6;
-    stroke-width: 6;
-}
-
-.total-item-footer {
-    text-align: center;
-}
-
-.total-value {
-    font-size: 16px;  /* Era 18px */
-    font-weight: 700;
-    color: #1f2937;
-}
-.total-item-label {
-    font-size: 10px;
-    font-weight: 700;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.total-label {
-    font-size: 9px;  /* Era 10px */
-    font-weight: 600;
-    color: #6b7280;
-    text-transform: uppercase;
-    margin-top: 2px;
-}
-
-.total-bar {
-    height: 3px;  /* Era 4px */
-    background: #f3f4f6;
-    border-radius: 3px;
-    overflow: hidden;
-    margin-top: 4px;
-}
-
-.total-bar-fill {
-    height: 100%;
-    border-radius: 4px;
-    transition: width 0.3s ease;
-}
-
-/* ===== CONTENEDOR DE COMIDAS - SIN SCROLL HORIZONTAL ===== */
+/* layout tipo informe: comidas en columna */
 
 .meals-container {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 12px;
-    flex: 1;         /* <--- AGREGAR: Esto hace que se estire hasta abajo */
-    height: 100%;    /* <--- AGREGAR */
-    min-height: 0;   /* <--- AGREGAR: Importante para evitar desbordamientos en grid */
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
 }
 
-/* ===== SECCIÓN DE COMIDA - COMPACTA ===== */
+/* ============================================================================
+   CARDS / SECCIONES
+   ========================================================================== */
 
-.meal-section {
-    background: white;
-    border-radius: 10px;
-    padding: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+.meal-card {
+    border-radius: 10px !important;
     border: 1px solid #e5e7eb;
-    transition: all 0.15s ease;
-    display: flex;
-    flex-direction: column;
-    height: 100%;      /* <--- AGREGAR: Para que llene la celda de la grid */
-    min-height: 0;     /* <--- CAMBIAR: Quita los 300px fijos si quieres que se ajuste exacto */
-    overflow: hidden;  /* <--- AGREGAR: Para contener el scroll interno */
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04) !important;
+    padding: 4px 0;
 }
 
-.meal-section:hover {
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    border-color: #d1d5db;
+.meal-card-header {
+    border-bottom: 1px solid #e5e7eb;
+    padding-top: 10px !important;
+    padding-bottom: 8px !important;
 }
 
-.meal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #f3f4f6;
-}
-
-.meal-title-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex: 1;
-    min-width: 0;
-}
-
-.meal-icon {
-    font-size: 20px;
-    flex-shrink: 0;
-}
-
-.meal-title {
-    font-size: 13px;
-    font-weight: 700;
-    margin: 0;
-    color: #1f2937;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.meal-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-}
-
-.meal-totals-mini {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 4px 8px;
-    background: #fafafa;
-    border-radius: 6px;
-    font-size: 9px;
-    font-weight: 600;
-    color: #6b7280;
-    border: 1px solid #f3f4f6;
-}
-
-.btn-regenerate-meal {
-    background: #f59e0b;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    flex-shrink: 0;
-}
-
-.btn-regenerate-meal:hover:not(:disabled) {
-    background: #d97706;
-    transform: rotate(180deg);
-}
-
-.btn-regenerate-meal:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* ===== CONTENIDO DE COMIDA ===== */
-
-.meal-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    overflow-y: auto; /* Esto mantiene el scroll dentro de la tarjeta */
-}
-
-.meal-content::-webkit-scrollbar {
-    width: 4px;
-}
-
-.meal-content::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.meal-content::-webkit-scrollbar-thumb {
-    background: #d1d5db;
-    border-radius: 4px;
-}
-
-.empty-meal {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 20px 10px;
-    text-align: center;
-}
-
-.empty-meal-icon {
-    color: #d1d5db;
-}
-
-.empty-meal-text {
-    color: #9ca3af;
-    font-size: 11px;
-    font-weight: 500;
-    line-height: 1.4;
-}
-
-.btn-generate-meal {
-    background: #6366f1;
-    color: white;
-    border: none;
-    padding: 8px 14px;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 11px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.15s ease;
-}
-
-.btn-generate-meal:hover:not(:disabled) {
-    background: #4f46e5;
-}
-
-.btn-generate-meal:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.meal-loading {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 20px 10px;
-}
-
-.meal-loading-spinner {
-    color: #6366f1;
-    animation: spin 1s linear infinite;
-}
-
-.meal-loading-text {
-    color: #6366f1;
-    font-size: 11px;
-    font-weight: 600;
-    text-align: center;
-}
-
-/* ===== RECETAS - COMPACTAS ===== */
-
-.recipes-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-/* TARJETA MAESTRA: Sin restricciones de altura y sin transiciones de tamaño */
-.recipe-card {
-    background: #fafafa;
-    border: 1px solid #f3f4f6;
-    border-radius: 8px;
-    padding: 10px;
-    /* CORRECCIÓN IMPORTANTE: Solo animamos color, NUNCA el tamaño ni transformaciones */
-    transition: background-color 0.15s ease, border-color 0.15s ease;
-
-    /* Forzamos que la altura sea automática y siempre visible */
-    height: auto !important;
-    min-height: 0 !important;
-    overflow: visible !important;
-    transform: none !important;
-}
-
-.recipe-card:hover {
-    background: white;
-    border-color: #e5e7eb;
-    /* Sin sombras grandes ni escalas */
-}
-
-.recipe-header {
-    display: flex;
-    align-items: start;
-    justify-content: space-between;
-    margin-bottom: 8px;
-    gap: 8px;
-}
-
-.recipe-name {
+.meal-count-pill {
+    background: #eef2ff;
+    color: #1e293b;
     font-size: 12px;
     font-weight: 700;
-    color: #1f2937;
-    margin: 0;
-    flex: 1;
-    line-height: 1.3;
+    padding: 2px 8px;
+    border-radius: 999px;
 }
 
-.recipe-time {
-    font-size: 10px;
-    color: #6b7280;
-    background: white;
-    padding: 3px 6px;
-    border-radius: 4px;
-    white-space: nowrap;
-    font-weight: 600;
-    border: 1px solid #f3f4f6;
-    flex-shrink: 0;
+/* ============================================================================
+   RECETAS
+   ========================================================================== */
+
+.meal-recipe-box {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 10px 12px;
 }
 
-.recipe-nutrition {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-    margin-bottom: 10px;
+.meal-recipe-title {
+    font-weight: 600 !important;
+    letter-spacing: -0.01em;
 }
 
-.nutrition-badge {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 6px 4px;
-    background: white;
-    border-radius: 6px;
-    border: 1px solid #f3f4f6;
-}
+/* macros como texto compacto */
 
-.nutrition-value {
+.macro-chip {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
     font-size: 12px;
-    font-weight: 700;
-    color: #1f2937;
+    color: #475569;
 }
 
-.nutrition-label {
-    font-size: 8px;
-    font-weight: 600;
-    color: #6b7280;
-    text-transform: uppercase;
+/* ============================================================================
+   ACORDEONES
+   ========================================================================== */
+
+.meal-accordion {
+    border-radius: 8px !important;
 }
 
-.recipe-ingredients {
-    margin-bottom: 10px;
+.meal-accordion-summary {
+    min-height: 40px !important;
 }
 
-.recipe-ingredients h5,
-.recipe-preparation h5 {
-    font-size: 10px;
-    font-weight: 700;
-    color: #6b7280;
-    margin: 0 0 6px 0;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
+.meal-accordion-title {
+    font-weight: 500 !important;
 }
 
-/* LISTAS SIEMPRE EXPANDIDAS */
-.recipe-ingredients ul,
-.recipe-preparation ol {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    /* Forzamos altura automática siempre */
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
+.meal-accordion-details {
+    background: #ffffff;
 }
 
-.recipe-ingredients li {
-    font-size: 10px;
-    color: #6b7280;
-    padding: 3px 0;
-    border-bottom: 1px solid #f3f4f6;
-    line-height: 1.4;
+.meal-accordion-summary .MuiAccordionSummary-content {
+    margin: 8px 0 !important;
 }
 
-.recipe-ingredients li:last-child {
-    border-bottom: none;
-}
-
-/* OCULTAR EL TEXTO "...MÁS" */
-.more-ingredients {
-    display: none !important;
-}
-
-.recipe-preparation ol {
-    padding-left: 14px;
-    margin: 0;
-}
-
-.recipe-preparation li {
-    font-size: 10px;
-    color: #6b7280;
-    margin-bottom: 4px;
-    line-height: 1.5;
-}
-
-/* ===== FOOTER - ELIMINADO O VACÍO ===== */
-
-.diet-generator-footer {
-    display: none; /* Footer completamente oculto */
-}
-
-/* Si prefieres dejarlo visible pero vacío (para posibles usos futuros): */
-/*
-.diet-generator-footer {
-    padding: 8px 24px;
-    background: white;
-    border-top: 1px solid #e5e7eb;
-    flex-shrink: 0;
-}
-*/
-
-/* ===== TOAST DE ÉXITO ===== */
+/* ============================================================================
+   TOAST
+   ========================================================================== */
 
 .success-toast {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #10b981;
-    color: white;
-    padding: 12px 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 600;
-    font-size: 13px;
-    animation: slideInRight 0.2s ease-out;
-    z-index: 10000;
+    background: #0f766e;
 }
 
-@keyframes slideInRight {
-    from {
-        opacity: 0;
-        transform: translateX(100px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-/* ===== RESPONSIVE ===== */
-
-@media (max-width: 1600px) {
-    .meals-container {
-        grid-template-columns: repeat(5, 1fr);
-        gap: 10px;
-    }
-
-    .meal-section {
-        padding: 10px;
-        min-height: 280px;
-    }
-}
-
-@media (max-width: 1400px) {
-    .meals-container {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
-    .header-macros {
-        gap: 8px;
-    }
-
-    .header-macro-badge {
-        padding: 5px 10px;
-    }
-
-    .header-macro-value {
-        font-size: 12px;
-    }
-}
+/* ============================================================================
+   RESPONSIVE
+   ========================================================================== */
 
 @media (max-width: 1100px) {
-    .meals-container {
-        grid-template-columns: repeat(2, 1fr);
+    .diet-generator-header {
+        grid-template-areas:
+            "title actions"
+            "metrics metrics";
+        grid-template-columns: minmax(0, 1.2fr) auto;
+        row-gap: 8px;
     }
-}
 
-@media (max-width: 968px) {
     .header-macros {
-        display: none;
-    }
-
-    .header-title-group {
-        flex: 1;
+        justify-content: flex-start;
     }
 }
 
 @media (max-width: 768px) {
-    .diet-generator-header,
-    .days-tabs,
-    .day-content {
-        padding-left: 16px;
-        padding-right: 16px;
+    /* HEADER: se apila en 3 filas: título, macros, acciones */
+    .diet-generator-header {
+        grid-template-areas:
+            "title"
+            "metrics"
+            "actions";
+        grid-template-columns: minmax(0, 1fr);
+        row-gap: 10px;
+        padding: 10px 12px;
     }
 
-    .diet-generator-header {
-        padding: 12px 16px;
+    .header-title-group {
+        align-items: flex-start;
     }
 
     .header-title {
         font-size: 16px;
+        line-height: 1.2;
     }
 
     .header-subtitle {
         font-size: 11px;
     }
 
-    .btn-generate-day-header {
-        padding: 6px 12px;
-        font-size: 12px;
+    /* MACROS: se adaptan al ancho (2 por fila aprox) */
+    .header-macros {
+        display: flex;
+        flex-wrap: nowrap;              /* NO permitir salto de línea */
+        gap: 4px;                       /* menos espacio entre tarjetas */
+        justify-content: space-between; /* que se repartan el ancho */
     }
 
-    .btn-generate-day-header span {
-        display: none;
+    .header-macro-badge {
+        flex: 1 1 0;        /* los 4 comparten el ancho disponible */
+        min-width: 0;
+        padding: 4px 6px;   /* más compactos */
+        border-radius: 9999px;
     }
 
-    .days-tabs {
-        gap: 4px;
-        padding: 8px 16px;
+    .header-macro-label {
+        font-size: 9px;
+        line-height: 1.1;
     }
 
-    .day-tab {
-        min-width: 85px;
-        padding: 7px 10px;
+    .header-macro-value {
         font-size: 11px;
+        font-weight: 600;
+        line-height: 1.1;
     }
 
-    .meals-container {
-        grid-template-columns: 1fr;
-        gap: 12px;
+    /* ACCIONES: botón morado ocupa todo el ancho disponible */
+    .header-actions {
+        justify-content: flex-start;
+        gap: 6px;
     }
 
-    .day-totals-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
+    .btn-generate-day-header {
+        flex: 1;
+        justify-content: center;
+        padding-inline: 10px;
+        font-size: 12px;
+        height: 32px;
+    }
+
+    .btn-header-icon,
+    .btn-close {
+        height: 30px;
+        width: 30px;
+    }
+
+    /* Ajuste de tabs y contenido para que respiren en móvil */
+    .days-tabs {
+        padding: 8px 12px 6px;
+    }
+
+    .day-content {
+        padding: 14px 12px;
     }
 }
 
-@media (max-width: 480px) {
-    .recipe-nutrition {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 4px;
+
+/* ============================================================================
+   MODO IMPRESIÓN (A4 / PDF)
+   ========================================================================== */
+
+@media print {
+
+    * {
+        box-shadow: none !important;
+        animation: none !important;
+        transition: none !important;
     }
 
-    .nutrition-badge {
-        padding: 5px 3px;
+    body {
+        background: #ffffff !important;
     }
 
-    .nutrition-value {
-        font-size: 11px;
+    /* ocultar UI */
+    .diet-generator-header,
+    .header-actions,
+    .days-tabs,
+    .btn-generate-day-header,
+    .btn-header-icon,
+    .btn-close,
+    .generation-progress,
+    .success-toast {
+        display: none !important;
     }
 
-    .nutrition-label {
-        font-size: 7px;
+    .diet-generator-container {
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    .day-content {
+        padding: 0 !important;
+    }
+
+    /* evitar cortes feos */
+    .meal-card {
+        page-break-inside: avoid;
+        margin-bottom: 24px;
+        border: none !important;
+    }
+
+    .meal-card-header {
+        border-bottom: 1px solid #000 !important;
+        padding-bottom: 6px;
+    }
+
+    body,
+    .meal-recipe-title,
+    .meal-accordion-title {
+        font-family: "Times New Roman", Georgia, serif !important;
+        color: #000 !important;
+    }
+
+    .meal-recipe-title {
+        font-size: 14pt !important;
+    }
+
+    .meal-detail-list li {
+        font-weight: 400;
+    }
+
+    .meal-accordion {
+        border: none !important;
+    }
+
+    .meal-accordion-summary {
+        display: none !important;
+    }
+
+    .meal-accordion-details {
+        display: block !important;
+    }
+
+    .meal-macros-row {
+        gap: 12px;
+    }
+
+    .macro-chip {
+        min-width: unset !important;
+        letter-spacing: 0;
+    }
+
+    .meal-recipe-box {
+        page-break-inside: avoid;
     }
 }
 
 /* ============================================================================
-   ESTILOS DE TARJETAS DE RECETA (SIN EFECTO DE EXPANSIÓN/HOVER)
-   Reemplaza toda la sección final del CSS original con esto.
-   ============================================================================ */
+   SCROLL ÚNICO
+   ========================================================================== */
 
-.recipe-card {
-    /* Se eliminan las restricciones de altura y el overflow */
-    height: auto;
-    overflow: visible;
-    /* Mantenemos solo la transición suave del color de fondo, quitamos la de 'all' */
-    transition: background-color 0.15s ease, border-color 0.15s ease;
-
-    /* Aseguramos que no haya transformación ni sombra extra al pasar el mouse */
-    transform: none !important;
-    box-shadow: none !important;
-    z-index: auto !important;
+html,
+body {
+    overflow: hidden;
 }
 
-/* Aseguramos que el hover solo cambie el color de fondo (el comportamiento original definido arriba)
-   y no aplique efectos de escala o sombra. */
-.recipe-card:hover {
-    background: white;
-    border-color: #e5e7eb;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Sombra sutil estándar, no la grande */
-}
-
-/* Estilos para las listas de ingredientes y preparación: SIN restricciones de altura */
-.recipe-ingredients ul,
-.recipe-preparation ol {
-    height: auto !important;
-    max-height: none !important;
+.MuiCardContent-root {
     overflow: visible !important;
-    transition: none !important; /* Se elimina la animación */
-}
-
-/* Como ahora siempre se muestra todo el contenido, ocultamos el texto que dice "...más" */
-.more-ingredients {
-    display: none !important;
 }

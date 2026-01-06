@@ -295,7 +295,15 @@ INSTRUCCIÓN CRÍTICA:
 3. Ajusta estrictamente a restricciones del paciente: ${restrictions}. Como experto en nutrición ecuatoriana, prioriza balance y salud (e.g., bajo sodio si hipertensión).
 4. Adapta a patologías: ${pathologies || "Ninguna"}. E.g., si diabetes, usa bajos carbohidratos simples; si hipertensión, reduce sal.
 5. Responde SOLO con el formato exacto.
-6. La sección PREPARACIÓN es OBLIGATORIA: escribe entre 3 y 6 líneas PREP= con pasos concretos (lavar, picar, saltear, hervir, hornear, licuar, etc.). No uses textos genéricos como "En", "igual que antes" o "Preparar según indicaciones del plato".
+6. PREPARACIÓN OBLIGATORIA:
+- Escribe ENTRE 4 y 6 líneas PREP=
+- Cada PREP= debe mencionar al menos 1 ingrediente REAL de la receta.
+- Prohibido usar frases genéricas: "Lava y corta los ingredientes", "Cocina la preparación principal", "Sirve en porciones individuales".
+- Escribe 3 a 6 pasos, cada uno con un verbo + ingrediente + acción concreta + "hasta que..." o tiempo aproximado.
+
+
+
+
 
 CONTEXTO:
 Paciente: ${patientName}, ${age} años, ${gender}
@@ -499,17 +507,67 @@ function parseMealLinesToJson(text, dayKey, mealType, targetData) {
     const targets = computeMealTargets(mealType, targetData);
     if (!nutricion) nutricion = { ...targets };
 
+    // Limpieza de preparación:
+// - Quitamos pasos demasiado cortos
+// - Rechazamos preparación genérica (para forzar reintentos)
+    // Limpieza de preparación (suave, para no provocar 500)
+    const GENERIC_PREP_PATTERNS = [
+        /mise en place/i,
+        /re[uú]ne todos los ingredientes/i,
+        /aplica la t[eé]cnica/i,
+        /ajusta condimentos/i,
+        /sirve en porciones/i,
+        /seg[uú]n corresponda/i,
+        /texturas de cada alimento/i,
+    ];
+
+// 1) pasos “válidos” por longitud mínima
+    const cleanedSteps = preparacion
+        .map((p) => String(p || "").trim())
+        .filter((p) => p.length >= 10);
+
+// 2) pasos “mejores” (no genéricos)
+
+// Limpieza y fallback de preparación:
+// - NO seas agresivo filtrando por longitud
+// - SOLO usa fallback si NO vino ningún PREP válido
     let finalPreparacion = preparacion
         .map((p) => String(p || "").trim())
-        .filter((p) => p.length >= 5);
+        .filter((p) => p.length >= 4); // antes lo subiste y por eso se te vacía
 
     if (finalPreparacion.length === 0) {
+        // fallback SOLO cuando realmente no hay nada
         finalPreparacion = [
-            "Reúne todos los ingredientes indicados y realiza la mise en place (lavar, pelar y cortar según corresponda).",
-            "Aplica la técnica de cocción principal (hervir, saltear, hornear, licuar o mezclar en frío) respetando tiempos y texturas de cada alimento.",
-            "Ajusta condimentos al gusto del paciente y sirve en porciones individuales, respetando las cantidades sugeridas en la receta.",
+            "Lava y corta los ingredientes según corresponda.",
+            "Cocina la preparación principal usando la técnica indicada (hervir, saltear, hornear, licuar).",
+            "Sirve en porciones individuales respetando las cantidades sugeridas.",
         ];
     }
+
+// Si vino poco, NO lo botes: solo completa hasta 3 pasos
+    if (finalPreparacion.length < 3) {
+        const prot = ingredientes.find(i => /pollo|res|cerdo|pescado|atun|huevo|pavo|camar/i.test(i.alimento || ""))?.alimento
+            || ingredientes[0]?.alimento
+            || "la proteína";
+        const base = ingredientes.find(i => /arroz|mote|yuca|verde|quinoa|avena|papa|camote/i.test(i.alimento || ""))?.alimento
+            || ingredientes[1]?.alimento
+            || "la base";
+
+        const extras = [
+            `Cocina ${prot} hasta que esté bien cocido y con buena textura.`,
+            `Incorpora ${base} y mezcla hasta integrar; ajusta al gusto del paciente.`,
+            "Sirve y, si aplica, acompaña con vegetales o fruta según la receta.",
+        ];
+
+        for (const step of extras) {
+            if (finalPreparacion.length >= 3) break;
+            finalPreparacion.push(step);
+        }
+    }
+
+// Limita a 6 por si la IA manda demasiados
+    finalPreparacion = finalPreparacion.slice(0, 6);
+
 
     if (!nombre || !tiempo || ingredientes.length < 2) {
         throw new Error(`Formato inválido de IA: faltan NOMBRE/TIEMPO o ingredientes insuficientes (ING=${ingredientes.length})`);
@@ -620,7 +678,7 @@ async function generateWeeklyDiet(req, res) {
 
         for (const day of daysArray) {
             for (const mealType of mealTypes) {
-                const mealData = await generateSingleMeal(mealType, day, targetData, patientContext, usedRecipeNames, 2);
+                const mealData = await generateSingleMeal(mealType, day, targetData, patientContext, usedRecipeNames, 3);
                 weeklyPlan[day][mealType] = mealData.recetas || [];
                 for (const r of mealData.recetas || []) {
                     const name = r?.receta?.nombre;
@@ -664,7 +722,7 @@ async function regenerateSingleMeal(req, res) {
 
         if (previousRecipeName) usedNames.push(String(previousRecipeName).trim());
 
-        const mealData = await generateSingleMeal(mealType, day, targetData, ctx, usedNames, 2, true);
+        const mealData = await generateSingleMeal(mealType, day, targetData, ctx, usedNames, 3, true);
 
         return res.json({
             success: true,
@@ -673,8 +731,10 @@ async function regenerateSingleMeal(req, res) {
             fallbackUsed: !!mealData._fallback,
         });
     } catch (error) {
+        console.error("❌ regenerateSingleMeal error:", error);
         return res.status(500).json({ success: false, error: "Error al regenerar", details: error.message });
     }
+
 }
 
 // ============================================================================
@@ -743,7 +803,7 @@ async function runWeeklyDietJob(jobId, { targetData, patientContext, daysToGener
         for (const mealType of mealTypes) {
             updateJob(jobId, { progress: { ...getJob(jobId).progress, day, mealType, done } });
 
-            const mealData = await generateSingleMeal(mealType, day, targetData, patientContext, usedRecipeNames, 2);
+            const mealData = await generateSingleMeal(mealType, day, targetData, patientContext, usedRecipeNames, 3);
 
             const job = getJob(jobId);
             job.weeklyPlan[day][mealType] = mealData.recetas || [];
@@ -842,7 +902,7 @@ async function runDailyDietJob(jobId, { dayKey, targetData, patientContext, used
     for (const mealType of mealTypes) {
         updateJob(jobId, { progress: { ...getJob(jobId).progress, day: dayKey, mealType, done } });
 
-        const mealData = await generateSingleMeal(mealType, dayKey, targetData, patientContext, used, 2);
+        const mealData = await generateSingleMeal(mealType, dayKey, targetData, patientContext, used, 3);
 
         const job = getJob(jobId);
         job.weeklyPlan[dayKey][mealType] = mealData.recetas || [];

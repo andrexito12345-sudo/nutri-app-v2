@@ -3,6 +3,29 @@
  * DIET GENERATOR WEEKLY - (Nuevo enfoque) Generación por DÍA + Regeneración por comida
  * ============================================================================
  */
+import {
+    ThemeProvider,
+    createTheme,
+    CssBaseline,
+    Card,
+    CardHeader,
+    CardContent,
+    IconButton,
+    Typography,
+    Stack,
+    Chip,
+    Divider,
+    Button,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
+    Tooltip,
+    CircularProgress,
+    Box,
+} from "@mui/material";
+
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+
 import { Printer } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -96,6 +119,124 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
         SNACK: "MEDIA_TARDE",
         DINNER: "CENA",
     };
+
+    // =========================
+    // Tema MUI (solo visual)
+    // =========================
+    const muiTheme = createTheme({
+        shape: { borderRadius: 18 },
+        typography: {
+            fontFamily: "Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+        },
+        palette: {
+            mode: "light",
+            primary: { main: "#6366f1" },
+            background: { default: "#f6f7fb", paper: "#ffffff" },
+            text: { primary: "#0f172a", secondary: "#475569" },
+            divider: "rgba(15, 23, 42, 0.08)",
+        },
+        components: {
+            MuiCssBaseline: {
+                styleOverrides: {
+                    body: {
+                        backgroundColor: "#f6f7fb",
+                    },
+                },
+            },
+            MuiCard: {
+                styleOverrides: {
+                    root: {
+                        border: "1px solid rgba(15, 23, 42, 0.08)",
+                        boxShadow: "0 10px 30px rgba(2, 6, 23, 0.08)",
+                        overflow: "hidden",
+                    },
+                },
+            },
+            MuiCardHeader: {
+                styleOverrides: {
+                    root: {
+                        paddingTop: 14,
+                        paddingBottom: 10,
+                    },
+                    title: {
+                        fontWeight: 900,
+                    },
+                },
+            },
+            MuiCardContent: {
+                styleOverrides: {
+                    root: {
+                        paddingTop: 12,
+                    },
+                },
+            },
+            MuiChip: {
+                styleOverrides: {
+                    root: {
+                        borderRadius: 999,
+                        fontWeight: 800,
+                    },
+                    label: {
+                        paddingLeft: 10,
+                        paddingRight: 10,
+                    },
+                },
+            },
+            MuiAccordion: {
+                defaultProps: {
+                    disableGutters: true,
+                    elevation: 0,
+                },
+                styleOverrides: {
+                    root: {
+                        borderRadius: 14,
+                        border: "1px solid rgba(15,23,42,0.08)",
+                        background: "rgba(15, 23, 42, 0.02)",
+                        overflow: "hidden",
+                        margin: 0,
+                    },
+                },
+            },
+            MuiAccordionSummary: {
+                styleOverrides: {
+                    root: {
+                        minHeight: 44,
+                        paddingLeft: 12,
+                        paddingRight: 10,
+                    },
+                    content: {
+                        margin: "10px 0",
+                    },
+                },
+            },
+            MuiAccordionDetails: {
+                styleOverrides: {
+                    root: {
+                        paddingTop: 10,
+                        paddingBottom: 12,
+                        paddingLeft: 12,
+                        paddingRight: 12,
+                        background: "#fff",
+                    },
+                },
+            },
+            MuiIconButton: {
+                styleOverrides: {
+                    root: {
+                        borderRadius: 12,
+                    },
+                },
+            },
+            MuiButton: {
+                styleOverrides: {
+                    root: {
+                        borderRadius: 14,
+                        fontWeight: 900,
+                    },
+                },
+            },
+        },
+    });
 
     // =========================
     // Helpers: normalizar recetas
@@ -438,16 +579,24 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     };
 
     // =========================
-    // UI: RecipeCard
+    // UI: RecipeCard (se mantiene tal cual)
     // =========================
     const RecipeCard = ({ recipe }) => {
         const [expanded, setExpanded] = React.useState(false);
 
+        const ingredientes = recipe.ingredientes || [];
+        const preparacion = recipe.preparacion || [];
+
         return (
             <div
-                className="recipe-card"
-                onMouseEnter={() => setExpanded(true)}
-                onMouseLeave={() => setExpanded(false)}
+                className={`recipe-card ${expanded ? "is-expanded" : ""}`}
+                onClick={() => setExpanded((v) => !v)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") setExpanded((v) => !v);
+                }}
+                title="Click para ver más/menos"
             >
                 <div className="recipe-header">
                     <h4 className="recipe-name">{recipe.nombre}</h4>
@@ -476,13 +625,13 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                 <div className="recipe-ingredients">
                     <h5>Ingredientes:</h5>
                     <ul>
-                        {(expanded ? recipe.ingredientes : recipe.ingredientes?.slice(0, 4))?.map((ing, idx) => (
+                        {(expanded ? ingredientes : ingredientes.slice(0, 4)).map((ing, idx) => (
                             <li key={idx}>
                                 {ing.cantidad} {ing.unidad} de {ing.alimento}
                             </li>
                         ))}
-                        {!expanded && recipe.ingredientes?.length > 4 && (
-                            <li className="more-ingredients">+ {recipe.ingredientes.length - 4} más...</li>
+                        {!expanded && ingredientes.length > 4 && (
+                            <li className="more-ingredients">+ {ingredientes.length - 4} más...</li>
                         )}
                     </ul>
                 </div>
@@ -490,7 +639,7 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                 <div className="recipe-preparation">
                     <h5>Preparación:</h5>
                     <ol>
-                        {(expanded ? recipe.preparacion : recipe.preparacion?.slice(0, 3))?.map((paso, idx) => (
+                        {(expanded ? preparacion : preparacion.slice(0, 3)).map((paso, idx) => (
                             <li key={idx}>{paso}</li>
                         ))}
                     </ol>
@@ -500,7 +649,7 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     };
 
     // =========================
-    // UI: MealSection
+    // UI: MealSection (solo visual mejorado)
     // =========================
     const MealSection = ({ mealType, recipes, day }) => {
         const mealInfo = MEAL_TYPES[mealType];
@@ -509,49 +658,164 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
         const loadingKey = `${day}_${mealType}`;
         const isMealLoading = !!mealLoading[loadingKey];
 
+        const renderIngredients = (recipe) => {
+            const list = Array.isArray(recipe?.ingredientes) ? recipe.ingredientes : [];
+            if (!list.length) return <Typography variant="body2" sx={{ opacity: 0.75 }}>Sin ingredientes.</Typography>;
+
+            return (
+                <Box component="ul" className="meal-detail-list" sx={{ m: 0, pl: 2 }}>
+                    {list.map((ing, i) => (
+                        <li key={i}>
+                            <Typography variant="body2">
+                                {ing?.cantidad} {ing?.unidad} de {ing?.alimento}
+                            </Typography>
+                        </li>
+                    ))}
+                </Box>
+            );
+        };
+
+        const renderPreparation = (recipe) => {
+            const steps = Array.isArray(recipe?.preparacion) ? recipe.preparacion : [];
+            if (!steps.length) return <Typography variant="body2" sx={{ opacity: 0.75 }}>Sin preparación.</Typography>;
+
+            return (
+                <Box component="ol" className="meal-detail-list" sx={{ m: 0, pl: 2 }}>
+                    {steps.map((paso, i) => (
+                        <li key={i}>
+                            <Typography variant="body2">{paso}</Typography>
+                        </li>
+                    ))}
+                </Box>
+            );
+        };
+
         return (
-            <div className="meal-section">
-                <div className="meal-header">
-                    <div className="meal-title-group">
-                        <span className="meal-icon">{mealInfo.icon}</span>
-                        <h3 className="meal-title" style={{ color: mealInfo.color }}>
-                            {mealInfo.label}
-                        </h3>
-                    </div>
+            <Card
+                className="meal-card"
+                sx={{
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                }}
+            >
+                <CardHeader
+                    className="meal-card-header"
+                    sx={{ pb: 1 }}
+                    title={
+                        <Stack direction="row" spacing={1} alignItems="center">
+                            <span style={{ fontSize: 18 }}>{mealInfo.icon}</span>
+                            <Typography variant="h6" sx={{ color: mealInfo.color, fontWeight: 900 }}>
+                                {mealInfo.label}
+                            </Typography>
+                            {!isEmpty && (
+                                <span className="meal-count-pill">
+                                    {Array.isArray(recipes) ? recipes.length : 0}
+                                </span>
+                            )}
+                        </Stack>
+                    }
+                    action={
+                        <Tooltip title="Regenerar esta comida">
+                            <span>
+                                <IconButton
+                                    className="meal-regenerate-btn"
+                                    onClick={() => handleRegenerateMeal(mealType)}
+                                    disabled={isMealLoading}
+                                    size="small"
+                                >
+                                    {isMealLoading ? <CircularProgress size={18} /> : <RotateCcw size={18} />}
+                                </IconButton>
+                            </span>
+                        </Tooltip>
+                    }
+                />
 
-                    <div className="meal-actions">
-                        <button
-                            className="btn-regenerate-meal"
-                            onClick={() => handleRegenerateMeal(mealType)}
-                            title="Regenerar esta comida"
-                            disabled={isMealLoading}
-                        >
-                            {isMealLoading ? <Loader2 size={16} className="spinner" /> : <RotateCcw size={16} />}
-                        </button>
-                    </div>
-                </div>
+                <CardContent
+                    className="meal-card-content"
+                    sx={{
+                        pt: 0,
+                        display: "flex",
+                        flexDirection: "column",
+                        flex: 1,
+                        minHeight: 0,
+                    }}
+                >
+                    {isEmpty ? (
+                        <Stack spacing={1.5} alignItems="center" sx={{ py: 2, flex: 1, justifyContent: "center" }}>
+                            <AlertCircle size={30} color="#94a3b8" />
+                            <Typography variant="body2" sx={{ opacity: 0.8, textAlign: "center" }}>
+                                No hay recetas generadas para esta comida
+                            </Typography>
 
-                {isEmpty ? (
-                    <div className="empty-meal">
-                        <AlertCircle size={32} color="#94a3b8" />
-                        <p>No hay recetas generadas para esta comida</p>
-                        <button
-                            className="btn-generate-meal"
-                            onClick={() => handleRegenerateMeal(mealType)}
-                            disabled={isMealLoading}
-                        >
-                            {isMealLoading ? <Loader2 size={16} className="spinner" /> : <Sparkles size={16} />}
-                            Generar {mealInfo.label}
-                        </button>
-                    </div>
-                ) : (
-                    <div className="recipes-grid">
-                        {recipes.map((recipe, idx) => (
-                            <RecipeCard key={idx} recipe={recipe} />
-                        ))}
-                    </div>
-                )}
-            </div>
+                            <Button
+                                variant="contained"
+                                onClick={() => handleRegenerateMeal(mealType)}
+                                disabled={isMealLoading}
+                                startIcon={isMealLoading ? <CircularProgress size={16} /> : <Sparkles size={16} />}
+                                sx={{
+                                    textTransform: "none",
+                                    fontWeight: 900,
+                                    borderRadius: 3,
+                                    px: 2,
+                                    py: 1,
+                                }}
+                            >
+                                Generar {mealInfo.label}
+                            </Button>
+                        </Stack>
+                    ) : (
+                        <Stack className="meal-scroll" spacing={2} sx={{ flex: 1, minHeight: 0 }}>
+                            {(Array.isArray(recipes) ? recipes : []).map((recipe, idx) => (
+                                <Box key={idx} className="meal-recipe-box" sx={{ display: "grid", gap: 1.1 }}>
+                                    {/* Título */}
+                                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
+                                        <Typography variant="subtitle1" className="meal-recipe-title" sx={{ fontWeight: 950, lineHeight: 1.15 }}>
+                                            {recipe?.nombre}
+                                        </Typography>
+                                        <Typography variant="caption" className="meal-recipe-time" sx={{ opacity: 0.8, fontWeight: 800 }}>
+                                            ⏱️ {recipe?.tiempoPreparacion}
+                                        </Typography>
+                                    </Stack>
+
+                                    {/* Chips macros (una fila cómoda) */}
+                                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap className="meal-macros-row">
+                                        <Chip size="small" className="macro-chip" label={`${Math.round(recipe?.nutricion?.calorias || 0)} kcal`} />
+                                        <Chip size="small" className="macro-chip" label={`${Math.round(recipe?.nutricion?.proteinas || 0)} g Prot`} />
+                                        <Chip size="small" className="macro-chip" label={`${Math.round(recipe?.nutricion?.carbohidratos || 0)} g Carb`} />
+                                        <Chip size="small" className="macro-chip" label={`${Math.round(recipe?.nutricion?.grasas || 0)} g Gras`} />
+                                    </Stack>
+
+                                    <Divider />
+
+                                    {/* Acordeones (1 columna, elegantes) */}
+                                    <Accordion className="meal-accordion">
+                                        <AccordionSummary expandIcon={<ExpandMoreIcon />} className="meal-accordion-summary">
+                                            <Typography className="meal-accordion-title" sx={{ fontWeight: 950 }}>
+                                                Ingredientes
+                                            </Typography>
+                                        </AccordionSummary>
+                                        <AccordionDetails className="meal-accordion-details">
+                                            {renderIngredients(recipe)}
+                                        </AccordionDetails>
+                                    </Accordion>
+
+                                    <Accordion className="meal-accordion">
+                                        <AccordionSummary expandIcon={<ExpandMoreIcon />} className="meal-accordion-summary">
+                                            <Typography className="meal-accordion-title" sx={{ fontWeight: 950 }}>
+                                                Preparación
+                                            </Typography>
+                                        </AccordionSummary>
+                                        <AccordionDetails className="meal-accordion-details">
+                                            {renderPreparation(recipe)}
+                                        </AccordionDetails>
+                                    </Accordion>
+                                </Box>
+                            ))}
+                        </Stack>
+                    )}
+                </CardContent>
+            </Card>
         );
     };
 
@@ -562,166 +826,185 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     const hasAnyRecipes = Object.values(weeklyDiet[currentDay]).some((meals) => meals.length > 0);
 
     return (
-        <div className="diet-generator-overlay">
-            <div className="diet-generator-container">
-                {/* HEADER */}
-                <div className="diet-generator-header">
-                    <div className="header-title-group">
-                        <ChefHat size={28} className="header-icon" />
-                        <div>
-                            <h2 className="header-title">Generador de Dietas IA</h2>
-                            <p className="header-subtitle">
-                                Plan Semanal para {patientName} • {targetKcal} kcal/día
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="header-macros">
-                        <div className="header-macro-badge">
-                            <div className="macro-fill" style={{
-                                height: `${Math.min((dayTotals.calorias / targetKcal) * 100, 100)}%`,
-                                backgroundColor: "#fbbf24"
-                            }} />
-                            <div className="macro-content">
-                                <span className="header-macro-label">Objetivo</span>
-                                <span className="header-macro-value">{Math.round(dayTotals.calorias)}/{targetKcal}</span>
+        <ThemeProvider theme={muiTheme}>
+            <CssBaseline />
+            <div className="diet-generator-overlay">
+                <div className="diet-generator-container">
+                    {/* HEADER */}
+                    <div className="diet-generator-header">
+                        <div className="header-title-group">
+                            <ChefHat size={28} className="header-icon" />
+                            <div>
+                                <h2 className="header-title">Generador de Dietas IA</h2>
+                                <p className="header-subtitle">
+                                    Plan Semanal para {patientName} • {targetKcal} kcal/día
+                                </p>
                             </div>
                         </div>
 
-                        <div className="header-macro-badge">
-                            <div className="macro-fill" style={{
-                                height: `${Math.min((dayTotals.proteinas / targetProtein) * 100, 100)}%`,
-                                backgroundColor: "#f87171"
-                            }} />
-                            <div className="macro-content">
-                                <span className="header-macro-label">Proteína</span>
-                                <span className="header-macro-value">{Math.round(dayTotals.proteinas)}/{targetProtein}g</span>
+                        <div className="header-macros">
+                            <div className="header-macro-badge">
+                                <div
+                                    className="macro-fill"
+                                    style={{
+                                        height: `${Math.min((dayTotals.calorias / targetKcal) * 100, 100)}%`,
+                                        backgroundColor: "#fbbf24",
+                                    }}
+                                />
+                                <div className="macro-content">
+                                    <span className="header-macro-label">Objetivo</span>
+                                    <span className="header-macro-value">
+                                        {Math.round(dayTotals.calorias)}/{targetKcal}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="header-macro-badge">
+                                <div
+                                    className="macro-fill"
+                                    style={{
+                                        height: `${Math.min((dayTotals.proteinas / targetProtein) * 100, 100)}%`,
+                                        backgroundColor: "#f87171",
+                                    }}
+                                />
+                                <div className="macro-content">
+                                    <span className="header-macro-label">Proteína</span>
+                                    <span className="header-macro-value">
+                                        {Math.round(dayTotals.proteinas)}/{targetProtein}g
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="header-macro-badge">
+                                <div
+                                    className="macro-fill"
+                                    style={{
+                                        height: `${Math.min((dayTotals.carbohidratos / targetCarbs) * 100, 100)}%`,
+                                        backgroundColor: "#60a5fa",
+                                    }}
+                                />
+                                <div className="macro-content">
+                                    <span className="header-macro-label">Carbos</span>
+                                    <span className="header-macro-value">
+                                        {Math.round(dayTotals.carbohidratos)}/{targetCarbs}g
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="header-macro-badge">
+                                <div
+                                    className="macro-fill"
+                                    style={{
+                                        height: `${Math.min((dayTotals.grasas / targetFats) * 100, 100)}%`,
+                                        backgroundColor: "#34d399",
+                                    }}
+                                />
+                                <div className="macro-content">
+                                    <span className="header-macro-label">Grasas</span>
+                                    <span className="header-macro-value">
+                                        {Math.round(dayTotals.grasas)}/{targetFats}g
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="header-macro-badge">
-                            <div className="macro-fill" style={{
-                                height: `${Math.min((dayTotals.carbohidratos / targetCarbs) * 100, 100)}%`,
-                                backgroundColor: "#60a5fa"
-                            }} />
-                            <div className="macro-content">
-                                <span className="header-macro-label">Carbos</span>
-                                <span className="header-macro-value">{Math.round(dayTotals.carbohidratos)}/{targetCarbs}g</span>
-                            </div>
-                        </div>
-
-                        <div className="header-macro-badge">
-                            <div className="macro-fill" style={{
-                                height: `${Math.min((dayTotals.grasas / targetFats) * 100, 100)}%`,
-                                backgroundColor: "#34d399"
-                            }} />
-                            <div className="macro-content">
-                                <span className="header-macro-label">Grasas</span>
-                                <span className="header-macro-value">{Math.round(dayTotals.grasas)}/{targetFats}g</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="header-actions">
-                        <button
-                            className="btn-generate-day-header"
-                            onClick={handleGenerateCurrentDay}
-                            disabled={isGeneratingDay}
-                            title="Genera SOLO el día seleccionado"
-                        >
-                            {isGeneratingDay ? (
-                                <>
-                                    <Loader2 size={16} className="spinner" />
-                                    <span>Generando...</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Sparkles size={16} />
-                                    <span>Generar Día {DAYS.find((d) => d.key === currentDay)?.label || ""}</span>
-                                </>
-                            )}
-                        </button>
-
-                        <button
-                            className="btn-header-icon btn-print-header"
-                            onClick={handlePrintPdf}
-                            title="Imprimir PDF"
-                        >
-                            <Printer size={18} />
-                        </button>
-
-                        <button
-                            className="btn-header-icon btn-save-header"
-                            onClick={handleSaveDiet}
-                            disabled={!hasAnyRecipes}
-                            title="Guardar Dieta Completa"
-                        >
-                            <Save size={18} />
-                        </button>
-
-                        <button className="btn-close" onClick={onClose} title="Cerrar">
-                            <X size={20} />
-                        </button>
-                    </div>
-                </div>
-
-                {/* PROGRESO */}
-                {isGeneratingDay && (
-                    <div className="generation-progress">
-                        <div className="progress-bar">
-                            <div className="progress-fill" style={{ width: `${generationProgress}%` }} />
-                        </div>
-                        <p className="progress-status">{generationStatus}</p>
-                        {jobId && (
-                            <p className="progress-status" style={{ opacity: 0.7 }}>
-                                Job: {jobId}
-                            </p>
-                        )}
-                    </div>
-                )}
-
-                {/* TABS DÍAS */}
-                <div className="days-tabs">
-                    {DAYS.map((day) => {
-                        const dayHasRecipes = Object.values(weeklyDiet[day.key]).some((meals) => meals.length > 0);
-
-                        return (
+                        <div className="header-actions">
                             <button
-                                key={day.key}
-                                className={`day-tab ${currentDay === day.key ? "active" : ""}`}
-                                onClick={() => setCurrentDay(day.key)}
+                                className="btn-generate-day-header"
+                                onClick={handleGenerateCurrentDay}
+                                disabled={isGeneratingDay}
+                                title="Genera SOLO el día seleccionado"
                             >
-                                <Calendar size={16} />
-                                <span>{day.label}</span>
-                                {dayHasRecipes && <Check size={14} className="day-check" />}
+                                {isGeneratingDay ? (
+                                    <>
+                                        <Loader2 size={16} className="spinner" />
+                                        <span>Generando...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles size={16} />
+                                        <span>Generar Día {DAYS.find((d) => d.key === currentDay)?.label || ""}</span>
+                                    </>
+                                )}
                             </button>
-                        );
-                    })}
-                </div>
 
-                {/* CONTENIDO DÍA */}
-                <div className="day-content">
-                    <div className="meals-container">
-                        {Object.keys(MEAL_TYPES).map((mealType) => (
-                            <MealSection
-                                key={mealType}
-                                mealType={mealType}
-                                recipes={weeklyDiet[currentDay][mealType]}
-                                day={currentDay}
-                            />
-                        ))}
-                    </div>
-                </div>
+                            <button className="btn-header-icon btn-print-header" onClick={handlePrintPdf} title="Imprimir PDF">
+                                <Printer size={18} />
+                            </button>
 
-                {/* TOAST */}
-                {showSuccess && (
-                    <div className="success-toast">
-                        <Check size={24} />
-                        <span>¡Listo!</span>
+                            <button
+                                className="btn-header-icon btn-save-header"
+                                onClick={handleSaveDiet}
+                                disabled={!hasAnyRecipes}
+                                title="Guardar Dieta Completa"
+                            >
+                                <Save size={18} />
+                            </button>
+
+                            <button className="btn-close" onClick={onClose} title="Cerrar">
+                                <X size={20} />
+                            </button>
+                        </div>
                     </div>
-                )}
+
+                    {/* PROGRESO */}
+                    {isGeneratingDay && (
+                        <div className="generation-progress">
+                            <div className="progress-bar">
+                                <div className="progress-fill" style={{ width: `${generationProgress}%` }} />
+                            </div>
+                            <p className="progress-status">{generationStatus}</p>
+                            {jobId && (
+                                <p className="progress-status" style={{ opacity: 0.7 }}>
+                                    Job: {jobId}
+                                </p>
+                            )}
+                        </div>
+                    )}
+
+                    {/* TABS DÍAS */}
+                    <div className="days-tabs">
+                        {DAYS.map((day) => {
+                            const dayHasRecipes = Object.values(weeklyDiet[day.key]).some((meals) => meals.length > 0);
+
+                            return (
+                                <button
+                                    key={day.key}
+                                    className={`day-tab ${currentDay === day.key ? "active" : ""}`}
+                                    onClick={() => setCurrentDay(day.key)}
+                                >
+                                    <Calendar size={16} />
+                                    <span>{day.label}</span>
+                                    {dayHasRecipes && <Check size={14} className="day-check" />}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* CONTENIDO DÍA */}
+                    <div className="day-content">
+                        <div className="meals-container">
+                            {Object.keys(MEAL_TYPES).map((mealType) => (
+                                <MealSection
+                                    key={mealType}
+                                    mealType={mealType}
+                                    recipes={weeklyDiet[currentDay][mealType]}
+                                    day={currentDay}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* TOAST */}
+                    {showSuccess && (
+                        <div className="success-toast">
+                            <Check size={24} />
+                            <span>¡Listo!</span>
+                        </div>
+                    )}
+                </div>
             </div>
-        </div>
+        </ThemeProvider>
     );
 };
 
