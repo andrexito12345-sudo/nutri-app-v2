@@ -280,8 +280,16 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     };
 
     useEffect(() => {
-        return () => stopPolling();
+        // Cuando se abre el generador: bloquear scroll del body
+        document.body.classList.add("body--diet-open");
+
+        // Cleanup: cuando se cierra el generador
+        return () => {
+            document.body.classList.remove("body--diet-open");
+            stopPolling(); // Aquí también paras el polling
+        };
     }, []);
+
 
     // (Opcional) si te llega algo ya generado en aiGeneratedMenu
     useEffect(() => {

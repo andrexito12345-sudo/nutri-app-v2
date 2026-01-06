@@ -274,6 +274,24 @@
     padding: 18px 24px;
     overflow-y: auto;
     background: #ffffff;
+
+    /* Scroll fino en Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.8) transparent;
+}
+
+/* Scroll fino y gris en navegadores WebKit (Chrome, Edge, etc.) */
+.day-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.day-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.day-content::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.8); /* gris suave, nada de verde chillón */
+    border-radius: 999px;
 }
 
 /* layout tipo informe: comidas en columna */
@@ -561,9 +579,8 @@
 /* ============================================================================
    SCROLL ÚNICO
    ========================================================================== */
-
-html,
-body {
+/* Bloquea el scroll del body SOLO cuando el generador está abierto */
+.body--diet-open {
     overflow: hidden;
 }
 
