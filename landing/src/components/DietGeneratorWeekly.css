@@ -80,16 +80,12 @@
 /* --- macros en el centro, estilo chips --- */
 
 .header-macros {
-    grid-area: metrics;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
+
 }
 
 .header-macro-badge {
     position: relative;
+    overflow: hidden;
     padding: 6px 12px;
     background: #ffffff;
     border-radius: 999px;
@@ -101,12 +97,28 @@
     box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
 }
 
+
 .macro-content {
+    position: relative;   /* 👈 importante */
+    z-index: 1;           /* 👈 para que quede sobre la barra de color */
     display: flex;
     flex-direction: column;
     gap: 1px;
     text-align: left;
 }
+
+
+/* Barra que se rellena (recibe height y backgroundColor por inline-style) */
+.macro-fill {
+    position: absolute;        /* 👈 se pega al fondo del badge */
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    border-radius: 999px;      /* sigue la forma de la píldora */
+    transition: height 0.4s ease-out;  /* animación al cambiar el % */
+    z-index: 0;                /* 👈 queda detrás del texto */
+}
+
 
 .header-macro-label {
     font-size: 10px;
@@ -587,4 +599,17 @@
 
 .MuiCardContent-root {
     overflow: visible !important;
+}
+
+.spinner {
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
