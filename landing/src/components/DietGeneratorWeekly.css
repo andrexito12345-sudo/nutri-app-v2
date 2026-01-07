@@ -14,11 +14,12 @@
 .diet-generator-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.04);
+    z-index: 1100;         /* 🔧 antes seguramente era 9999 */
     display: flex;
-    align-items: stretch;
-    justify-content: stretch;
-    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(6px);
 }
 
 /* ================= CONTENEDOR ================= */

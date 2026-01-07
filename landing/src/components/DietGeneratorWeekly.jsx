@@ -22,6 +22,10 @@ import {
     Tooltip,
     CircularProgress,
     Box,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
 } from "@mui/material";
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -38,11 +42,13 @@ import {
     Loader2,
     Check,
     AlertCircle,
+    ListChecks,
 } from "lucide-react";
 import api from "../services/api";
 import "./DietGeneratorWeekly.css";
 
 import { printWeeklyDietPlan } from "../utils/printWeeklyDietPlan";
+import { printShoppingList } from "../utils/printShoppingList";
 
 const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) => {
     const {
@@ -84,12 +90,16 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     const [generationStatus, setGenerationStatus] = useState("");
     const [showSuccess, setShowSuccess] = useState(false);
 
-    // Loading por comida (para regenerar sin congelar todo)
+    // Loading por comida
     const [mealLoading, setMealLoading] = useState(() => ({})); // key: `${day}_${mealType}` -> boolean
 
     // JOB + POLLING
     const [jobId, setJobId] = useState(null);
     const pollRef = useRef(null);
+
+    // Lista de compras (por día)
+    const [shoppingList, setShoppingList] = useState({});
+    const [isShoppingOpen, setIsShoppingOpen] = useState(false);
 
     // =========================
     // Constantes UI
@@ -121,7 +131,7 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     };
 
     // =========================
-    // Tema MUI (solo visual)
+    // Tema MUI
     // =========================
     const muiTheme = createTheme({
         shape: { borderRadius: 18 },
@@ -239,12 +249,12 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     });
 
     // =========================
-    // Helpers: normalizar recetas
+    // Helpers
     // =========================
     const normalizeRecipeItem = (item) => {
         if (!item) return null;
-        if (item.receta && typeof item.receta === "object") return item.receta; // backend style
-        return item; // ya es receta plana
+        if (item.receta && typeof item.receta === "object") return item.receta;
+        return item;
     };
 
     const convertBackendDayToFrontendMeals = (backendDayObj) => {
@@ -280,22 +290,15 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     };
 
     useEffect(() => {
-        // Cuando se abre el generador: bloquear scroll del body
         document.body.classList.add("body--diet-open");
-
-        // Cleanup: cuando se cierra el generador
         return () => {
             document.body.classList.remove("body--diet-open");
-            stopPolling(); // Aquí también paras el polling
+            stopPolling();
         };
     }, []);
 
-
-    // (Opcional) si te llega algo ya generado en aiGeneratedMenu
     useEffect(() => {
         if (!aiGeneratedMenu) return;
-
-        // [No verificado] No sé el formato exacto de aiGeneratedMenu en tu proyecto.
         if (typeof aiGeneratedMenu === "object" && aiGeneratedMenu.lunes) {
             setWeeklyDiet(aiGeneratedMenu);
         }
@@ -322,21 +325,6 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
         return totals;
     };
 
-    const calculateMealTotals = (recipes) => {
-        return recipes.reduce(
-            (acc, recipe) => {
-                if (recipe?.nutricion) {
-                    acc.calorias += recipe.nutricion.calorias || 0;
-                    acc.proteinas += recipe.nutricion.proteinas || 0;
-                    acc.carbohidratos += recipe.nutricion.carbohidratos || 0;
-                    acc.grasas += recipe.nutricion.grasas || 0;
-                }
-                return acc;
-            },
-            { calorias: 0, proteinas: 0, carbohidratos: 0, grasas: 0 }
-        );
-    };
-
     const calculateWeekTotals = () => {
         let weekTotals = { calorias: 0, proteinas: 0, carbohidratos: 0, grasas: 0 };
         Object.keys(weeklyDiet).forEach((day) => {
@@ -350,7 +338,35 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     };
 
     // =========================
-    // API: Generar SOLO EL DÍA actual (job + polling)
+    // Lista de compras: ingredientes únicos POR DÍA
+    // =========================
+    const aggregateWeeklyIngredientsByDay = (diet) => {
+        const result = {};
+
+        Object.entries(diet).forEach(([dayKey, dayMeals]) => {
+            const ingredientSet = new Set();
+
+            Object.values(dayMeals).forEach((mealRecipes) => {
+                (mealRecipes || []).forEach((recipe) => {
+                    (recipe?.ingredientes || []).forEach((ing) => {
+                        if (!ing || !ing.alimento) return;
+                        const nombre = String(ing.alimento).trim();
+                        if (!nombre) return;
+                        ingredientSet.add(nombre);
+                    });
+                });
+            });
+
+            result[dayKey] = Array.from(ingredientSet).sort((a, b) =>
+                a.localeCompare(b, "es")
+            );
+        });
+
+        return result;
+    };
+
+    // =========================
+    // API: generar día
     // =========================
     const startGenerateDayJob = async (payload) => {
         try {
@@ -371,24 +387,25 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
 
                     const job = statusResp.data.job;
 
-                    // progreso
                     const done = job?.progress?.done ?? 0;
                     const total = job?.progress?.total ?? 5;
                     const pct = Math.round((done / total) * 100);
                     setGenerationProgress(Number.isFinite(pct) ? pct : 0);
 
-                    // status
                     const pDay = job?.progress?.day;
                     const pMeal = job?.progress?.mealType;
                     if (pDay && pMeal) {
-                        setGenerationStatus(`Generando: ${String(pDay).toUpperCase()} - ${pMeal} (${done}/${total})`);
+                        setGenerationStatus(
+                            `Generando: ${String(pDay).toUpperCase()} - ${pMeal} (${done}/${total})`
+                        );
                     } else {
                         setGenerationStatus(`Generando día... (${done}/${total})`);
                     }
 
-                    // pintar parcial: SOLO el día que estamos generando
                     if (job?.dayKey && job?.weeklyPlan?.[job.dayKey]) {
-                        const convertedMeals = convertBackendDayToFrontendMeals(job.weeklyPlan[job.dayKey]);
+                        const convertedMeals = convertBackendDayToFrontendMeals(
+                            job.weeklyPlan[job.dayKey]
+                        );
                         setWeeklyDiet((prev) => ({
                             ...prev,
                             [job.dayKey]: {
@@ -398,7 +415,6 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                         }));
                     }
 
-                    // fin
                     if (job.status === "done") {
                         stopPolling();
                         setGenerationProgress(100);
@@ -419,7 +435,6 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
             }, 900);
         } catch (err) {
             stopPolling();
-            // ✅ Mejor mensaje para ver details si viene del backend
             const details = err?.response?.data?.details;
             const msg =
                 err?.response?.data?.error ||
@@ -430,34 +445,12 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
         }
     };
 
-    const handlePrintPdf = () => {
-        const hasAnyWeek = Object.values(weeklyDiet).some((dayObj) =>
-            Object.values(dayObj).some((m) => m.length > 0)
-        );
-
-        if (!hasAnyWeek) {
-            alert("No hay datos para imprimir.");
-            return;
-        }
-
-        printWeeklyDietPlan({
-            brand: "NutriVida Pro",
-            doctorLabel: "Nutricionista",
-            patientName,
-            kcal: targetKcal,
-            macros: { p: targetProtein, c: targetCarbs, f: targetFats },
-            weeklyDiet,
-        });
-    };
-
     const handleGenerateCurrentDay = async () => {
         setIsGeneratingDay(true);
         setGenerationProgress(0);
         setGenerationStatus(`Iniciando generación del día: ${currentDay.toUpperCase()}...`);
 
         try {
-            // ✅ 1) Construir usedRecipeNames con TODO lo ya generado en la semana
-            // (excluimos el día actual para no “autoprohibir” si estás regenerando el mismo día)
             const usedRecipeNames = [];
             Object.entries(weeklyDiet).forEach(([dayKey, dayMeals]) => {
                 if (dayKey === currentDay) return;
@@ -468,7 +461,6 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                 });
             });
 
-            // ✅ 2) Deduplicar
             const seen = new Set();
             const usedRecipeNamesDeduped = [];
             for (const n of usedRecipeNames) {
@@ -479,7 +471,6 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                 }
             }
 
-            // ✅ 3) Payload + usedRecipeNames
             const payload = {
                 dayKey: currentDay,
                 targetKcal,
@@ -506,7 +497,7 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     };
 
     // =========================
-    // API: Regenerar una comida
+    // API: Regenerar comida
     // =========================
     const handleRegenerateMeal = async (mealType) => {
         const backMealType = FRONT_TO_BACK_MEAL[mealType];
@@ -516,12 +507,12 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
 
         try {
             const currentMealRecipes = weeklyDiet[currentDay]?.[mealType] || [];
-            const currentNames = currentMealRecipes.map(r => r?.nombre).filter(Boolean);
+            const currentNames = currentMealRecipes.map((r) => r?.nombre).filter(Boolean);
 
             const usedNames = [...currentNames];
-            Object.values(weeklyDiet).forEach(dayMeals => {
-                Object.values(dayMeals).forEach(mealRecipes => {
-                    mealRecipes.forEach(r => {
+            Object.values(weeklyDiet).forEach((dayMeals) => {
+                Object.values(dayMeals).forEach((mealRecipes) => {
+                    mealRecipes.forEach((r) => {
                         if (r?.nombre) usedNames.push(r.nombre);
                     });
                 });
@@ -580,6 +571,7 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
             weeklyDiet,
             targetCalories: targetKcal,
             averageKcal: avgKcal,
+            shoppingList,
         });
 
         setShowSuccess(true);
@@ -587,7 +579,64 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     };
 
     // =========================
-    // UI: RecipeCard (se mantiene tal cual)
+    // Imprimir PDF de la dieta
+    // =========================
+    const handlePrintPdf = () => {
+        const hasAnyWeek = Object.values(weeklyDiet).some((dayObj) =>
+            Object.values(dayObj).some((m) => m.length > 0)
+        );
+
+        if (!hasAnyWeek) {
+            alert("No hay datos para imprimir.");
+            return;
+        }
+
+        printWeeklyDietPlan({
+            brand: "NutriVida Pro",
+            doctorLabel: "Nutricionista",
+            patientName,
+            kcal: targetKcal,
+            macros: { p: targetProtein, c: targetCarbs, f: targetFats },
+            weeklyDiet,
+        });
+    };
+
+    // =========================
+    // Lista de ingredientes (abrir modal + imprimir)
+    // =========================
+    const handleOpenShoppingList = () => {
+        const listByDay = aggregateWeeklyIngredientsByDay(weeklyDiet);
+
+        const hasAny = Object.values(listByDay).some(
+            (arr) => Array.isArray(arr) && arr.length > 0
+        );
+        if (!hasAny) {
+            alert("No hay ingredientes porque aún no hay recetas generadas en la semana.");
+            return;
+        }
+
+        setShoppingList(listByDay);
+        setIsShoppingOpen(true);
+    };
+
+    const handlePrintShoppingList = () => {
+        const hasAny = Object.values(shoppingList || {}).some(
+            (arr) => Array.isArray(arr) && arr.length > 0
+        );
+        if (!hasAny) {
+            alert("No hay ingredientes para imprimir.");
+            return;
+        }
+
+        printShoppingList({
+            brand: "NutriVida Pro",
+            patientName: patientName || "",
+            shoppingListByDay: shoppingList,
+        });
+    };
+
+    // =========================
+    // UI: RecipeCard (no se usa en la vista actual, pero lo dejo)
     // =========================
     const RecipeCard = ({ recipe }) => {
         const [expanded, setExpanded] = React.useState(false);
@@ -613,19 +662,27 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
 
                 <div className="recipe-nutrition">
                     <div className="nutrition-badge">
-                        <span className="nutrition-value">{Math.round(recipe.nutricion?.calorias || 0)}</span>
+                        <span className="nutrition-value">
+                            {Math.round(recipe.nutricion?.calorias || 0)}
+                        </span>
                         <span className="nutrition-label">kcal</span>
                     </div>
                     <div className="nutrition-badge">
-                        <span className="nutrition-value">{Math.round(recipe.nutricion?.proteinas || 0)}g</span>
+                        <span className="nutrition-value">
+                            {Math.round(recipe.nutricion?.proteinas || 0)}g
+                        </span>
                         <span className="nutrition-label">Prot</span>
                     </div>
                     <div className="nutrition-badge">
-                        <span className="nutrition-value">{Math.round(recipe.nutricion?.carbohidratos || 0)}g</span>
+                        <span className="nutrition-value">
+                            {Math.round(recipe.nutricion?.carbohidratos || 0)}g
+                        </span>
                         <span className="nutrition-label">Carb</span>
                     </div>
                     <div className="nutrition-badge">
-                        <span className="nutrition-value">{Math.round(recipe.nutricion?.grasas || 0)}g</span>
+                        <span className="nutrition-value">
+                            {Math.round(recipe.nutricion?.grasas || 0)}g
+                        </span>
                         <span className="nutrition-label">Gra</span>
                     </div>
                 </div>
@@ -657,7 +714,7 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     };
 
     // =========================
-    // UI: MealSection (solo visual mejorado)
+    // UI: MealSection
     // =========================
     const MealSection = ({ mealType, recipes, day }) => {
         const mealInfo = MEAL_TYPES[mealType];
@@ -668,7 +725,12 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
 
         const renderIngredients = (recipe) => {
             const list = Array.isArray(recipe?.ingredientes) ? recipe.ingredientes : [];
-            if (!list.length) return <Typography variant="body2" sx={{ opacity: 0.75 }}>Sin ingredientes.</Typography>;
+            if (!list.length)
+                return (
+                    <Typography variant="body2" sx={{ opacity: 0.75 }}>
+                        Sin ingredientes.
+                    </Typography>
+                );
 
             return (
                 <Box component="ul" className="meal-detail-list" sx={{ m: 0, pl: 2 }}>
@@ -685,7 +747,12 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
 
         const renderPreparation = (recipe) => {
             const steps = Array.isArray(recipe?.preparacion) ? recipe.preparacion : [];
-            if (!steps.length) return <Typography variant="body2" sx={{ opacity: 0.75 }}>Sin preparación.</Typography>;
+            if (!steps.length)
+                return (
+                    <Typography variant="body2" sx={{ opacity: 0.75 }}>
+                        Sin preparación.
+                    </Typography>
+                );
 
             return (
                 <Box component="ol" className="meal-detail-list" sx={{ m: 0, pl: 2 }}>
@@ -713,7 +780,10 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                     title={
                         <Stack direction="row" spacing={1} alignItems="center">
                             <span style={{ fontSize: 18 }}>{mealInfo.icon}</span>
-                            <Typography variant="h6" sx={{ color: mealInfo.color, fontWeight: 900 }}>
+                            <Typography
+                                variant="h6"
+                                sx={{ color: mealInfo.color, fontWeight: 900 }}
+                            >
                                 {mealInfo.label}
                             </Typography>
                             {!isEmpty && (
@@ -732,7 +802,11 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                                     disabled={isMealLoading}
                                     size="small"
                                 >
-                                    {isMealLoading ? <CircularProgress size={18} /> : <RotateCcw size={18} />}
+                                    {isMealLoading ? (
+                                        <CircularProgress size={18} />
+                                    ) : (
+                                        <RotateCcw size={18} />
+                                    )}
                                 </IconButton>
                             </span>
                         </Tooltip>
@@ -750,9 +824,16 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                     }}
                 >
                     {isEmpty ? (
-                        <Stack spacing={1.5} alignItems="center" sx={{ py: 2, flex: 1, justifyContent: "center" }}>
+                        <Stack
+                            spacing={1.5}
+                            alignItems="center"
+                            sx={{ py: 2, flex: 1, justifyContent: "center" }}
+                        >
                             <AlertCircle size={30} color="#94a3b8" />
-                            <Typography variant="body2" sx={{ opacity: 0.8, textAlign: "center" }}>
+                            <Typography
+                                variant="body2"
+                                sx={{ opacity: 0.8, textAlign: "center" }}
+                            >
                                 No hay recetas generadas para esta comida
                             </Typography>
 
@@ -760,7 +841,13 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                                 variant="contained"
                                 onClick={() => handleRegenerateMeal(mealType)}
                                 disabled={isMealLoading}
-                                startIcon={isMealLoading ? <CircularProgress size={16} /> : <Sparkles size={16} />}
+                                startIcon={
+                                    isMealLoading ? (
+                                        <CircularProgress size={16} />
+                                    ) : (
+                                        <Sparkles size={16} />
+                                    )
+                                }
                                 sx={{
                                     textTransform: "none",
                                     fontWeight: 900,
@@ -775,31 +862,81 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                     ) : (
                         <Stack className="meal-scroll" spacing={2} sx={{ flex: 1, minHeight: 0 }}>
                             {(Array.isArray(recipes) ? recipes : []).map((recipe, idx) => (
-                                <Box key={idx} className="meal-recipe-box" sx={{ display: "grid", gap: 1.1 }}>
-                                    {/* Título */}
-                                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
-                                        <Typography variant="subtitle1" className="meal-recipe-title" sx={{ fontWeight: 950, lineHeight: 1.15 }}>
+                                <Box
+                                    key={idx}
+                                    className="meal-recipe-box"
+                                    sx={{ display: "grid", gap: 1.1 }}
+                                >
+                                    <Stack
+                                        direction="row"
+                                        justifyContent="space-between"
+                                        alignItems="flex-start"
+                                        gap={1}
+                                    >
+                                        <Typography
+                                            variant="subtitle1"
+                                            className="meal-recipe-title"
+                                            sx={{ fontWeight: 950, lineHeight: 1.15 }}
+                                        >
                                             {recipe?.nombre}
                                         </Typography>
-                                        <Typography variant="caption" className="meal-recipe-time" sx={{ opacity: 0.8, fontWeight: 800 }}>
+                                        <Typography
+                                            variant="caption"
+                                            className="meal-recipe-time"
+                                            sx={{ opacity: 0.8, fontWeight: 800 }}
+                                        >
                                             ⏱️ {recipe?.tiempoPreparacion}
                                         </Typography>
                                     </Stack>
 
-                                    {/* Chips macros (una fila cómoda) */}
-                                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap className="meal-macros-row">
-                                        <Chip size="small" className="macro-chip" label={`${Math.round(recipe?.nutricion?.calorias || 0)} kcal`} />
-                                        <Chip size="small" className="macro-chip" label={`${Math.round(recipe?.nutricion?.proteinas || 0)} g Prot`} />
-                                        <Chip size="small" className="macro-chip" label={`${Math.round(recipe?.nutricion?.carbohidratos || 0)} g Carb`} />
-                                        <Chip size="small" className="macro-chip" label={`${Math.round(recipe?.nutricion?.grasas || 0)} g Gras`} />
+                                    <Stack
+                                        direction="row"
+                                        spacing={1}
+                                        flexWrap="wrap"
+                                        useFlexGap
+                                        className="meal-macros-row"
+                                    >
+                                        <Chip
+                                            size="small"
+                                            className="macro-chip"
+                                            label={`${Math.round(
+                                                recipe?.nutricion?.calorias || 0
+                                            )} kcal`}
+                                        />
+                                        <Chip
+                                            size="small"
+                                            className="macro-chip"
+                                            label={`${Math.round(
+                                                recipe?.nutricion?.proteinas || 0
+                                            )} g Prot`}
+                                        />
+                                        <Chip
+                                            size="small"
+                                            className="macro-chip"
+                                            label={`${Math.round(
+                                                recipe?.nutricion?.carbohidratos || 0
+                                            )} g Carb`}
+                                        />
+                                        <Chip
+                                            size="small"
+                                            className="macro-chip"
+                                            label={`${Math.round(
+                                                recipe?.nutricion?.grasas || 0
+                                            )} g Gras`}
+                                        />
                                     </Stack>
 
                                     <Divider />
 
-                                    {/* Acordeones (1 columna, elegantes) */}
                                     <Accordion className="meal-accordion">
-                                        <AccordionSummary expandIcon={<ExpandMoreIcon />} className="meal-accordion-summary">
-                                            <Typography className="meal-accordion-title" sx={{ fontWeight: 950 }}>
+                                        <AccordionSummary
+                                            expandIcon={<ExpandMoreIcon />}
+                                            className="meal-accordion-summary"
+                                        >
+                                            <Typography
+                                                className="meal-accordion-title"
+                                                sx={{ fontWeight: 950 }}
+                                            >
                                                 Ingredientes
                                             </Typography>
                                         </AccordionSummary>
@@ -809,8 +946,14 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                                     </Accordion>
 
                                     <Accordion className="meal-accordion">
-                                        <AccordionSummary expandIcon={<ExpandMoreIcon />} className="meal-accordion-summary">
-                                            <Typography className="meal-accordion-title" sx={{ fontWeight: 950 }}>
+                                        <AccordionSummary
+                                            expandIcon={<ExpandMoreIcon />}
+                                            className="meal-accordion-summary"
+                                        >
+                                            <Typography
+                                                className="meal-accordion-title"
+                                                sx={{ fontWeight: 950 }}
+                                            >
                                                 Preparación
                                             </Typography>
                                         </AccordionSummary>
@@ -831,7 +974,9 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     // Render principal
     // =========================
     const dayTotals = calculateDayTotals(currentDay);
-    const hasAnyRecipes = Object.values(weeklyDiet[currentDay]).some((meals) => meals.length > 0);
+    const hasAnyRecipes = Object.values(weeklyDiet[currentDay]).some(
+        (meals) => meals.length > 0
+    );
 
     return (
         <ThemeProvider theme={muiTheme}>
@@ -855,7 +1000,10 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                                 <div
                                     className="macro-fill"
                                     style={{
-                                        height: `${Math.min((dayTotals.calorias / targetKcal) * 100, 100)}%`,
+                                        height: `${Math.min(
+                                            (dayTotals.calorias / targetKcal) * 100,
+                                            100
+                                        )}%`,
                                         backgroundColor: "#fbbf24",
                                     }}
                                 />
@@ -871,7 +1019,10 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                                 <div
                                     className="macro-fill"
                                     style={{
-                                        height: `${Math.min((dayTotals.proteinas / targetProtein) * 100, 100)}%`,
+                                        height: `${Math.min(
+                                            (dayTotals.proteinas / targetProtein) * 100,
+                                            100
+                                        )}%`,
                                         backgroundColor: "#f87171",
                                     }}
                                 />
@@ -887,7 +1038,10 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                                 <div
                                     className="macro-fill"
                                     style={{
-                                        height: `${Math.min((dayTotals.carbohidratos / targetCarbs) * 100, 100)}%`,
+                                        height: `${Math.min(
+                                            (dayTotals.carbohidratos / targetCarbs) * 100,
+                                            100
+                                        )}%`,
                                         backgroundColor: "#60a5fa",
                                     }}
                                 />
@@ -903,7 +1057,10 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                                 <div
                                     className="macro-fill"
                                     style={{
-                                        height: `${Math.min((dayTotals.grasas / targetFats) * 100, 100)}%`,
+                                        height: `${Math.min(
+                                            (dayTotals.grasas / targetFats) * 100,
+                                            100
+                                        )}%`,
                                         backgroundColor: "#34d399",
                                     }}
                                 />
@@ -917,6 +1074,7 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                         </div>
 
                         <div className="header-actions">
+                            {/* Generar día */}
                             <button
                                 className="btn-generate-day-header"
                                 onClick={handleGenerateCurrentDay}
@@ -931,15 +1089,33 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                                 ) : (
                                     <>
                                         <Sparkles size={16} />
-                                        <span>Generar Día {DAYS.find((d) => d.key === currentDay)?.label || ""}</span>
+                                        <span>
+                                            Generar Día{" "}
+                                            {DAYS.find((d) => d.key === currentDay)?.label || ""}
+                                        </span>
                                     </>
                                 )}
                             </button>
 
-                            <button className="btn-header-icon btn-print-header" onClick={handlePrintPdf} title="Imprimir PDF">
+                            {/* Abrir lista de ingredientes */}
+                            <button
+                                className="btn-header-icon btn-shopping-header"
+                                onClick={handleOpenShoppingList}
+                                title="Lista de ingredientes de la semana"
+                            >
+                                <ListChecks size={18} />
+                            </button>
+
+                            {/* Imprimir PDF de la dieta semanal */}
+                            <button
+                                className="btn-header-icon btn-print-header"
+                                onClick={handlePrintPdf}
+                                title="Imprimir PDF"
+                            >
                                 <Printer size={18} />
                             </button>
 
+                            {/* Guardar dieta */}
                             <button
                                 className="btn-header-icon btn-save-header"
                                 onClick={handleSaveDiet}
@@ -949,6 +1125,7 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                                 <Save size={18} />
                             </button>
 
+                            {/* Cerrar */}
                             <button className="btn-close" onClick={onClose} title="Cerrar">
                                 <X size={20} />
                             </button>
@@ -959,7 +1136,10 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                     {isGeneratingDay && (
                         <div className="generation-progress">
                             <div className="progress-bar">
-                                <div className="progress-fill" style={{ width: `${generationProgress}%` }} />
+                                <div
+                                    className="progress-fill"
+                                    style={{ width: `${generationProgress}%` }}
+                                />
                             </div>
                             <p className="progress-status">{generationStatus}</p>
                             {jobId && (
@@ -973,12 +1153,16 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                     {/* TABS DÍAS */}
                     <div className="days-tabs">
                         {DAYS.map((day) => {
-                            const dayHasRecipes = Object.values(weeklyDiet[day.key]).some((meals) => meals.length > 0);
+                            const dayHasRecipes = Object.values(weeklyDiet[day.key]).some(
+                                (meals) => meals.length > 0
+                            );
 
                             return (
                                 <button
                                     key={day.key}
-                                    className={`day-tab ${currentDay === day.key ? "active" : ""}`}
+                                    className={`day-tab ${
+                                        currentDay === day.key ? "active" : ""
+                                    }`}
                                     onClick={() => setCurrentDay(day.key)}
                                 >
                                     <Calendar size={16} />
@@ -1012,6 +1196,105 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
                     )}
                 </div>
             </div>
+
+            {/* MODAL LISTA DE INGREDIENTES */}
+            <Dialog
+                open={isShoppingOpen}
+                onClose={() => setIsShoppingOpen(false)}
+                fullWidth
+                maxWidth="sm"
+            >
+                <DialogTitle>Lista de ingredientes – Semana completa</DialogTitle>
+
+                <DialogContent dividers>
+                    <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
+                        Ingredientes únicos por día. Úsalo como checklist para las compras.
+                    </Typography>
+
+                    {Object.entries(shoppingList).map(([dayKey, items]) => {
+                        if (!Array.isArray(items) || items.length === 0) return null;
+
+                        const dayLabels = {
+                            lunes: "Lunes",
+                            martes: "Martes",
+                            miercoles: "Miércoles",
+                            jueves: "Jueves",
+                            viernes: "Viernes",
+                            sabado: "Sábado",
+                            domingo: "Domingo",
+                        };
+
+                        const dayName = dayLabels[dayKey] || dayKey;
+
+                        return (
+                            <Box key={dayKey} sx={{ mb: 2.5 }}>
+                                <Typography
+                                    variant="subtitle2"
+                                    sx={{
+                                        fontWeight: 800,
+                                        color: "primary.main",
+                                        mb: 0.5,
+                                    }}
+                                >
+                                    {dayName}
+                                </Typography>
+
+                                <Box
+                                    component="ul"
+                                    sx={{
+                                        listStyle: "none",
+                                        m: 0,
+                                        p: 0,
+                                        borderRadius: 2,
+                                        border: "1px solid #e5e7eb",
+                                        overflow: "hidden",
+                                    }}
+                                >
+                                    {items.map((name, idx) => (
+                                        <Box
+                                            key={idx}
+                                            component="li"
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                                px: 1.5,
+                                                py: 0.5,
+                                                borderBottom:
+                                                    idx === items.length - 1
+                                                        ? "none"
+                                                        : "1px solid #f3f4f6",
+                                            }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    width: 14,
+                                                    height: 14,
+                                                    borderRadius: 1,
+                                                    border: "1px solid #9ca3af",
+                                                    flexShrink: 0,
+                                                }}
+                                            />
+                                            <Typography variant="body2">{name}</Typography>
+                                        </Box>
+                                    ))}
+                                </Box>
+                            </Box>
+                        );
+                    })}
+                </DialogContent>
+
+                <DialogActions>
+                    <Button onClick={() => setIsShoppingOpen(false)}>Cerrar</Button>
+                    <Button
+                        variant="contained"
+                        onClick={handlePrintShoppingList}
+                        startIcon={<Printer size={16} />}
+                    >
+                        Imprimir lista
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </ThemeProvider>
     );
 };
