@@ -3,6 +3,9 @@
  * DIET GENERATOR WEEKLY - (Nuevo enfoque) Generación por DÍA + Regeneración por comida
  * ============================================================================
  */
+
+/** landing/src/components/DietGeneratorWeekly.jsx **/
+
 import {
     ThemeProvider,
     createTheme,
@@ -359,6 +362,34 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
     };
 
     // =========================
+// Normalización de ingredientes (shopping list)
+// =========================
+    const normalizeIngredientName = (value) => {
+        if (!value) return null;
+
+        const raw = String(value)
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "") // elimina tildes
+            .replace(/\s+/g, " ")
+            .trim();
+
+        // ❌ Palabras prohibidas
+        if (
+            raw === "ninguno" ||
+            raw === "ninguna" ||
+            raw === "no aplica" ||
+            raw === "-"
+        ) {
+            return null;
+        }
+
+        // Capitalización estándar
+        return raw.charAt(0).toUpperCase() + raw.slice(1);
+    };
+
+
+    // =========================
     // Lista de compras semanal POR DÍA
     // - ingredientes únicos (sin repetir nombre)
     // - sin cantidades
@@ -367,28 +398,30 @@ const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) 
         const result = {};
 
         Object.entries(diet).forEach(([dayKey, dayMeals]) => {
-            const ingredientSet = new Set();
+            const ingredientMap = new Map(); // key normalizada → valor bonito
 
             Object.values(dayMeals).forEach((mealRecipes) => {
                 (mealRecipes || []).forEach((recipe) => {
                     (recipe?.ingredientes || []).forEach((ing) => {
-                        if (!ing || !ing.alimento) return;
+                        const cleanName = normalizeIngredientName(ing?.alimento);
+                        if (!cleanName) return;
 
-                        const nombre = String(ing.alimento).trim();
-                        if (!nombre) return;
-
-                        ingredientSet.add(nombre);
+                        const key = cleanName.toLowerCase();
+                        if (!ingredientMap.has(key)) {
+                            ingredientMap.set(key, cleanName);
+                        }
                     });
                 });
             });
 
-            result[dayKey] = Array.from(ingredientSet).sort((a, b) =>
+            result[dayKey] = Array.from(ingredientMap.values()).sort((a, b) =>
                 a.localeCompare(b, "es")
             );
         });
 
         return result;
     };
+
 
     // =========================
     // API: Generar SOLO EL DÍA actual (job + polling)
