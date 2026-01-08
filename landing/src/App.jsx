@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'; // 1. Agregado useLocation
 import { Toaster } from 'react-hot-toast';
 
+import DietGeneratorWeeklyPage from './pages/DietGeneratorWeeklyPage';
+
 // Components
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -126,6 +128,16 @@ function App() {
                         </ProtectedRoute>
                     }
                 />
+
+                <Route
+                    path="/doctora/dietas-ia"
+                    element={
+                        <ProtectedRoute>
+                            <DietGeneratorWeeklyPage />
+                        </ProtectedRoute>
+                    }
+                />
+
 
                 {/* Rutas de Consulta SOAP */}
                 <Route

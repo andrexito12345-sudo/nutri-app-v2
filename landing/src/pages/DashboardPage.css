@@ -2147,3 +2147,226 @@
         justify-content: center;
     }
 }
+
+/* ===========================
+   LAYOUT TIPO "Oxbow UI"
+=========================== */
+
+.dash-shell {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    min-height: 100vh;
+    background: #f6f8fc;
+}
+
+/* Sidebar */
+.dash-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    background: #ffffff;
+    border-right: 1px solid rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+}
+
+.dash-sidebar-inner {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 18px 14px;
+}
+
+.dash-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 10px 14px;
+}
+
+.dash-brand-mark {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #2563eb, #60a5fa);
+}
+
+.dash-brand-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+}
+
+.dash-brand-subtitle {
+    font-size: 12px;
+    color: rgba(15, 23, 42, 0.6);
+    margin-top: 2px;
+}
+
+.dash-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 8px;
+}
+
+.dash-nav-item {
+    width: 100%;
+    text-align: left;
+    border: 1px solid transparent;
+    background: transparent;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(15, 23, 42, 0.75);
+    cursor: pointer;
+    transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.dash-nav-item:hover {
+    background: rgba(37, 99, 235, 0.06);
+    border-color: rgba(37, 99, 235, 0.15);
+    color: #0f172a;
+}
+
+.dash-nav-item.is-active {
+    background: rgba(37, 99, 235, 0.10);
+    border-color: rgba(37, 99, 235, 0.22);
+    color: #0f172a;
+}
+
+.dash-sidebar-footer {
+    margin-top: auto;
+    padding: 14px 10px 6px;
+    border-top: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.dash-date-label {
+    font-size: 11px;
+    color: rgba(15, 23, 42, 0.55);
+}
+
+.dash-date-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(15, 23, 42, 0.85);
+    margin-top: 4px;
+}
+
+.dash-sidebar-softbtn {
+    margin-top: 10px;
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    background: #fff;
+    padding: 10px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(15, 23, 42, 0.7);
+    cursor: pointer;
+}
+
+/* Main */
+.dash-main {
+    padding: 22px 22px 40px;
+    overflow: hidden;
+}
+
+/* Top bar */
+.dash-topbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.dash-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+}
+
+.dash-subtitle {
+    margin: 6px 0 0;
+    font-size: 12px;
+    color: rgba(15, 23, 42, 0.6);
+}
+
+/* Filters row */
+.dash-filters {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr 0.8fr;
+    gap: 12px;
+    margin: 14px 0 16px;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 16px;
+    padding: 12px;
+}
+
+.dash-filter-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(15, 23, 42, 0.55);
+    margin-bottom: 6px;
+}
+
+.dash-filter-input {
+    width: 100%;
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    background: #fff;
+    padding: 0 12px;
+    font-size: 13px;
+    outline: none;
+}
+
+.dash-filter-input:focus {
+    border-color: rgba(37, 99, 235, 0.55);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* Charts grid */
+.dash-grid {
+    grid-template-columns: 2fr 1fr;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.dash-card-span-2,
+.dash-card-span-1 {
+    min-width: 0;
+}
+
+/* Sections spacing */
+.dash-section {
+    margin-top: 14px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .dash-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .dash-sidebar {
+        display: none;
+    }
+
+    .dash-main {
+        padding: 16px 14px 28px;
+    }
+
+    .dash-filters {
+        grid-template-columns: 1fr;
+    }
+
+    .dash-grid {
+        grid-template-columns: 1fr;
+    }
+}

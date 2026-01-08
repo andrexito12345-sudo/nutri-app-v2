@@ -53,21 +53,25 @@ import "./DietGeneratorWeekly.css";
 import { printWeeklyDietPlan } from "../utils/printWeeklyDietPlan";
 import { printShoppingList } from "../utils/printShoppingList";
 
-const DietGeneratorWeekly = ({ initialData, aiGeneratedMenu, onClose, onSave }) => {
+const DietGeneratorWeekly = ({ initialData = {}, aiGeneratedMenu, onClose = () => {}, onSave = () =>{}, }) => {
+
+    const safeInitialData = initialData ?? {};
+
     const {
-        targetKcal,
-        targetProtein,
-        targetCarbs,
-        targetFats,
-        patientName,
-        age,
-        gender,
-        weight,
-        activityLevel,
-        pathologies,
-        restrictions,
-        preferences,
-    } = initialData;
+        targetKcal = "",
+        targetProtein = "",
+        targetCarbs = "",
+        targetFats = "",
+        patientName = "",
+        age = "",
+        gender = "",
+        weight = "",
+        activityLevel = "",
+        pathologies = "",
+        restrictions = "",
+        preferences = "",
+    } = safeInitialData;
+
 
     // =========================
     // Plan vacío

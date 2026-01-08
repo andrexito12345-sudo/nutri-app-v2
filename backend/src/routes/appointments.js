@@ -294,23 +294,50 @@ router.patch('/:id/status', requireAuth, async (req, res) => {
 });
 
 // ============================================
-// 5. ELIMINAR CITA (PRIVADO - DOCTORA)
+// 5. ELIMINAR CITA (CON ELIMINACIÓN EN CASCADA)
 //    DELETE /api/appointments/:id
 // ============================================
 router.delete('/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
 
     try {
-        const result = await pgPool.query('DELETE FROM appointments WHERE id = $1', [id]);
-
-        if (result.rowCount === 0) {
-            return res.status(404).json({ ok: false, message: 'Cita no encontrada' });
+        // 1. Primero eliminar consultas relacionadas (si existen)
+        try {
+            await pgPool.query('DELETE FROM consultations WHERE appointment_id = $1', [id]);
+            console.log(`🗑️ Consultas relacionadas con cita ${id} eliminadas`);
+        } catch (consultErr) {
+            console.log('ℹ️ No hay consultas relacionadas o tabla no existe');
         }
 
-        return res.json({ ok: true, message: 'Cita eliminada correctamente' });
+        // 2. Verificar que la cita existe
+        const checkResult = await pgPool.query(
+            'SELECT id, patient_name FROM appointments WHERE id = $1',
+            [id]
+        );
+
+        if (checkResult.rowCount === 0) {
+            return res.status(404).json({
+                ok: false,
+                message: 'Cita no encontrada'
+            });
+        }
+
+        // 3. Eliminar la cita
+        await pgPool.query('DELETE FROM appointments WHERE id = $1', [id]);
+
+        console.log(`✅ Cita ${id} (${checkResult.rows[0].patient_name}) eliminada correctamente`);
+
+        return res.json({
+            ok: true,
+            message: 'Cita eliminada correctamente'
+        });
     } catch (err) {
-        console.error('❌ Error al eliminar cita (Postgres):', err);
-        return res.status(500).json({ ok: false, message: 'Error al eliminar cita' });
+        console.error('❌ Error al eliminar cita:', err);
+        return res.status(500).json({
+            ok: false,
+            message: 'Error al eliminar cita',
+            details: err.message
+        });
     }
 });
 

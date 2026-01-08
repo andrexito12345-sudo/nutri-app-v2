@@ -1,35 +1,51 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useNavigate } from "react-router-dom";
+
+
 
 import { useDashboardLogic } from '../hooks/useDashboardLogic';
 import DashboardKPIsModern from '../components/dashboard/DashboardKPIsModern';
 import TrendChart from '../components/dashboard/TrendChart';
 import UpcomingTimeline from '../components/dashboard/UpcomingTimeline';
-import QuickActions from '../components/dashboard/QuickActions';
+//import QuickActions from '../components/dashboard/QuickActions';
 import AppointmentsSection from '../components/dashboard/AppointmentsSection';
 import PatientsSection from '../components/dashboard/PatientsSection';
 import DashboardModals from '../components/dashboard/DashboardModals';
 import ToolsSidebar from '../components/ToolsSidebar';
 
+import DietGeneratorWeekly from "../components/DietGeneratorWeekly.jsx";
+
 import "./DashboardPage.css";
 import ConfirmDeleteModal from '../components/modals/ConfirmDeleteModal';
 import ConfirmCreationModal from '../components/modals/ConfirmCreationModal';
 
-// 👇 1. IMPORTAR LA SECCIÓN DE LEADS
+// 👇 IMPORTAR LEADS
 import LeadsSection from '../components/dashboard/LeadsSection';
-
 import ConfirmDeleteLeadModal from '../components/modals/ConfirmDeleteLeadModal';
 
 function DashboardPage() {
     const [isToolsOpen, setIsToolsOpen] = useState(false);
     const logic = useDashboardLogic();
 
+    const navigate = useNavigate();
+
+
+    // Refs para “navegación” por secciones (sin depender de rutas)
+    const topRef = useRef(null);
+    const appointmentsRef = useRef(null);
+    const patientsRef = useRef(null);
+
+    const scrollToRef = (ref) => {
+        if (!ref?.current) return;
+        ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
     // Fecha formateada para usar en el diseño
     const currentDate = new Date().toLocaleDateString('es-EC', {
         weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
-    // Capitalizar primera letra de la fecha
     const formattedDate = currentDate.charAt(0).toUpperCase() + currentDate.slice(1);
 
     if (logic.loading) {
@@ -53,78 +69,195 @@ function DashboardPage() {
     }
 
     return (
-        <div className="dash">
+        <div className="dash dash-shell" ref={topRef}>
+
+            {/* =============== SIDEBAR (DESKTOP) =============== */}
+            <aside className="dash-sidebar">
+                <div className="dash-sidebar-inner">
+                    <div className="dash-brand">
+                        <div className="dash-brand-mark" aria-hidden="true" />
+                        <div className="dash-brand-text">
+                            <div className="dash-brand-title">Dashboard</div>
+                            <div className="dash-brand-subtitle">Daniela Vaca Nutrición</div>
+                        </div>
+                    </div>
+
+                    <nav className="dash-nav">
+                        <button className="dash-nav-item is-active" onClick={() => scrollToRef(topRef)}>
+                            Panel
+                        </button>
+
+                        <button className="dash-nav-item" onClick={() => scrollToRef(appointmentsRef)}>
+                            Citas
+                        </button>
+
+                        <button className="dash-nav-item" onClick={() => scrollToRef(patientsRef)}>
+                            Pacientes
+                        </button>
+
+                        <button className="dash-nav-item" onClick={logic.openPatientForm}>
+                            Nuevo paciente
+                        </button>
+
+                        <button className="dash-nav-item" onClick={() => navigate("/doctora/dietas-ia")}>
+                            Generador IA
+                        </button>
 
 
-            {/* Quick Actions - SOLO DESKTOP */}
-            <div className="hidden lg:block mb-8">
-                <QuickActions
-                    onOpenPatientForm={logic.openPatientForm}
-                    onOpenIMC={() => logic.setShowBMIModal(true)}
-                    onOpenStats={() => logic.setShowStatsModal(true)}
-                    onOpenDiet={() => logic.setShowDietModal(true)}
-                    onOpenHerramientasAvanzadas={() => logic.setShowHerramientasAvanzadas(true)}
+                        <button className="dash-nav-item" onClick={() => logic.setShowStatsModal(true)}>
+                            Estadísticas
+                        </button>
+
+                        <button className="dash-nav-item" onClick={() => logic.setShowBMIModal(true)}>
+                            IMC
+                        </button>
+
+                        <button className="dash-nav-item" onClick={() => logic.setShowHerramientasAvanzadas(true)}>
+                            Herramientas avanzadas
+                        </button>
+                    </nav>
+
+                    <div className="dash-sidebar-footer">
+                        <div className="dash-date-label">Hoy</div>
+                        <div className="dash-date-value">{formattedDate}</div>
+
+                        <button
+                            className="dash-sidebar-softbtn"
+                            onClick={() => setIsToolsOpen(true)}
+                        >
+                            Abrir herramientas (móvil)
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            {/* =============== MAIN CONTENT =============== */}
+            <main className="dash-main">
+                {/* Header superior (tipo “top bar”) */}
+                <div className="dash-topbar">
+                    <div className="dash-topbar-left">
+                        <h1 className="dash-title">Reportes</h1>
+                        <p className="dash-subtitle">{formattedDate}</p>
+                    </div>
+
+                    {/* Quick Actions - SOLO DESKTOP
+                    <div className="dash-topbar-right hidden lg:block">
+                        <QuickActions
+                            onOpenPatientForm={logic.openPatientForm}
+                            onOpenIMC={() => logic.setShowBMIModal(true)}
+                            onOpenStats={() => logic.setShowStatsModal(true)}
+                            onOpenDiet={() => logic.setShowDietModal(true)}
+                            onOpenHerramientasAvanzadas={() => logic.setShowHerramientasAvanzadas(true)}
+                        />
+                    </div>
+                    */}
+                </div>
+
+                {/* KPIs Modernos + BOTÓN DE MENÚ MÓVIL (Integrado por prop) */}
+                <DashboardKPIsModern
+                    metrics={logic.metrics}
+                    visitStats={logic.visitStats}
+                    appointmentStats={logic.appointmentStats}
+                    onOpenMenu={() => setIsToolsOpen(true)}
                 />
-            </div>
 
-            {/* KPIs Modernos + BOTÓN DE MENÚ MÓVIL (Integrado por prop) */}
-            <DashboardKPIsModern
-                metrics={logic.metrics}
-                visitStats={logic.visitStats}
-                appointmentStats={logic.appointmentStats}
-                onOpenMenu={() => setIsToolsOpen(true)} // <--- Pasamos la función aquí
-            />
+                {/* Barra de filtros arriba (estilo del ejemplo)
+                <div className="dash-filters">
+                    <div className="dash-filter">
+                        <label className="dash-filter-label">Buscar</label>
+                        <input
+                            className="dash-filter-input"
+                            value={logic.search}
+                            onChange={(e) => logic.setSearch(e.target.value)}
+                            placeholder="Paciente, motivo, etc."
+                        />
+                    </div>
 
-            {/* Gráficas y Timeline */}
-            <div className="hidden md:grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-                <div className="lg:col-span-2">
-                    <TrendChart appointments={logic.filteredAppointments} />
+                    <div className="dash-filter">
+                        <label className="dash-filter-label">Estado</label>
+                        <select
+                            className="dash-filter-input"
+                            value={logic.statusFilter}
+                            onChange={(e) => logic.setStatusFilter(e.target.value)}
+                        >
+                            <option value="">Todos</option>
+                            <option value="pending">Pendiente</option>
+                            <option value="confirmed">Confirmada</option>
+                            <option value="completed">Completada</option>
+                            <option value="cancelled">Cancelada</option>
+                        </select>
+                    </div>
+
+                    <div className="dash-filter">
+                        <label className="dash-filter-label">Fecha</label>
+                        <input
+                            className="dash-filter-input"
+                            type="date"
+                            value={logic.dateFilter || ""}
+                            onChange={(e) => logic.setDateFilter(e.target.value)}
+                        />
+                    </div>
+                </div>*/}
+
+                {/* Gráficas y Timeline (como el ejemplo: tarjeta grande + tarjeta lateral) */}
+                <div className="dash-grid hidden md:grid">
+                    <div className="dash-card-span-2">
+                        <TrendChart appointments={logic.filteredAppointments} />
+                    </div>
+                    <div className="dash-card-span-1">
+                        <UpcomingTimeline
+                            appointments={logic.filteredAppointments}
+                            formatDate={logic.formatDate}
+                        />
+                    </div>
                 </div>
-                <div className="lg:col-span-1">
-                    <UpcomingTimeline
+
+                {/* LEADS (opcional) — lo dejo listo para que no quede import sin uso */}
+                {Array.isArray(logic.leads) && logic.leads.length > 0 && (
+                    <div className="dash-section">
+                        <LeadsSection leads={logic.leads} onDelete={logic.deleteLead} />
+                    </div>
+                )}
+
+                {/* Sección de Citas */}
+                <section className="dash-section" ref={appointmentsRef}>
+                    <AppointmentsSection
                         appointments={logic.filteredAppointments}
+                        metrics={logic.metrics}
+                        filters={{
+                            search: logic.search,
+                            status: logic.statusFilter,
+                            date: logic.dateFilter
+                        }}
+                        setSearch={logic.setSearch}
+                        setStatusFilter={logic.setStatusFilter}
+                        setDateFilter={logic.setDateFilter}
                         formatDate={logic.formatDate}
+                        changeStatus={logic.changeStatus}
+                        deleteAppointment={logic.deleteAppointment}
+                        navigate={logic.navigate}
+                        handleCreatePatientFromAppointment={logic.handleCreatePatientFromAppointment}
                     />
-                </div>
-            </div>
+                </section>
 
-            {/* 👇 3. AQUÍ PONEMOS LA BANDEJA DE LEADS (Lo Nuevo) */}
-            {/* <LeadsSection leads={logic.leads} onDelete={logic.deleteLead} />*/}
+                {/* Sección de Pacientes */}
+                <section className="dash-section" ref={patientsRef}>
+                    <PatientsSection
+                        patients={logic.patients}
+                        loading={logic.patientsLoading}
+                        search={logic.patientSearch}
+                        setSearch={logic.setPatientSearch}
+                        openPatientForm={logic.openPatientForm}
+                        formatDate={logic.formatDate}
+                        viewPatientRecord={logic.viewPatientRecord}
+                        printLatestConsultation={logic.printLatestConsultation}
+                        editPatient={logic.editPatient}
+                        deletePatient={logic.deletePatient}
+                    />
+                </section>
+            </main>
 
-            {/* Sección de Citas */}
-            <AppointmentsSection
-                appointments={logic.filteredAppointments}
-                metrics={logic.metrics}
-                filters={{
-                    search: logic.search,
-                    status: logic.statusFilter,
-                    date: logic.dateFilter
-                }}
-                setSearch={logic.setSearch}
-                setStatusFilter={logic.setStatusFilter}
-                setDateFilter={logic.setDateFilter}
-                formatDate={logic.formatDate}
-                changeStatus={logic.changeStatus}
-                deleteAppointment={logic.deleteAppointment}
-                navigate={logic.navigate}
-                handleCreatePatientFromAppointment={logic.handleCreatePatientFromAppointment}
-            />
-
-            {/* Sección de Pacientes */}
-            <PatientsSection
-                patients={logic.patients}
-                loading={logic.patientsLoading}
-                search={logic.patientSearch}
-                setSearch={logic.setPatientSearch}
-                openPatientForm={logic.openPatientForm}
-                formatDate={logic.formatDate}
-                viewPatientRecord={logic.viewPatientRecord}
-                printLatestConsultation={logic.printLatestConsultation}
-                editPatient={logic.editPatient}
-                deletePatient={logic.deletePatient}
-            />
-
-            {/* Menú Lateral de Herramientas */}
+            {/* Menú Lateral de Herramientas (móvil) */}
             <ToolsSidebar
                 isOpen={isToolsOpen}
                 onClose={() => setIsToolsOpen(false)}
@@ -148,6 +281,8 @@ function DashboardPage() {
                     logic.setShowHerramientasAvanzadas(true);
                     setIsToolsOpen(false);
                 }}
+
+
             />
 
             {/* Modales */}
@@ -171,14 +306,14 @@ function DashboardPage() {
                 <div ref={logic.printRef}></div>
             </div>
 
-            {/* 👇 AGREGAMOS EL MODAL AQUÍ */}
+            {/* Modal: eliminar cita */}
             <ConfirmDeleteModal
-                isOpen={!!logic.appointmentToDelete} // Se abre si hay un ID seleccionado
-                onClose={() => logic.setAppointmentToDelete(null)} // Cerrar
-                onConfirm={logic.confirmDeleteAppointment} // Confirmar borrado
+                isOpen={!!logic.appointmentToDelete}
+                onClose={() => logic.setAppointmentToDelete(null)}
+                onConfirm={logic.confirmDeleteAppointment}
             />
 
-            {/* 👇 AGREGAMOS EL SEGUNDO MODAL (PARA PACIENTES) */}
+            {/* Modal: eliminar paciente */}
             <ConfirmDeleteModal
                 isOpen={!!logic.patientToDelete}
                 onClose={() => logic.setPatientToDelete(null)}
@@ -186,13 +321,13 @@ function DashboardPage() {
                 title="¿Eliminar Paciente?"
                 message={
                     <>
-                        Estás a punto de eliminar a <span className="font-bold text-slate-800">{logic.patientToDelete?.name}</span>.<br/>
+                        Estás a punto de eliminar a <span className="font-bold text-slate-800">{logic.patientToDelete?.name}</span>.<br />
                         Esto borrará <span className="text-red-500 font-bold">todo su historial clínico y citas.</span>
                     </>
                 }
             />
 
-            {/* 👇 NUEVO MODAL DE CREACIÓN DE PACIENTE */}
+            {/* Modal: crear paciente desde cita */}
             <ConfirmCreationModal
                 isOpen={!!logic.appointmentToConvert}
                 onClose={() => logic.setAppointmentToConvert(null)}
@@ -200,11 +335,11 @@ function DashboardPage() {
                 patientName={logic.appointmentToConvert?.patient_name}
             />
 
-
+            {/* Modal: eliminar lead */}
             <ConfirmDeleteLeadModal
                 isOpen={!!logic.leadToDelete}
-                onClose={() => logic.setLeadToDelete(null)} // Cierra si cancelas
-                onConfirm={logic.confirmDeleteLead}         // Borra si confirmas
+                onClose={() => logic.setLeadToDelete(null)}
+                onConfirm={logic.confirmDeleteLead}
             />
 
             <ToastContainer />
