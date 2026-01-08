@@ -307,34 +307,66 @@ router.put('/:id', requireAuth, async (req, res) => {
 });
 
 // ============================================
-// 5. ELIMINAR PACIENTE
+// 5. ELIMINAR PACIENTE (CON CASCADE)
 //    DELETE /api/patients/:id
 // ============================================
 router.delete('/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
 
+    const client = await pgPool.connect();
+
     try {
+        await client.query('BEGIN');
+
         // Verificar que el paciente existe
-        const existing = await pgPool.query(
-            'SELECT id FROM patients WHERE id = $1',
+        const existing = await client.query(
+            'SELECT id, full_name FROM patients WHERE id = $1',
             [id]
         );
 
         if (existing.rowCount === 0) {
+            await client.query('ROLLBACK');
             return res.status(404).json({ error: 'Paciente no encontrado' });
         }
 
-        await pgPool.query('DELETE FROM patients WHERE id = $1', [id]);
+        const patientName = existing.rows[0].full_name;
+
+        // 1. Eliminar todas las consultas del paciente
+        const deletedConsultations = await client.query(
+            'DELETE FROM consultations WHERE patient_id = $1',
+            [id]
+        );
+
+        // 2. Eliminar todas las citas relacionadas (si patient_id existe en appointments)
+        const deletedAppointments = await client.query(
+            'DELETE FROM appointments WHERE patient_id = $1',
+            [id]
+        );
+
+        // 3. Finalmente, eliminar el paciente
+        await client.query('DELETE FROM patients WHERE id = $1', [id]);
+
+        await client.query('COMMIT');
+
+        console.log(`✅ Paciente eliminado: ${patientName} (ID: ${id})`);
+        console.log(`   - Consultas eliminadas: ${deletedConsultations.rowCount}`);
+        console.log(`   - Citas eliminadas: ${deletedAppointments.rowCount}`);
 
         return res.json({
             message: 'Paciente eliminado exitosamente',
             deletedId: id,
+            deletedConsultations: deletedConsultations.rowCount,
+            deletedAppointments: deletedAppointments.rowCount
         });
     } catch (err) {
+        await client.query('ROLLBACK');
         console.error('❌ Error al eliminar paciente (Postgres):', err);
-        return res
-            .status(500)
-            .json({ error: 'Error al eliminar paciente' });
+        return res.status(500).json({
+            error: 'Error al eliminar paciente',
+            details: err.message
+        });
+    } finally {
+        client.release();
     }
 });
 
@@ -421,6 +453,47 @@ router.get('/:id/stats', requireAuth, async (req, res) => {
         return res
             .status(500)
             .json({ error: 'Error al obtener estadísticas' });
+    }
+
+});
+
+// ============================================
+// 🗑️ DESARROLLO: ELIMINAR TODOS LOS DATOS
+//    DELETE /api/patients/dev/reset-all
+// ============================================
+router.delete('/dev/reset-all', requireAuth, async (req, res) => {
+    const client = await pgPool.connect();
+
+    try {
+        await client.query('BEGIN');
+
+        // Eliminar en orden correcto (hijo -> padre)
+        await client.query('DELETE FROM consultations');
+        await client.query('DELETE FROM appointments');
+        await client.query('DELETE FROM patients');
+
+        // Reiniciar secuencias
+        await client.query('ALTER SEQUENCE consultations_id_seq RESTART WITH 1');
+        await client.query('ALTER SEQUENCE appointments_id_seq RESTART WITH 1');
+        await client.query('ALTER SEQUENCE patients_id_seq RESTART WITH 1');
+
+        await client.query('COMMIT');
+
+        console.log('🧹 Base de datos limpiada completamente');
+
+        return res.json({
+            ok: true,
+            message: 'Todos los datos eliminados y secuencias reiniciadas'
+        });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('❌ Error al resetear datos:', err);
+        return res.status(500).json({
+            error: 'Error al limpiar datos',
+            details: err.message
+        });
+    } finally {
+        client.release();
     }
 });
 

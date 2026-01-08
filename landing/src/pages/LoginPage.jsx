@@ -7,8 +7,8 @@ import api, { saveAuthData } from '../services/api';
 function LoginPage() {
     // --- LÓGICA ---
     const [form, setForm] = useState({
-        email: 'nutri@example.com',
-        password: 'ClaveSegura123',
+        email: '',
+        password: '',
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
