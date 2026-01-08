@@ -75,8 +75,8 @@ const PatientsSection = ({
                     <h2 className="text-xl font-bold text-slate-800 flex items-center gap-3">
                         Gestión de Pacientes
                         <span className="bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded-full font-extrabold border border-slate-200">
-                            {patients.length} TOTAL
-                        </span>
+              {patients.length} TOTAL
+            </span>
                     </h2>
                     <p className="text-sm text-slate-400 font-medium mt-1">
                         Historial clínico y seguimiento
@@ -97,7 +97,7 @@ const PatientsSection = ({
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     </div>
 
-                    {/* Botón Nuevo Paciente */}
+                    {/* Botón Nuevo Paciente (ÚNICO botón de agregar) */}
                     <button
                         onClick={openPatientForm}
                         className="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-200 hover:shadow-blue-300 hover:-translate-y-0.5 transition-all active:scale-95 w-full sm:w-auto"
@@ -158,12 +158,12 @@ const PatientsSection = ({
                                             {getInitials(patient.full_name)}
                                         </div>
                                         <div>
-                                                <span className="font-bold text-slate-700 block group-hover:text-blue-600 transition-colors">
-                                                    {patient.full_name}
-                                                </span>
+                        <span className="font-bold text-slate-700 block group-hover:text-blue-600 transition-colors">
+                          {patient.full_name}
+                        </span>
                                             <span className="text-[10px] text-slate-400 font-medium bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
-                                                    ID: {patient.id}
-                                                </span>
+                          ID: {patient.id}
+                        </span>
                                         </div>
                                     </div>
                                 </td>
@@ -200,18 +200,18 @@ const PatientsSection = ({
 
                                 {/* Contador Consultas */}
                                 <td className="px-6 py-4 whitespace-nowrap text-center">
-                                        <span
-                                            className={`
-                                                inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold
-                                                ${
-                                                patient.consultation_count > 0
-                                                    ? "bg-blue-50 text-blue-600 border border-blue-100"
-                                                    : "bg-slate-100 text-slate-400"
-                                            }
-                                            `}
-                                        >
-                                            {patient.consultation_count || 0}
-                                        </span>
+                    <span
+                        className={`
+                        inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold
+                        ${
+                            patient.consultation_count > 0
+                                ? "bg-blue-50 text-blue-600 border border-blue-100"
+                                : "bg-slate-100 text-slate-400"
+                        }
+                      `}
+                    >
+                      {patient.consultation_count || 0}
+                    </span>
                                 </td>
 
                                 {/* Datos Físicos (Peso/IMC) */}
@@ -220,17 +220,15 @@ const PatientsSection = ({
                                         <div className="flex flex-col items-center">
                                             <span className="text-[10px] text-slate-400 uppercase font-bold">Peso</span>
                                             <span className="text-sm font-bold text-slate-700">
-                                                    {patient.current_weight ? `${patient.current_weight} kg` : "—"}
-                                                </span>
+                          {patient.current_weight ? `${patient.current_weight} kg` : "—"}
+                        </span>
                                         </div>
                                         <div className="w-px h-8 bg-slate-200"></div>
                                         <div className="flex flex-col items-center">
                                             <span className="text-[10px] text-slate-400 uppercase font-bold">IMC</span>
-                                            <span
-                                                className={`text-sm font-bold px-1.5 rounded ${bmiStyle(patient.bmi)}`}
-                                            >
-                                                    {patient.bmi || "—"}
-                                                </span>
+                                            <span className={`text-sm font-bold px-1.5 rounded ${bmiStyle(patient.bmi)}`}>
+                          {patient.bmi || "—"}
+                        </span>
                                         </div>
                                     </div>
                                 </td>
@@ -238,7 +236,6 @@ const PatientsSection = ({
                                 {/* Acciones (ICONOS) */}
                                 <td className="px-6 py-4 whitespace-nowrap text-center">
                                     <div className="flex items-center justify-center gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                                        {/* Ver Expediente */}
                                         <button
                                             onClick={() => viewPatientRecord(patient)}
                                             className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
@@ -247,7 +244,6 @@ const PatientsSection = ({
                                             <Eye className="w-4 h-4" />
                                         </button>
 
-                                        {/* Imprimir Última */}
                                         <button
                                             onClick={() => printLatestConsultation(patient)}
                                             className="p-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
@@ -256,7 +252,6 @@ const PatientsSection = ({
                                             <Printer className="w-4 h-4" />
                                         </button>
 
-                                        {/* Editar */}
                                         <button
                                             onClick={() => editPatient(patient)}
                                             className="p-2 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors"
@@ -265,7 +260,6 @@ const PatientsSection = ({
                                             <Edit className="w-4 h-4" />
                                         </button>
 
-                                        {/* Eliminar */}
                                         <button
                                             onClick={() => deletePatient(patient.id, patient.full_name)}
                                             className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
@@ -288,7 +282,9 @@ const PatientsSection = ({
                     <div className="p-8 text-center text-slate-400">No se encontraron pacientes</div>
                 ) : (
                     patients.map((patient, index) => {
-                        const last = patient.last_consultation ? formatLastConsultation(patient.last_consultation) : null;
+                        const last = patient.last_consultation
+                            ? formatLastConsultation(patient.last_consultation)
+                            : null;
                         const count = patient.consultation_count || 0;
 
                         return (
@@ -299,7 +295,7 @@ const PatientsSection = ({
                                 transition={{ duration: 0.2, delay: index * 0.04 }}
                                 className="p-4 flex flex-col gap-3"
                             >
-                                {/* Top row: Avatar + Name + ID + Count */}
+                                {/* Top row: Avatar + Name + ID + Count (SIN botón de agregar aquí) */}
                                 <div className="flex items-center gap-3">
                                     <div
                                         className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm bg-gradient-to-br ${getAvatarGradient(
@@ -312,31 +308,26 @@ const PatientsSection = ({
                                     <div className="flex-1 min-w-0">
                                         <p className="font-bold text-slate-800 truncate">{patient.full_name}</p>
                                         <div className="flex items-center gap-2 mt-0.5">
-                                            <span className="text-[10px] text-slate-400 font-medium bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
-                                                ID: {patient.id}
-                                            </span>
+                      <span className="text-[10px] text-slate-400 font-medium bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                        ID: {patient.id}
+                      </span>
 
                                             <span
                                                 className={`
-                                                    inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full border
-                                                    ${count > 0 ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-slate-100 text-slate-500 border-slate-200"}
-                                                `}
+                          inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full border
+                          ${
+                                                    count > 0
+                                                        ? "bg-blue-50 text-blue-700 border-blue-100"
+                                                        : "bg-slate-100 text-slate-500 border-slate-200"
+                                                }
+                        `}
                                                 title="Consultas registradas"
                                             >
-                                                <Activity className="w-3 h-3" />
+                        <Activity className="w-3 h-3" />
                                                 {count}
-                                            </span>
+                      </span>
                                         </div>
                                     </div>
-
-                                    {/* CTA quick: Nuevo (solo icono, por si quieres) */}
-                                    <button
-                                        onClick={openPatientForm}
-                                        className="p-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors active:scale-95"
-                                        title="Nuevo Paciente"
-                                    >
-                                        <UserPlus className="w-5 h-5" />
-                                    </button>
                                 </div>
 
                                 {/* Contacto */}
@@ -359,7 +350,11 @@ const PatientsSection = ({
                                         <p className="text-[10px] uppercase font-extrabold text-slate-400">Última consulta</p>
                                         <p className="text-sm font-bold text-slate-700 flex items-center gap-2 mt-1">
                                             <Calendar className="w-4 h-4 text-slate-300" />
-                                            {last ? last : <span className="text-slate-400 italic font-medium">Sin registros</span>}
+                                            {last ? (
+                                                last
+                                            ) : (
+                                                <span className="text-slate-400 italic font-medium">Sin registros</span>
+                                            )}
                                         </p>
                                     </div>
 
@@ -369,15 +364,15 @@ const PatientsSection = ({
                                             <div className="flex flex-col">
                                                 <span className="text-[10px] text-slate-400 uppercase font-bold">Peso</span>
                                                 <span className="text-sm font-bold text-slate-700">
-                                                    {patient.current_weight ? `${patient.current_weight} kg` : "—"}
-                                                </span>
+                          {patient.current_weight ? `${patient.current_weight} kg` : "—"}
+                        </span>
                                             </div>
                                             <div className="w-px h-8 bg-slate-200"></div>
                                             <div className="flex flex-col items-end">
                                                 <span className="text-[10px] text-slate-400 uppercase font-bold">IMC</span>
                                                 <span className={`text-sm font-bold px-2 py-0.5 rounded ${bmiStyle(patient.bmi)}`}>
-                                                    {patient.bmi || "—"}
-                                                </span>
+                          {patient.bmi || "—"}
+                        </span>
                                             </div>
                                         </div>
                                     </div>
