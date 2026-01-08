@@ -20,7 +20,7 @@ const Icons = {
     )
 };
 
-const NutritionalTools = ({ patientData, onCancel, onSave, actionLabel = "Guardar Cálculo" }) => {
+const NutritionalTools = ({ patientData, onCancel, onSave, actionLabel = "Guardar " }) => {
     const [config, setConfig] = useState({
         formula: 'mifflin',
         activityLevel: 'sedentary',

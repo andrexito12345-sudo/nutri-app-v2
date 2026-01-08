@@ -1,42 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
     calculateNutritionalPlan,
     validatePatientData,
     ACTIVITY_FACTORS,
-    STRESS_FACTORS
-} from '../utils/nutritionalCalculations';
-import './NutritionalToolsModal.css';
+    STRESS_FACTORS,
+} from "../utils/nutritionalCalculations";
+import "./NutritionalToolsModal.css";
 
 const NutritionalToolsModal = ({
                                    isOpen,
                                    onClose,
                                    patient,
                                    consultation = {},
-                                   onApplyToPlan
+                                   onApplyToPlan,
                                }) => {
     // Estados para los cálculos
     const [calculationData, setCalculationData] = useState({
-        weight: consultation.weight || patient.weight || '',
-        height: consultation.height || patient.height || '',
-        age: patient.birth_date ? new Date().getFullYear() - new Date(patient.birth_date).getFullYear() : '',
-        gender: patient.gender || '',
-        activityLevel: consultation.physical_activity || 'Sedentario',
-        goal: 'Mantenimiento',
-        condition: 'Normal',
-        stressFactor: 'Normal',
-        formula: 'Mifflin',
-        numberOfMeals: 5
+        weight: consultation.weight || patient.weight || "",
+        height: consultation.height || patient.height || "",
+        age: patient.birth_date
+            ? new Date().getFullYear() - new Date(patient.birth_date).getFullYear()
+            : "",
+        gender: patient.gender || "",
+        activityLevel: consultation.physical_activity || "Sedentario",
+        goal: "Mantenimiento",
+        condition: "Normal",
+        stressFactor: "Normal",
+        formula: "Mifflin",
+        numberOfMeals: 5,
     });
 
     const [results, setResults] = useState(null);
-    const [activeTab, setActiveTab] = useState('calculator'); // calculator | history
+    const [activeTab, setActiveTab] = useState("calculator"); // calculator | history
     const [validationErrors, setValidationErrors] = useState([]);
 
-    // Calcular automáticamente cuando cambian los datos
+    // Calcular automáticamente cuando se abre (si hay datos mínimos)
     useEffect(() => {
-        if (isOpen && calculationData.weight && calculationData.height && calculationData.age && calculationData.gender) {
+        if (
+            isOpen &&
+            calculationData.weight &&
+            calculationData.height &&
+            calculationData.age &&
+            calculationData.gender
+        ) {
             handleCalculate();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen]);
 
     const handleCalculate = () => {
@@ -55,9 +64,9 @@ const NutritionalToolsModal = ({
     };
 
     const handleInputChange = (field, value) => {
-        setCalculationData(prev => ({
+        setCalculationData((prev) => ({
             ...prev,
-            [field]: value
+            [field]: value,
         }));
     };
 
@@ -72,10 +81,10 @@ const NutritionalToolsModal = ({
                 get_calculated: results.get,
                 formula_used: calculationData.formula,
                 activity_factor: calculationData.activityLevel,
-                distribution_strategy: `${results.macros.protein.percentage}/${results.macros.carbs.percentage}/${results.macros.fats.percentage}`
+                distribution_strategy: `${results.macros.protein.percentage}/${results.macros.carbs.percentage}/${results.macros.fats.percentage}`,
             };
             onApplyToPlan(dataToApply);
-            alert('✅ Valores aplicados al plan de tratamiento');
+            alert("✅ Valores aplicados al plan de tratamiento");
             onClose();
         }
     };
@@ -84,20 +93,30 @@ const NutritionalToolsModal = ({
 
     return (
         <div className="nutritional-modal-overlay" onClick={onClose}>
-            <div className="nutritional-modal-content" onClick={(e) => e.stopPropagation()}>
-
+            <div
+                className="nutritional-modal-content"
+                role="dialog"
+                aria-modal="true"
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* HEADER */}
                 <div className="nutritional-modal-header">
                     <div className="header-title-group">
                         <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                            />
                         </svg>
-                        <div>
+                        <div className="header-text">
                             <h2>Herramientas Nutricionales</h2>
                             <p>{patient.full_name}</p>
                         </div>
                     </div>
-                    <button className="btn-close-nutritional" onClick={onClose}>
+
+                    <button className="btn-close-nutritional" onClick={onClose} aria-label="Cerrar">
                         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -107,24 +126,25 @@ const NutritionalToolsModal = ({
                 {/* TABS */}
                 <div className="nutritional-tabs">
                     <button
-                        className={`tab-btn ${activeTab === 'calculator' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('calculator')}
+                        className={`tab-btn ${activeTab === "calculator" ? "active" : ""}`}
+                        onClick={() => setActiveTab("calculator")}
+                        type="button"
                     >
                         Calculadora
                     </button>
                     <button
-                        className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('history')}
+                        className={`tab-btn ${activeTab === "history" ? "active" : ""}`}
+                        onClick={() => setActiveTab("history")}
+                        type="button"
                     >
                         Historial
                     </button>
                 </div>
 
-                {/* BODY */}
+                {/* BODY (scroll interno) */}
                 <div className="nutritional-modal-body">
-
-                    {activeTab === 'calculator' && (
-                        <>
+                    {activeTab === "calculator" && (
+                        <div className="calculator-layout">
                             {/* FORMULARIO DE ENTRADA */}
                             <div className="calculation-inputs">
                                 <h3 className="section-subtitle">Datos del Paciente</h3>
@@ -135,7 +155,7 @@ const NutritionalToolsModal = ({
                                         <input
                                             type="number"
                                             value={calculationData.weight}
-                                            onChange={(e) => handleInputChange('weight', parseFloat(e.target.value))}
+                                            onChange={(e) => handleInputChange("weight", parseFloat(e.target.value))}
                                             step="0.1"
                                         />
                                     </div>
@@ -145,41 +165,28 @@ const NutritionalToolsModal = ({
                                         <input
                                             type="number"
                                             value={calculationData.height}
-                                            onChange={(e) => handleInputChange('height', parseFloat(e.target.value))}
+                                            onChange={(e) => handleInputChange("height", parseFloat(e.target.value))}
                                             step="0.1"
                                         />
                                     </div>
 
                                     <div className="input-field">
                                         <label>Edad (años)</label>
-                                        <input
-                                            type="number"
-                                            value={calculationData.age}
-                                            readOnly
-                                            className="readonly-input"
-                                        />
+                                        <input type="number" value={calculationData.age} readOnly className="readonly-input" />
                                     </div>
 
                                     <div className="input-field">
                                         <label>Género</label>
-                                        <input
-                                            type="text"
-                                            value={calculationData.gender}
-                                            readOnly
-                                            className="readonly-input"
-                                        />
+                                        <input type="text" value={calculationData.gender} readOnly className="readonly-input" />
                                     </div>
                                 </div>
 
-                                <h3 className="section-subtitle" style={{marginTop: '20px'}}>Parámetros de Cálculo</h3>
+                                <h3 className="section-subtitle section-spacing">Parámetros de Cálculo</h3>
 
                                 <div className="input-grid">
                                     <div className="input-field">
                                         <label>Fórmula TMB</label>
-                                        <select
-                                            value={calculationData.formula}
-                                            onChange={(e) => handleInputChange('formula', e.target.value)}
-                                        >
+                                        <select value={calculationData.formula} onChange={(e) => handleInputChange("formula", e.target.value)}>
                                             <option value="Mifflin">Mifflin-St Jeor (Recomendada)</option>
                                             <option value="Harris-Benedict">Harris-Benedict</option>
                                             <option value="FAO">FAO/OMS</option>
@@ -191,9 +198,9 @@ const NutritionalToolsModal = ({
                                         <label>Actividad Física</label>
                                         <select
                                             value={calculationData.activityLevel}
-                                            onChange={(e) => handleInputChange('activityLevel', e.target.value)}
+                                            onChange={(e) => handleInputChange("activityLevel", e.target.value)}
                                         >
-                                            {Object.keys(ACTIVITY_FACTORS).map(level => (
+                                            {Object.keys(ACTIVITY_FACTORS).map((level) => (
                                                 <option key={level} value={level}>
                                                     {level} ({ACTIVITY_FACTORS[level]}x)
                                                 </option>
@@ -203,10 +210,7 @@ const NutritionalToolsModal = ({
 
                                     <div className="input-field">
                                         <label>Objetivo</label>
-                                        <select
-                                            value={calculationData.goal}
-                                            onChange={(e) => handleInputChange('goal', e.target.value)}
-                                        >
+                                        <select value={calculationData.goal} onChange={(e) => handleInputChange("goal", e.target.value)}>
                                             <option value="Pérdida de peso">Pérdida de peso (-20%)</option>
                                             <option value="Pérdida de peso agresiva">Pérdida agresiva (-30%)</option>
                                             <option value="Mantenimiento">Mantenimiento</option>
@@ -219,9 +223,9 @@ const NutritionalToolsModal = ({
                                         <label>Factor de Estrés</label>
                                         <select
                                             value={calculationData.stressFactor}
-                                            onChange={(e) => handleInputChange('stressFactor', e.target.value)}
+                                            onChange={(e) => handleInputChange("stressFactor", e.target.value)}
                                         >
-                                            {Object.keys(STRESS_FACTORS).map(factor => (
+                                            {Object.keys(STRESS_FACTORS).map((factor) => (
                                                 <option key={factor} value={factor}>
                                                     {factor} ({STRESS_FACTORS[factor]}x)
                                                 </option>
@@ -231,10 +235,7 @@ const NutritionalToolsModal = ({
 
                                     <div className="input-field">
                                         <label>Condición Especial</label>
-                                        <select
-                                            value={calculationData.condition}
-                                            onChange={(e) => handleInputChange('condition', e.target.value)}
-                                        >
+                                        <select value={calculationData.condition} onChange={(e) => handleInputChange("condition", e.target.value)}>
                                             <option value="Normal">Normal</option>
                                             <option value="Diabetes">Diabetes</option>
                                             <option value="Hipertensión">Hipertensión</option>
@@ -246,7 +247,7 @@ const NutritionalToolsModal = ({
                                         <label>Comidas por día</label>
                                         <select
                                             value={calculationData.numberOfMeals}
-                                            onChange={(e) => handleInputChange('numberOfMeals', parseInt(e.target.value))}
+                                            onChange={(e) => handleInputChange("numberOfMeals", parseInt(e.target.value))}
                                         >
                                             <option value="3">3 comidas</option>
                                             <option value="4">4 comidas</option>
@@ -260,21 +261,23 @@ const NutritionalToolsModal = ({
                                 {validationErrors.length > 0 && (
                                     <div className="validation-errors">
                                         {validationErrors.map((error, index) => (
-                                            <div key={index} className="error-message">{error}</div>
+                                            <div key={index} className="error-message">
+                                                {error}
+                                            </div>
                                         ))}
                                     </div>
                                 )}
 
-                                <button className="btn-calculate" onClick={handleCalculate}>
+                                <button className="btn-calculate" onClick={handleCalculate} type="button">
                                     <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
                                     </svg>
                                     Calcular Requerimientos
                                 </button>
                             </div>
 
                             {/* RESULTADOS */}
-                            {results && (
+                            {results ? (
                                 <div className="calculation-results">
                                     <h3 className="section-subtitle">Resultados</h3>
 
@@ -282,21 +285,21 @@ const NutritionalToolsModal = ({
                                     <div className="results-grid">
                                         <div className="result-card tmb-card">
                                             <div className="result-label">TMB</div>
-                                            <div className="result-value">{results.tmb.toLocaleString('es-EC')}</div>
+                                            <div className="result-value">{results.tmb.toLocaleString("es-EC")}</div>
                                             <div className="result-unit">kcal/día</div>
                                             <div className="result-description">Tasa Metabólica Basal</div>
                                         </div>
 
                                         <div className="result-card get-card">
                                             <div className="result-label">GET</div>
-                                            <div className="result-value">{results.get.toLocaleString('es-EC')}</div>
+                                            <div className="result-value">{results.get.toLocaleString("es-EC")}</div>
                                             <div className="result-unit">kcal/día</div>
                                             <div className="result-description">Gasto Energético Total</div>
                                         </div>
 
                                         <div className="result-card prescription-card">
                                             <div className="result-label">Prescripción</div>
-                                            <div className="result-value">{results.calorieGoal.calories.toLocaleString('es-EC')}</div>
+                                            <div className="result-value">{results.calorieGoal.calories.toLocaleString("es-EC")}</div>
                                             <div className="result-unit">kcal/día</div>
                                             <div className="result-description">
                                                 Rango: {results.calorieGoal.min} - {results.calorieGoal.max} kcal
@@ -313,7 +316,7 @@ const NutritionalToolsModal = ({
                                                 <div className="macro-label">Proteína</div>
                                                 <div className="macro-value">{results.macros.protein.grams}g</div>
                                                 <div className="macro-percentage">{results.macros.protein.percentage}%</div>
-                                                <div className="macro-calories">{results.macros.protein.calories.toLocaleString('es-EC')} kcal</div>
+                                                <div className="macro-calories">{results.macros.protein.calories.toLocaleString("es-EC")} kcal</div>
                                             </div>
 
                                             <div className="macro-card carbs-card">
@@ -321,7 +324,7 @@ const NutritionalToolsModal = ({
                                                 <div className="macro-label">Carbohidratos</div>
                                                 <div className="macro-value">{results.macros.carbs.grams}g</div>
                                                 <div className="macro-percentage">{results.macros.carbs.percentage}%</div>
-                                                <div className="macro-calories">{results.macros.carbs.calories.toLocaleString('es-EC')} kcal</div>
+                                                <div className="macro-calories">{results.macros.carbs.calories.toLocaleString("es-EC")} kcal</div>
                                             </div>
 
                                             <div className="macro-card fats-card">
@@ -329,7 +332,7 @@ const NutritionalToolsModal = ({
                                                 <div className="macro-label">Grasas</div>
                                                 <div className="macro-value">{results.macros.fats.grams}g</div>
                                                 <div className="macro-percentage">{results.macros.fats.percentage}%</div>
-                                                <div className="macro-calories">{results.macros.fats.calories.toLocaleString('es-EC')} kcal</div>
+                                                <div className="macro-calories">{results.macros.fats.calories.toLocaleString("es-EC")} kcal</div>
                                             </div>
                                         </div>
                                     </div>
@@ -341,7 +344,7 @@ const NutritionalToolsModal = ({
                                             {Object.entries(results.mealDistribution).map(([meal, calories]) => (
                                                 <div key={meal} className="meal-item">
                                                     <span className="meal-name">{meal}</span>
-                                                    <span className="meal-calories">{calories.toLocaleString('es-EC')} kcal</span>
+                                                    <span className="meal-calories">{calories.toLocaleString("es-EC")} kcal</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -349,30 +352,34 @@ const NutritionalToolsModal = ({
 
                                     {/* BOTONES DE ACCIÓN */}
                                     <div className="results-actions">
-                                        <button className="btn-apply" onClick={handleApplyResults}>
+                                        <button className="btn-apply" onClick={handleApplyResults} type="button">
                                             <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
-                                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                                             </svg>
                                             Aplicar al Plan de Tratamiento
                                         </button>
-                                        <button className="btn-save">
+                                        <button className="btn-save" type="button">
                                             <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
-                                                <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+                                                <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
                                             </svg>
-                                            Guardar Cálculo
+                                            Guardar
                                         </button>
                                     </div>
                                 </div>
+                            ) : (
+                                <div className="calculation-results empty-results">
+                                    <h3 className="section-subtitle">Resultados</h3>
+                                    <p className="empty-hint">Completa los datos y presiona “Calcular” para ver los resultados.</p>
+                                </div>
                             )}
-                        </>
+                        </div>
                     )}
 
-                    {activeTab === 'history' && (
+                    {activeTab === "history" && (
                         <div className="history-section">
                             <p className="coming-soon">Historial de cálculos próximamente...</p>
                         </div>
                     )}
-
                 </div>
             </div>
         </div>
