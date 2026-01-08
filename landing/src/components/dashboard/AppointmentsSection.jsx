@@ -52,10 +52,10 @@ const AppointmentsSection = ({
 
     const statusPill = (status) => {
         const s = String(status || "").toLowerCase();
-        if (s === "pendiente") return "bg-amber-100 text-amber-700";
-        if (s === "realizada") return "bg-emerald-100 text-emerald-700";
-        if (s === "cancelada") return "bg-rose-100 text-rose-700";
-        return "bg-slate-100 text-slate-600";
+        if (s === "pendiente") return "bg-amber-100 text-amber-700 border-amber-200";
+        if (s === "realizada") return "bg-emerald-100 text-emerald-700 border-emerald-200";
+        if (s === "cancelada") return "bg-rose-100 text-rose-700 border-rose-200";
+        return "bg-slate-100 text-slate-600 border-slate-200";
     };
 
     const statusPillText = (status) => {
@@ -78,7 +78,7 @@ const AppointmentsSection = ({
             {/* --- HEADER & FILTROS --- */}
             <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col xl:flex-row gap-3 justify-between items-start xl:items-center bg-white z-20 relative">
                 {/* Título */}
-                <div>
+                <div className="w-full xl:w-auto">
                     <h2 className="text-xl font-bold text-slate-800 flex items-center gap-3">
                         Gestión de Citas
                         {metrics.pending > 0 && (
@@ -87,7 +87,9 @@ const AppointmentsSection = ({
                             </span>
                         )}
                     </h2>
-                    <p className="text-sm text-slate-400 font-medium mt-1">Mostrando las últimas actualizaciones</p>
+                    <p className="text-sm text-slate-400 font-medium mt-1">
+                        Mostrando las últimas actualizaciones
+                    </p>
                 </div>
 
                 {/* Filtros */}
@@ -161,13 +163,16 @@ const AppointmentsSection = ({
                                         <Calendar className="w-8 h-8 text-slate-400" />
                                     </div>
                                     <p className="text-slate-500 font-medium">No se encontraron citas</p>
-                                    <p className="text-sm text-slate-400">Intenta cambiar los filtros de búsqueda</p>
+                                    <p className="text-sm text-slate-400">
+                                        Intenta cambiar los filtros de búsqueda
+                                    </p>
                                 </div>
                             </td>
                         </tr>
                     ) : (
                         appointments.map((appointment, index) => {
-                            const isLead = appointment.reason && appointment.reason.includes("Lead");
+                            const isLead =
+                                appointment.reason && appointment.reason.includes("Lead");
 
                             return (
                                 <motion.tr
@@ -238,7 +243,9 @@ const AppointmentsSection = ({
                                                 </span>
                                             <span className="text-xs text-slate-400 flex items-center mt-0.5">
                                                     <Clock className="w-3 h-3 mr-1" />
-                                                {new Date(appointment.appointment_datetime).toLocaleTimeString("es-EC", {
+                                                {new Date(
+                                                    appointment.appointment_datetime
+                                                ).toLocaleTimeString("es-EC", {
                                                     hour: "2-digit",
                                                     minute: "2-digit",
                                                 })}
@@ -246,37 +253,28 @@ const AppointmentsSection = ({
                                         </div>
                                     </td>
 
-                                    {/* Estado */}
+                                    {/* Estado (armonía con Patients: pill + borde) */}
                                     <td className="px-6 py-4 whitespace-nowrap text-center">
                                             <span
-                                                className={`
-                                                    inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border
-                                                    ${
-                                                    appointment.status === "pendiente"
-                                                        ? "bg-amber-50 text-amber-600 border-amber-100"
-                                                        : ""
-                                                }
-                                                    ${
-                                                    appointment.status === "realizada"
-                                                        ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                                                        : ""
-                                                }
-                                                    ${
-                                                    appointment.status === "cancelada"
-                                                        ? "bg-rose-50 text-rose-600 border-rose-100"
-                                                        : ""
-                                                }
-                                                `}
+                                                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${statusPill(
+                                                    appointment.status
+                                                )}`}
                                             >
                                                 <span
-                                                    className={`
-                                                        w-1.5 h-1.5 rounded-full mr-2
-                                                        ${appointment.status === "pendiente" ? "bg-amber-500 animate-pulse" : ""}
-                                                        ${appointment.status === "realizada" ? "bg-emerald-500" : ""}
-                                                        ${appointment.status === "cancelada" ? "bg-rose-500" : ""}
-                                                    `}
+                                                    className={`w-1.5 h-1.5 rounded-full mr-2 ${
+                                                        String(appointment.status || "").toLowerCase() ===
+                                                        "pendiente"
+                                                            ? "bg-amber-500 animate-pulse"
+                                                            : String(appointment.status || "").toLowerCase() ===
+                                                            "realizada"
+                                                                ? "bg-emerald-500"
+                                                                : String(appointment.status || "").toLowerCase() ===
+                                                                "cancelada"
+                                                                    ? "bg-rose-500"
+                                                                    : "bg-slate-400"
+                                                    }`}
                                                 />
-                                                {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                                                {statusPillText(appointment.status)}
                                             </span>
                                     </td>
 
@@ -331,12 +329,13 @@ const AppointmentsSection = ({
             </div>
 
             {/* ================= MOBILE CARDS (SOLO MÓVIL) ================= */}
-            <div className="block lg:hidden divide-y">
+            <div className="block lg:hidden divide-y bg-white">
                 {appointments.length === 0 ? (
                     <div className="p-8 text-center text-slate-400">No se encontraron citas</div>
                 ) : (
                     appointments.map((appointment, index) => {
-                        const isLead = appointment.reason && appointment.reason.includes("Lead");
+                        const isLead =
+                            appointment.reason && appointment.reason.includes("Lead");
 
                         return (
                             <motion.div
@@ -344,12 +343,14 @@ const AppointmentsSection = ({
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.2, delay: index * 0.04 }}
-                                className={`p-4 flex flex-col gap-3 ${isLead ? "bg-amber-50/40" : "bg-white"}`}
+                                className={`p-4 flex flex-col gap-3 ${
+                                    isLead ? "bg-amber-50/40" : "bg-white"
+                                }`}
                             >
-                                {/* Header */}
+                                {/* Top row: Avatar + Name + Date + Status */}
                                 <div className="flex items-center gap-3">
                                     <div
-                                        className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold text-white bg-gradient-to-br ${getAvatarGradient(
+                                        className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm bg-gradient-to-br ${getAvatarGradient(
                                             appointment.patient_name
                                         )}`}
                                     >
@@ -357,17 +358,28 @@ const AppointmentsSection = ({
                                     </div>
 
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-bold text-slate-800 truncate">{appointment.patient_name}</p>
-                                        <p className="text-xs text-slate-400">
-                                            {formatDate(appointment.appointment_datetime)} ·{" "}
-                                            {new Date(appointment.appointment_datetime).toLocaleTimeString("es-EC", {
-                                                hour: "2-digit",
-                                                minute: "2-digit",
-                                            })}
+                                        <p className="font-bold text-slate-800 truncate">
+                                            {appointment.patient_name}
+                                        </p>
+                                        <p className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
+                                            <Calendar className="w-4 h-4 text-slate-300" />
+                                            <span className="truncate">
+                                                {formatDate(appointment.appointment_datetime)} ·{" "}
+                                                {new Date(
+                                                    appointment.appointment_datetime
+                                                ).toLocaleTimeString("es-EC", {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit",
+                                                })}
+                                            </span>
                                         </p>
                                     </div>
 
-                                    <span className={`text-[11px] px-2 py-1 rounded-full font-bold ${statusPill(appointment.status)}`}>
+                                    <span
+                                        className={`inline-flex items-center px-2 py-1 rounded-full text-[11px] font-extrabold border ${statusPill(
+                                            appointment.status
+                                        )}`}
+                                    >
                                         {statusPillText(appointment.status)}
                                     </span>
                                 </div>
@@ -386,9 +398,14 @@ const AppointmentsSection = ({
                                     </div>
                                 </div>
 
-                                {/* Motivo */}
-                                <div className="text-xs bg-slate-50 border rounded-lg px-3 py-2">
-                                    {appointment.reason || "Consulta General"}
+                                {/* Motivo (card tipo “bloque” como Patients) */}
+                                <div className="bg-slate-50 border border-slate-100 rounded-xl px-3 py-2">
+                                    <p className="text-[10px] uppercase font-extrabold text-slate-400">
+                                        Motivo
+                                    </p>
+                                    <p className="text-sm font-medium text-slate-700 mt-1 leading-snug">
+                                        {appointment.reason || "Consulta General"}
+                                    </p>
                                 </div>
 
                                 {/* Acciones (ICONOS en móvil también) */}
