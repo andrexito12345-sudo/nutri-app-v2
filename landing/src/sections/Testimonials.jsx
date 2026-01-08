@@ -131,7 +131,7 @@ export default function Testimonials() {
             <h2 className="text-3xl md:text-6xl font-black mb-4 md:mb-6 leading-tight px-4">
               <span className="text-neutral-900">Más de </span>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 via-purple-600 to-pink-600">
-                500 Mujeres
+                100 Mujeres
               </span>
               <br />
               <span className="text-neutral-900">Ya lo Lograron</span>
