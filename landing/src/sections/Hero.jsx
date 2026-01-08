@@ -65,7 +65,7 @@ export default function Hero() {
                   <Users className="w-3 h-3 md:w-4 md:h-4 text-primary-600" />
                 </div>
                 <span className="text-xs md:text-sm font-medium text-neutral-700">
-                  +500 Vidas Transformadas en 2024
+                  +100 Vidas Transformadas en 2024
                 </span>
               </motion.div>
 
