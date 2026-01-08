@@ -212,12 +212,12 @@ function DashboardPage() {
                     </div>
                 </div>
 
-                {/* LEADS (opcional) — lo dejo listo para que no quede import sin uso */}
+                {/* LEADS (opcional) — lo dejo listo para que no quede import sin uso
                 {Array.isArray(logic.leads) && logic.leads.length > 0 && (
                     <div className="dash-section">
                         <LeadsSection leads={logic.leads} onDelete={logic.deleteLead} />
                     </div>
-                )}
+                )}*/}
 
                 {/* Sección de Citas */}
                 <section className="dash-section" ref={appointmentsRef}>
