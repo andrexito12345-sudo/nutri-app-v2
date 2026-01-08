@@ -1,6 +1,17 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Search, Filter, Calendar, ChevronRight, Mail, Phone, Clock, Trash2 } from 'lucide-react';
+import React from "react";
+import { motion } from "framer-motion";
+import {
+    Search,
+    Filter,
+    Calendar,
+    ChevronRight,
+    Mail,
+    Phone,
+    Clock,
+    Trash2,
+    Check,
+    X,
+} from "lucide-react";
 
 const AppointmentsSection = ({
                                  appointments,
@@ -13,34 +24,59 @@ const AppointmentsSection = ({
                                  changeStatus,
                                  deleteAppointment,
                                  navigate,
-                                 handleCreatePatientFromAppointment
+                                 handleCreatePatientFromAppointment,
                              }) => {
-
     // Helper para iniciales
     const getInitials = (name) => {
         if (!name) return "P";
-        return name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
+        return name
+            .split(" ")
+            .map((n) => n[0])
+            .slice(0, 2)
+            .join("")
+            .toUpperCase();
     };
 
     // Helper para gradientes
     const getAvatarGradient = (name) => {
         const gradients = [
-            'from-blue-400 to-indigo-500',
-            'from-emerald-400 to-teal-500',
-            'from-orange-400 to-rose-500',
-            'from-purple-400 to-fuchsia-500',
-            'from-cyan-400 to-blue-500'
+            "from-blue-400 to-indigo-500",
+            "from-emerald-400 to-teal-500",
+            "from-orange-400 to-rose-500",
+            "from-purple-400 to-fuchsia-500",
+            "from-cyan-400 to-blue-500",
         ];
         const index = (name?.length || 0) % gradients.length;
         return gradients[index];
     };
 
+    const statusPill = (status) => {
+        const s = String(status || "").toLowerCase();
+        if (s === "pendiente") return "bg-amber-100 text-amber-700";
+        if (s === "realizada") return "bg-emerald-100 text-emerald-700";
+        if (s === "cancelada") return "bg-rose-100 text-rose-700";
+        return "bg-slate-100 text-slate-600";
+    };
+
+    const statusPillText = (status) => {
+        const s = String(status || "").toLowerCase();
+        if (!s) return "—";
+        return s.charAt(0).toUpperCase() + s.slice(1);
+    };
+
+    const goAttend = (appointment) => {
+        const finalPatientId = appointment.linked_patient_id || appointment.patient_id;
+        if (finalPatientId) {
+            navigate(`/consulta/nueva/${appointment.id}/${finalPatientId}`);
+        } else {
+            handleCreatePatientFromAppointment(appointment);
+        }
+    };
+
     return (
         <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden mb-8 flex flex-col h-full">
-
             {/* --- HEADER & FILTROS --- */}
-            <div className="p-6 border-b border-slate-100 flex flex-col xl:flex-row gap-4 justify-between items-start xl:items-center bg-white z-20 relative">
-
+            <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col xl:flex-row gap-3 justify-between items-start xl:items-center bg-white z-20 relative">
                 {/* Título */}
                 <div>
                     <h2 className="text-xl font-bold text-slate-800 flex items-center gap-3">
@@ -51,16 +87,13 @@ const AppointmentsSection = ({
                             </span>
                         )}
                     </h2>
-                    <p className="text-sm text-slate-400 font-medium mt-1">
-                        Mostrando las últimas actualizaciones
-                    </p>
+                    <p className="text-sm text-slate-400 font-medium mt-1">Mostrando las últimas actualizaciones</p>
                 </div>
 
                 {/* Filtros */}
-                <div className="flex flex-col md:flex-row gap-3 w-full xl:w-auto">
+                <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
                     {/* Buscador */}
                     <div className="relative group w-full md:w-64">
-
                         <input
                             type="text"
                             placeholder="Buscar paciente..."
@@ -68,6 +101,7 @@ const AppointmentsSection = ({
                             onChange={(e) => setSearch(e.target.value)}
                             className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                         />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     </div>
 
                     {/* Estado */}
@@ -104,12 +138,9 @@ const AppointmentsSection = ({
                 </div>
             </div>
 
-            {/* --- TABLA CON SCROLL (Altura limitada) --- */}
-            {/* max-h-[650px] es aprox 10 filas. overflow-y-auto activa el scroll */}
-            <div className="overflow-x-auto overflow-y-auto max-h-[650px] custom-scrollbar bg-white">
+            {/* ================= DESKTOP TABLE (SOLO DESKTOP) ================= */}
+            <div className="hidden lg:block overflow-x-auto overflow-y-auto max-h-[650px] custom-scrollbar bg-white">
                 <table className="w-full text-left border-collapse">
-
-                    {/* Header Sticky (Se queda fijo al hacer scroll) */}
                     <thead className="sticky top-0 z-10 bg-slate-50 shadow-sm">
                     <tr className="text-xs uppercase tracking-wider text-slate-400 font-bold border-b border-slate-200">
                         <th className="px-6 py-4 whitespace-nowrap bg-slate-50">Paciente</th>
@@ -146,13 +177,17 @@ const AppointmentsSection = ({
                                     transition={{ duration: 0.2, delay: index * 0.05 }}
                                     className={`
                                             group transition-all duration-200 hover:bg-slate-50/80
-                                            ${isLead ? 'bg-amber-50/30 hover:bg-amber-50/60' : ''}
+                                            ${isLead ? "bg-amber-50/30 hover:bg-amber-50/60" : ""}
                                         `}
                                 >
                                     {/* Paciente */}
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm bg-gradient-to-br ${getAvatarGradient(appointment.patient_name)}`}>
+                                            <div
+                                                className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm bg-gradient-to-br ${getAvatarGradient(
+                                                    appointment.patient_name
+                                                )}`}
+                                            >
                                                 {getInitials(appointment.patient_name)}
                                             </div>
                                             <span className="font-bold text-slate-700 group-hover:text-blue-600 transition-colors">
@@ -177,14 +212,18 @@ const AppointmentsSection = ({
                                         </div>
                                     </td>
 
-                                    {/* Motivo (Lead Highlight) */}
+                                    {/* Motivo */}
                                     <td className="px-6 py-4 max-w-xs">
-                                        <div className={`
-                                                text-xs rounded-lg px-3 py-2 border leading-relaxed
-                                                ${isLead
-                                            ? 'bg-amber-50 border-amber-100 text-amber-800'
-                                            : 'bg-white border-slate-100 text-slate-500'}
-                                            `}>
+                                        <div
+                                            className={`
+                                                    text-xs rounded-lg px-3 py-2 border leading-relaxed
+                                                    ${
+                                                isLead
+                                                    ? "bg-amber-50 border-amber-100 text-amber-800"
+                                                    : "bg-white border-slate-100 text-slate-500"
+                                            }
+                                                `}
+                                        >
                                                 <span className="line-clamp-2" title={appointment.reason}>
                                                     {appointment.reason || "Consulta General"}
                                                 </span>
@@ -199,29 +238,49 @@ const AppointmentsSection = ({
                                                 </span>
                                             <span className="text-xs text-slate-400 flex items-center mt-0.5">
                                                     <Clock className="w-3 h-3 mr-1" />
-                                                {new Date(appointment.appointment_datetime).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' })}
+                                                {new Date(appointment.appointment_datetime).toLocaleTimeString("es-EC", {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit",
+                                                })}
                                                 </span>
                                         </div>
                                     </td>
 
                                     {/* Estado */}
                                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                                            <span className={`
-                                                inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border
-                                                ${appointment.status === 'pendiente' ? 'bg-amber-50 text-amber-600 border-amber-100' : ''}
-                                                ${appointment.status === 'realizada' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : ''}
-                                                ${appointment.status === 'cancelada' ? 'bg-rose-50 text-rose-600 border-rose-100' : ''}
-                                            `}>
-                                                <span className={`w-1.5 h-1.5 rounded-full mr-2 
-                                                    ${appointment.status === 'pendiente' ? 'bg-amber-500 animate-pulse' : ''}
-                                                    ${appointment.status === 'realizada' ? 'bg-emerald-500' : ''}
-                                                    ${appointment.status === 'cancelada' ? 'bg-rose-500' : ''}
-                                                `}/>
+                                            <span
+                                                className={`
+                                                    inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border
+                                                    ${
+                                                    appointment.status === "pendiente"
+                                                        ? "bg-amber-50 text-amber-600 border-amber-100"
+                                                        : ""
+                                                }
+                                                    ${
+                                                    appointment.status === "realizada"
+                                                        ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                                                        : ""
+                                                }
+                                                    ${
+                                                    appointment.status === "cancelada"
+                                                        ? "bg-rose-50 text-rose-600 border-rose-100"
+                                                        : ""
+                                                }
+                                                `}
+                                            >
+                                                <span
+                                                    className={`
+                                                        w-1.5 h-1.5 rounded-full mr-2
+                                                        ${appointment.status === "pendiente" ? "bg-amber-500 animate-pulse" : ""}
+                                                        ${appointment.status === "realizada" ? "bg-emerald-500" : ""}
+                                                        ${appointment.status === "cancelada" ? "bg-rose-500" : ""}
+                                                    `}
+                                                />
                                                 {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                                             </span>
                                     </td>
 
-                                    {/* Acciones */}
+                                    {/* Acciones (ICONOS) */}
                                     <td className="px-6 py-4 whitespace-nowrap text-center">
                                         <div className="flex items-center justify-center gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                                             {/* Pendiente */}
@@ -234,33 +293,26 @@ const AppointmentsSection = ({
                                                 <Clock className="w-4 h-4" />
                                             </button>
 
-                                            {/* Completar */}
+                                            {/* Atender */}
                                             <button
-                                                onClick={() => {
-                                                    const finalPatientId = appointment.linked_patient_id || appointment.patient_id;
-                                                    if (finalPatientId) {
-                                                        navigate(`/consulta/nueva/${appointment.id}/${finalPatientId}`);
-                                                    } else {
-                                                        handleCreatePatientFromAppointment(appointment);
-                                                    }
-                                                }}
+                                                onClick={() => goAttend(appointment)}
                                                 className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
                                                 title="Atender Cita"
                                             >
-                                                <span className="font-bold">✓</span>
+                                                <Check className="w-4 h-4" />
                                             </button>
 
                                             {/* Cancelar */}
                                             <button
                                                 onClick={() => changeStatus(appointment.id, "cancelada")}
                                                 disabled={appointment.status === "cancelada"}
-                                                className="p-2 rounded-lg text-rose-400 hover:bg-rose-50 disabled:opacity-30 transition-colors"
+                                                className="p-2 rounded-lg text-rose-500 hover:bg-rose-50 disabled:opacity-30 transition-colors"
                                                 title="Cancelar"
                                             >
-                                                <span className="font-bold">✕</span>
+                                                <X className="w-4 h-4" />
                                             </button>
 
-                                            {/* Eliminar (Basura) */}
+                                            {/* Eliminar */}
                                             <button
                                                 onClick={() => deleteAppointment(appointment.id)}
                                                 className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
@@ -276,6 +328,109 @@ const AppointmentsSection = ({
                     )}
                     </tbody>
                 </table>
+            </div>
+
+            {/* ================= MOBILE CARDS (SOLO MÓVIL) ================= */}
+            <div className="block lg:hidden divide-y">
+                {appointments.length === 0 ? (
+                    <div className="p-8 text-center text-slate-400">No se encontraron citas</div>
+                ) : (
+                    appointments.map((appointment, index) => {
+                        const isLead = appointment.reason && appointment.reason.includes("Lead");
+
+                        return (
+                            <motion.div
+                                key={appointment.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.2, delay: index * 0.04 }}
+                                className={`p-4 flex flex-col gap-3 ${isLead ? "bg-amber-50/40" : "bg-white"}`}
+                            >
+                                {/* Header */}
+                                <div className="flex items-center gap-3">
+                                    <div
+                                        className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold text-white bg-gradient-to-br ${getAvatarGradient(
+                                            appointment.patient_name
+                                        )}`}
+                                    >
+                                        {getInitials(appointment.patient_name)}
+                                    </div>
+
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-bold text-slate-800 truncate">{appointment.patient_name}</p>
+                                        <p className="text-xs text-slate-400">
+                                            {formatDate(appointment.appointment_datetime)} ·{" "}
+                                            {new Date(appointment.appointment_datetime).toLocaleTimeString("es-EC", {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                            })}
+                                        </p>
+                                    </div>
+
+                                    <span className={`text-[11px] px-2 py-1 rounded-full font-bold ${statusPill(appointment.status)}`}>
+                                        {statusPillText(appointment.status)}
+                                    </span>
+                                </div>
+
+                                {/* Contacto */}
+                                <div className="text-xs text-slate-500 space-y-1">
+                                    {appointment.patient_email && (
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <Mail className="w-3 h-3 flex-shrink-0" />
+                                            <span className="truncate">{appointment.patient_email}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-2">
+                                        <Phone className="w-3 h-3 flex-shrink-0" />
+                                        {appointment.patient_phone || "—"}
+                                    </div>
+                                </div>
+
+                                {/* Motivo */}
+                                <div className="text-xs bg-slate-50 border rounded-lg px-3 py-2">
+                                    {appointment.reason || "Consulta General"}
+                                </div>
+
+                                {/* Acciones (ICONOS en móvil también) */}
+                                <div className="flex items-center justify-between pt-1">
+                                    <button
+                                        onClick={() => changeStatus(appointment.id, "pendiente")}
+                                        disabled={appointment.status === "pendiente"}
+                                        className="p-2 rounded-lg text-amber-600 hover:bg-amber-50 disabled:opacity-30 transition-colors"
+                                        title="Marcar Pendiente"
+                                    >
+                                        <Clock className="w-5 h-5" />
+                                    </button>
+
+                                    <button
+                                        onClick={() => goAttend(appointment)}
+                                        className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
+                                        title="Atender Cita"
+                                    >
+                                        <Check className="w-5 h-5" />
+                                    </button>
+
+                                    <button
+                                        onClick={() => changeStatus(appointment.id, "cancelada")}
+                                        disabled={appointment.status === "cancelada"}
+                                        className="p-2 rounded-lg text-rose-500 hover:bg-rose-50 disabled:opacity-30 transition-colors"
+                                        title="Cancelar"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+
+                                    <button
+                                        onClick={() => deleteAppointment(appointment.id)}
+                                        className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                        title="Eliminar"
+                                    >
+                                        <Trash2 className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </motion.div>
+                        );
+                    })
+                )}
             </div>
         </div>
     );
