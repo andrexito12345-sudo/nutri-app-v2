@@ -86,7 +86,7 @@ export function useDashboardLogic() {
             console.error(error);
             toast.error("Error al eliminar lead");
         } finally {
-            setLeadToDelete(null); // Cerrar modal siempre
+            setLeadToDelete(null);
         }
     };
 
@@ -131,7 +131,7 @@ export function useDashboardLogic() {
             const [appRes, summRes, leadsRes] = await Promise.all([
                 api.get("/appointments"),
                 api.get("/dashboard/summary"),
-                api.get("/leads") // 👈 Esta es la clave para la bandeja
+                api.get("/leads")
             ]);
 
             // Guardamos los leads en el estado
@@ -140,23 +140,54 @@ export function useDashboardLogic() {
             setAppointmentStats(summRes.data.summary.appointments || null);
 
         } catch (err) {
-            console.error("Error al cargar leads en el dashboard");
+            console.error("Error al cargar datos del dashboard:", err);
+            if (!isBackgroundUpdate) {
+                setError("Error al cargar los datos");
+            }
         } finally {
-            setLoading(false);
+            if (!isBackgroundUpdate) setLoading(false);
         }
     };
 
-    // Efectos de Carga
+    // ✅ CARGA INICIAL
     useEffect(() => {
         loadDashboardData();
     }, []);
 
+    // ✅ AUTO-REFRESH CADA 5 SEGUNDOS (antes era 15)
     useEffect(() => {
         const intervalId = setInterval(() => {
-            console.log("🔄 Radar: Buscando nuevas citas y leads...");
+            console.log("🔄 Auto-refresh: Actualizando citas y leads...");
             loadDashboardData(true);
-        }, 15000); // Actualiza cada 30 segundos
+        }, 5000); // ⚡ Ahora cada 5 segundos
+
         return () => clearInterval(intervalId);
+    }, []);
+
+    // ✅ LISTENER DE EVENTOS - Detecta cuando se crea una cita desde la calculadora IMC
+    useEffect(() => {
+        const handleNewAppointment = (event) => {
+            console.log("🆕 Nueva cita detectada desde calculadora IMC");
+            loadDashboardData(true); // Recargar inmediatamente
+        };
+
+        // Escuchar eventos personalizados
+        window.addEventListener('newAppointmentCreated', handleNewAppointment);
+
+        // También escuchar cambios en localStorage (entre pestañas)
+        const handleStorageChange = (e) => {
+            if (e.key === 'lastAppointmentCreated') {
+                console.log("🆕 Nueva cita detectada (storage)");
+                loadDashboardData(true);
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+
+        return () => {
+            window.removeEventListener('newAppointmentCreated', handleNewAppointment);
+            window.removeEventListener('storage', handleStorageChange);
+        };
     }, []);
 
     // --- CARGA DE PACIENTES ---
@@ -357,7 +388,7 @@ export function useDashboardLogic() {
     ];
 
     // --- FUNCIONES DE CONFIRMACIÓN (ELIMINAR/CREAR) ---
-    const deleteAppointment = requestDeleteAppointment; // Alias para compatibilidad
+    const deleteAppointment = requestDeleteAppointment;
 
     const confirmDeleteAppointment = async () => {
         if (!appointmentToDelete) return;
@@ -414,13 +445,15 @@ export function useDashboardLogic() {
         error,
         metrics,
         visitStats,
+        appointmentStats,
         filteredAppointments,
+        appointments,
         patients,
         patientsLoading,
 
-        // 👇 NUEVO: Exportamos los leads para usarlos en el Dashboard
+        // Leads
         leads,
-        deleteLead: requestDeleteLead, // 👈 AGREGAR AQUÍ
+        deleteLead: requestDeleteLead,
 
         // Filtros
         search,

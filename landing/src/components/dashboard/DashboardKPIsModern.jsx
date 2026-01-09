@@ -1,24 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Calendar, CheckCircle, XCircle, Clock, TrendingUp, Activity, Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-function DashboardKPIsModern({ metrics, visitStats, appointmentStats, onOpenMenu }) {
+function DashboardKPIsModern({ metrics, visitStats, appointmentStats, appointments = [], onOpenMenu }) {
     const [filter, setFilter] = useState('hoy');
 
+    // ✅ CALCULAR STATS DE HOY directamente desde appointments
+    const statsToday = useMemo(() => {
+        if (!Array.isArray(appointments) || appointments.length === 0) {
+            return { total: 0, pending: 0, done: 0, cancelled: 0 };
+        }
+
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+        const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+        const todayAppointments = appointments.filter(app => {
+            const appDate = new Date(app.appointment_datetime);
+            return appDate >= todayStart && appDate <= todayEnd;
+        });
+
+        return {
+            total: todayAppointments.length,
+            pending: todayAppointments.filter(a => a.status === 'pendiente').length,
+            done: todayAppointments.filter(a => a.status === 'completada').length,
+            cancelled: todayAppointments.filter(a => a.status === 'cancelada').length
+        };
+    }, [appointments]);
+
     const statsTotal = {
-        total: metrics?.totalAppointments || 0,
+        total: metrics?.total || 0,
         pending: metrics?.pending || 0,
-        completed: metrics?.completed || 0,
+        completed: metrics?.done || 0,
         cancelled: metrics?.cancelled || 0,
     };
 
-    const statsToday = appointmentStats?.today || { total: 0, pending: 0, done: 0, cancelled: 0 };
-
     const currentStats = filter === 'hoy' ? {
-        total: statsToday.total || 0,
-        pending: statsToday.pending || 0,
-        completed: statsToday.done || 0,
-        cancelled: statsToday.cancelled || 0,
+        total: statsToday.total,
+        pending: statsToday.pending,
+        completed: statsToday.done,
+        cancelled: statsToday.cancelled,
         subtitle: 'Agenda del día'
     } : {
         total: statsTotal.total,

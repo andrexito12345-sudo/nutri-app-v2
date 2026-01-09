@@ -82,10 +82,11 @@ export default function BMICalculator() {
     setIsSubmitting(true);
 
     try {
-      // Crear fecha de cita sugerida (3 días desde hoy a las 10:00 AM)
+      // ✅ CITA INMEDIATA - HOY (no +3 días)
       const appointmentDate = new Date();
-      appointmentDate.setDate(appointmentDate.getDate() + 3);
-      appointmentDate.setHours(10, 0, 0, 0);
+      // Agregar 1 hora a la hora actual para dar tiempo de preparación
+      appointmentDate.setHours(appointmentDate.getHours() + 1);
+      appointmentDate.setMinutes(0, 0, 0);
 
       // Construir el reason con todos los datos del IMC
       const detailedReason = `
@@ -104,7 +105,7 @@ ${gender ? `👤 Género: ${gender === 'female' ? 'Femenino' : 'Masculino'}` : '
         patient_name: name,
         patient_email: email || null,
         patient_phone: phone,
-        reason: detailedReason, // Mantenemos el reason para referencia
+        reason: detailedReason,
         appointment_datetime: appointmentDate.toISOString(),
         // 🆕 Datos biométricos estructurados para pre-llenar el SOAP
         patient_weight: weight ? parseFloat(weight) : null,
@@ -128,6 +129,10 @@ ${gender ? `👤 Género: ${gender === 'female' ? 'Femenino' : 'Masculino'}` : '
         // Mostrar modal de éxito
         setShowSuccessModal(true);
 
+        // ✅ RECARGAR DASHBOARD INMEDIATAMENTE
+        toast.success('¡Cita agendada! Aparecerá en tu dashboard en unos segundos.', {
+          duration: 3000
+        });
       }
     } catch (error) {
       console.error('Error al enviar lead:', error);
@@ -136,11 +141,26 @@ ${gender ? `👤 Género: ${gender === 'female' ? 'Femenino' : 'Masculino'}` : '
       });
     } finally {
       setIsSubmitting(false);
+      // Disparar evento para que el dashboard se actualice
+      window.dispatchEvent(new Event('newAppointmentCreated'));
+      localStorage.setItem('lastAppointmentCreated', Date.now());
     }
   };
 
   const formatAppointmentDate = (date) => {
     if (!date) return '';
+    const now = new Date();
+    const appointmentDate = new Date(date);
+
+    // Si es hoy
+    if (appointmentDate.toDateString() === now.toDateString()) {
+      return `Hoy, ${appointmentDate.toLocaleTimeString('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })}`;
+    }
+
+    // Si es otro día
     const options = {
       weekday: 'long',
       year: 'numeric',
@@ -149,7 +169,7 @@ ${gender ? `👤 Género: ${gender === 'female' ? 'Femenino' : 'Masculino'}` : '
       hour: '2-digit',
       minute: '2-digit'
     };
-    return new Date(date).toLocaleDateString('es-ES', options);
+    return appointmentDate.toLocaleDateString('es-ES', options);
   };
 
   const handleWhatsAppClick = () => {
@@ -508,7 +528,7 @@ ${gender ? `👤 Género: ${gender === 'female' ? 'Femenino' : 'Masculino'}` : '
                           <Calendar className="w-4 h-4 md:w-5 md:h-5 text-white" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Fecha Tentativa</p>
+                          <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Fecha de Consulta</p>
                           <p className="text-sm font-bold text-neutral-900 truncate">
                             {formatAppointmentDate(appointmentData.date)}
                           </p>
@@ -520,9 +540,9 @@ ${gender ? `👤 Género: ${gender === 'female' ? 'Femenino' : 'Masculino'}` : '
                           <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-white" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Fecha Tentativa</p>
-                          <p className="text-xs md:text-sm font-bold text-neutral-900 line-clamp-2">
-                            {formatAppointmentDate(appointmentData.date)}
+                          <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Tu IMC</p>
+                          <p className="text-sm font-bold text-neutral-900">
+                            {appointmentData.bmi} - {appointmentData.category}
                           </p>
                         </div>
                       </div>

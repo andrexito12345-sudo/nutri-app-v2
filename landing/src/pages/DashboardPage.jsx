@@ -158,6 +158,7 @@ function DashboardPage() {
                     metrics={logic.metrics}
                     visitStats={logic.visitStats}
                     appointmentStats={logic.appointmentStats}
+                    appointments={logic.appointments}
                     onOpenMenu={() => setIsToolsOpen(true)}
                 />
 
